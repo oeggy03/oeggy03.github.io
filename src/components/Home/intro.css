@@ -47,6 +47,7 @@
     background: -webkit-linear-gradient(0deg, transparent 50%, #61DAFB 50%);
     background-size: 800px 80px;
     border: 2.5px solid #61DAFB;
+    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -56,10 +57,10 @@
 
 .homeFindOutMoreBtn:hover {
     background-position: 300px 0;
+    color: #20232A;
 }
 
 .homeFindOutMoreBtnText {
-    color: white;
     font-size: 1.5rem;
     font-weight: 500;
     padding: 3% 0px;
