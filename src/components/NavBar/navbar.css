@@ -1,0 +1,51 @@
+.navbar {
+    background: #20232A;
+    height: 4.5rem;
+    width: 100vw;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    
+}
+
+.internalLinks {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo_nav, .linkedIn, .github {
+    object-fit: cover;
+    height: 2.5rem;
+    cursor: pointer;
+}
+
+.logo_nav:hover, .linkedIn:hover, .github:hover {
+    filter: drop-shadow(0px 0px 5px #61DAFB);
+}
+
+.allNavbarItems {
+    margin: 0px 0px 0px 20px;
+}
+
+.navbarItem {
+    margin: 1rem;
+    cursor: pointer;
+    padding-bottom: 0.25rem;
+}
+
+.navbarItem:hover {
+    color: #61DAFB;
+    left: 0;
+    right: auto;
+    border-bottom: 3px solid #61DAFB;
+}
+
+.linkedIn, .github {
+    padding: 0px 8px 0px 8px;
+}

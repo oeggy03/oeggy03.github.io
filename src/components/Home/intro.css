@@ -1,0 +1,66 @@
+#homepage {
+    height: calc(100vh - 4rem);
+    width: 100vw;
+    max-width: 75rem;
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+
+}
+
+.homepageContent {
+    height: 100vh;
+    width: 100vw;
+    padding: 2rem;
+    font-size: 3rem;
+    font-weight: 700;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+}
+
+.helloIntro {
+    font-size: 1.75rem;
+    font-weight: 300;
+}
+
+.name, .introContentJob {
+    color: #61DAFB;
+}
+
+.introContentJob {
+    font-weight: 600;
+}
+
+.homeIntroContent {
+    font-size: 2rem;
+    font-weight: 300;
+    padding-top: 0.8rem;
+}
+
+.homeFindOutMoreBtn {
+    cursor: pointer;
+    margin-top: 2rem;
+    height: auto;
+    width: 250px;
+    background: -webkit-linear-gradient(0deg, transparent 50%, #61DAFB 50%);
+    background-size: 800px 80px;
+    border: 2.5px solid #61DAFB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.8s;
+    position: relative;
+}
+
+.homeFindOutMoreBtn:hover {
+    background-position: 300px 0;
+}
+
+.homeFindOutMoreBtnText {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 500;
+    padding: 3% 0px;
+}
