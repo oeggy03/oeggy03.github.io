@@ -5,7 +5,7 @@ import {Link} from 'react-scroll'
 
 const Intro = () => {
     const [text] = useTypewriter({
-        words:['Software Engineer.', 'Data Engineer.', 'Web Developer.'],
+        words:['Software Engineer.', 'Data Engineer.', 'Full Stack Web Developer.'],
         loop: {},
         typeSpeed: 120,
     })
