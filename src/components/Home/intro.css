@@ -11,7 +11,8 @@
 .homepageContent {
     height: 100vh;
     width: 100vw;
-    padding: 2rem;
+    padding-left: 2rem;
+    padding-right: 1rem;
     font-size: 3rem;
     font-weight: 700;
     display: flex;

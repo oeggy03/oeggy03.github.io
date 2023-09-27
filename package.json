@@ -14,7 +14,8 @@
     "react-dom": "^18.2.0",
     "react-scroll": "^1.8.9",
     "react-simple-typewriter": "^5.0.1",
-    "typed.js": "^2.0.16"
+    "typed.js": "^2.0.16",
+    "yarn": "^1.22.19"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",
