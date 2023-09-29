@@ -11,13 +11,11 @@ import postgre from "../../assets/postgre.png"
 import python from "../../assets/python.png"
 import react from "../../assets/react.png"
 import expressjs from "../../assets/expressjs.png"
+import oop from "../../assets/oop.png"
+import mss from "../../assets/mss.png"
 
 const About = () => {
-    let descString = `
-    
 
-    Aside from majoring in Computer Science, I am also minoring in Quantitative Finance and Management.
-    ` 
     return (
         <section id="aboutSection">
             <div className="aboutMe">
@@ -33,6 +31,7 @@ const About = () => {
                 <span className="techStackIntro">I am proficient in:</span>
                 <div className="techStackIcons">
                     <a href='https://en.wikipedia.org/wiki/Git' target="_blank" rel="noreferrer noopener"><img className="techStackIcon git" src={git} alt=""/></a>
+                    <a href='https://en.wikipedia.org/wiki/Object-oriented_programming' target="_blank" rel="noreferrer noopener"><img className="techStackIcon oop" src={oop} alt=""/></a>
                     <a href='https://en.wikipedia.org/wiki/HTML' target="_blank" rel="noreferrer noopener"><img className="techStackIcon html" src={html} alt=""/></a>
                     <a href='https://en.wikipedia.org/wiki/CSS' target="_blank" rel="noreferrer noopener"><img className="techStackIcon css" src={css} alt=""/></a>
                     <a href='https://en.wikipedia.org/wiki/JavaScript' target="_blank" rel="noreferrer noopener"><img className="techStackIcon js" src={js} alt=""/></a>
@@ -41,6 +40,7 @@ const About = () => {
                     <a href='https://en.wikipedia.org/wiki/Express.js' target="_blank" rel="noreferrer noopener"><img className="techStackIcon expressjs" src={expressjs} alt=""/></a>
                     <a href='https://en.wikipedia.org/wiki/MySQL' target="_blank" rel="noreferrer noopener"><img className="techStackIcon mysql" src={mysql} alt=""/></a>
                     <a href='https://en.wikipedia.org/wiki/PostgreSQL' target="_blank" rel="noreferrer noopener"><img className="techStackIcon postgre" src={postgre} alt=""/></a>
+                    <a href='https://en.wikipedia.org/wiki/Microsoft_SQL_Server' target="_blank" rel="noreferrer noopener"><img className="techStackIcon mss" src={mss} alt=""/></a>
                     <a href='https://en.wikipedia.org/wiki/Java_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIcon java" src={java} alt=""/></a>
                     <a href='https://en.wikipedia.org/wiki/Python_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIcon python" src={python} alt=""/></a>
                 </div>

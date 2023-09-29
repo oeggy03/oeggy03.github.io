@@ -17,7 +17,7 @@ const Intro = () => {
                 <span className="nameIntro">I'm <span className="name">Ha Thu</span></span>
             </div>
             <div className="homeIntroContent">
-                Computer Science major and <span className="introContentJob">{text}</span>
+                Computer Science major @NUS and <span className="introContentJob">{text}</span>
                 <span><Cursor cursorStyle="|" cursorBlinking={true} cursorColor='#61DAFB'/></span>
             </div>
             <Link>

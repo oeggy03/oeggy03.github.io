@@ -1,0 +1,85 @@
+.experiencesSec {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100vw;
+    padding: 0 1rem;
+}
+
+.experienceTitle {
+    font-size: 3rem;
+    font-weight: 600;
+    margin: 3rem 0 1.5rem 0;
+    color: #61DAFB;
+}
+
+.expCard {
+    background-color: #20232A;
+    display: flex;
+    margin: 1.5rem;
+    border-radius: 20px;
+}
+
+.expCard:hover {
+    transition: 0.4s;
+    filter: drop-shadow(0px 0px 5px #61DAFB);
+}
+
+.cardContent {
+    margin: 5px 5% 5px 5%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.companyIcon {
+    width: 5rem;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.astar {
+    background-color: white;
+    
+}
+
+.expDescSec {
+    margin: 2rem;
+}
+
+.expTitle {
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin-bottom: 3%;
+}
+
+.expCompany, .expDates, .expDescription{
+    margin-bottom: 10px;
+    line-height: 25px;
+}
+
+.expSkills {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: white;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+.techStackIconExp {
+    height: 2rem;
+    margin: 10px 0px 5px 15px;
+}
+
+.techStackIconExp:hover {
+    filter: drop-shadow(0px 0px 10px #20232A);
+}
+
+.skillsIntro {
+    font-weight: 600;
+    color: #20232A;
+    margin: 10px 0px 5px 15px;
+}
+
