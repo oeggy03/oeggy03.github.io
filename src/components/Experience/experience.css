@@ -1,4 +1,4 @@
-.experiencesSec {
+#experiencesSec {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -10,7 +10,7 @@
 .experienceTitle {
     font-size: 3rem;
     font-weight: 600;
-    margin: 3rem 0 1.5rem 0;
+    margin: 10rem 0 1.5rem 0;
     color: #61DAFB;
 }
 
@@ -97,4 +97,12 @@
         margin: 2rem 0 0 2rem
     }
   
-  }
+}
+
+@media only screen and (max-width: 840px) {
+    .experienceTitle {
+        font-size: 2rem;
+        margin-top: 8rem;
+    }
+  
+}

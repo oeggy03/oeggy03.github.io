@@ -13,6 +13,9 @@
     opacity: 90%;
 }
 
+.normalNav {
+    
+}
 .internalLinks {
     display: flex;
     align-items: center;
@@ -23,10 +26,12 @@
     object-fit: cover;
     height: 2.5rem;
     cursor: pointer;
+    transition: 0.5s;
 }
 
 .logo_nav:hover, .linkedIn:hover, .github:hover {
     filter: drop-shadow(0px 0px 5px #61DAFB);
+    transition: 0.5s;
 }
 
 .allNavbarItems {
@@ -47,6 +52,76 @@
     border-bottom: 3px solid #61DAFB;
 }
 
+.active {
+    border-bottom: 3px solid #61DAFB;
+    color: #61DAFB;
+}
+
 .linkedIn, .github {
     padding: 0px 8px 0px 8px;
 }
+
+.burgerMenuImg {
+    height: 2.5rem;
+    display: none;
+}
+
+.burgerMenuImg:hover {
+    height: 2.5rem;
+    cursor: pointer;
+}
+
+.burgerNavMenu {
+    position: absolute;
+    top: 4rem;
+    right: 0rem;
+    z-index: 2;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0.5rem;
+    height: 100vh;
+    width: 100vw;
+    background: #20232A;
+}
+
+.burgerMenuInternalLinks {
+    display: flex;
+    flex-direction: column;
+}
+
+.burgerMenuItem {
+    margin: 1rem;
+    cursor: pointer;
+    padding-bottom: 0.25rem;
+    color: white;
+    
+}
+
+.burgerMenuItem:hover {
+    color: #61DAFB;
+    left: 0;
+    right: auto;
+    border-bottom: 3px solid #61DAFB;
+    cursor: pointer;
+}
+
+@media only screen and (max-width: 840px) {
+
+    .burgerMenuImg {
+        display: flex;
+    }
+
+    .burgerNavMenu {
+        display: flex;
+    }
+    
+    .allNavbarItems {
+        display: none;
+    }
+
+    .externalLinks {
+        display: none;
+    }
+  }

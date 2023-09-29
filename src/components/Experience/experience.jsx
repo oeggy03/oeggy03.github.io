@@ -11,7 +11,7 @@ import python from "../../assets/python.png"
 
 const Experience = () => {
     return (
-    <section className="experiencesSec">
+    <section id="experiencesSec">
         <div className="experienceTitle">My Work Experience</div>
         <div className="expCards">
             <div className="expCard">
