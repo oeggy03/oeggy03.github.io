@@ -67,8 +67,12 @@
     }
 
     .techStackIcon {
-        height: 2rem;
-        margin: 10px 20px;
+        height: 1.5rem;
+        margin: 5px 10px;
+    }
+
+    .techStackIntro {
+        font-size: 1rem;
     }
   
   }

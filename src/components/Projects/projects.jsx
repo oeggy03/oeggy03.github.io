@@ -35,8 +35,7 @@ const Projects = () => {
                             Built with <b>React</b> using the Vite build template, my portfolio website is a basic demonstration of my capabilities in Frontend Web Development.
                         </div>
                         <div className="projLinks">
-                            You're already here :): <a href="https://oeggy03.github.io/" className="linkTo" target="_blank" rel="noreferrer noopener">https://oeggy03.github.io/</a><br/>
-                            View the github page: <a href="https://github.com/oeggy03/oeggy03.github.io" className="linkTo" target="_blank" rel="noreferrer noopener">https://github.com/oeggy03/oeggy03.github.io</a><br/>
+                            <a href="https://github.com/oeggy03/oeggy03.github.io" className="linkTo" target="_blank" rel="noreferrer noopener">View the github page</a><br/>
                         </div>
                         <div className="projSkills">
                             <div className="skillsIntro">Skills:</div>
@@ -61,9 +60,9 @@ const Projects = () => {
                             Eggbot is a chatbot created to help me manage my tasks. It is built with <b>Java</b> and <b>JavaFX</b>, and the code follows the <b>Object-Oriented Programming</b> paradigm very closely.
                         </div>
                         <div className="projLinks">
-                            Try out Eggbot!: <a href="https://github.com/oeggy03/ip/releases/tag/A-Release" className="linkTo" target="_blank" rel="noreferrer noopener">https://github.com/oeggy03/ip/releases/tag/A-Release</a><br/>
-                            Learn more about Eggbot: <a href="https://oeggy03.github.io/ip/" className="linkTo" target="_blank" rel="noreferrer noopener">https://oeggy03.github.io/ip/</a><br/>
-                            View Eggbot's github page: <a href="https://github.com/oeggy03/ip" className="linkTo" target="_blank" rel="noreferrer noopener">https://github.com/oeggy03/ip</a><br/>
+                            <a href="https://github.com/oeggy03/ip/releases/tag/A-Release" className="linkTo" target="_blank" rel="noreferrer noopener">Try out Eggbot!</a><br/>
+                            <a href="https://oeggy03.github.io/ip/" className="linkTo" target="_blank" rel="noreferrer noopener">Learn more about Eggbot</a><br/>
+                            <a href="https://github.com/oeggy03/ip" className="linkTo" target="_blank" rel="noreferrer noopener">View Eggbot's github page</a><br/>
                         </div>
                         <div className="projSkills">
                             <div className="skillsIntro">Skills:</div>
@@ -86,8 +85,8 @@ const Projects = () => {
                             It is capable of identifying cats, dogs, planes and more!
                         </div>
                         <div className="projLinks">
-                            Learn more about TeleAI: <a href="https://oeggy03.github.io/TeleAI/" className="linkTo" target="_blank" rel="noreferrer noopener">https://oeggy03.github.io/TeleAI/</a><br/>
-                            View TeleAI's github page: <a href="https://github.com/oeggy03/TeleAI" className="linkTo" target="_blank" rel="noreferrer noopener">https://github.com/oeggy03/TeleAI</a><br/>
+                            <a href="https://oeggy03.github.io/TeleAI/" className="linkTo" target="_blank" rel="noreferrer noopener">Learn more about TeleAI</a><br/>
+                            <a href="https://github.com/oeggy03/TeleAI" className="linkTo" target="_blank" rel="noreferrer noopener">View TeleAI's github page</a><br/>
                         </div>
                         <div className="projSkills">
                             <div className="skillsIntro">Skills:</div>
@@ -107,9 +106,9 @@ const Projects = () => {
                             This project incorporates both a front-end built with <b>React</b>, and a back-end built with <b>GO</b> and <b>MySQL</b>. It supports secure user authentication using jwt tokens and bcrypt.
                         </div>
                         <div className="projLinks">
-                            Learn more on DevPost: <a href="https://devpost.com/software/foroom" className="linkTo" target="_blank" rel="noreferrer noopener">https://devpost.com/software/foroom</a><br/>
-                            View the front-end's Github: <a href="https://github.com/oeggy03/cvwo-frontend" className="linkTo" target="_blank" rel="noreferrer noopener">https://github.com/oeggy03/cvwo-frontend</a><br/>
-                            View the back-end's Github: <a href="https://github.com/oeggy03/cvwo-backend" className="linkTo" target="_blank" rel="noreferrer noopener">https://github.com/oeggy03/cvwo-backend</a><br/>
+                            <a href="https://devpost.com/software/foroom" className="linkTo" target="_blank" rel="noreferrer noopener">Learn more on DevPost</a><br/>
+                            <a href="https://github.com/oeggy03/cvwo-frontend" className="linkTo" target="_blank" rel="noreferrer noopener">View the front-end's Github</a><br/>
+                            <a href="https://github.com/oeggy03/cvwo-backend" className="linkTo" target="_blank" rel="noreferrer noopener">View the back-end's Github</a><br/>
                         </div>
                         <div className="projSkills">
                             <div className="skillsIntro">Skills:</div>
@@ -134,10 +133,10 @@ const Projects = () => {
                             Originally built for the Hack For Good 2023 hackathon for SGEnable, this project incorporates both a front-end built with <b>React</b>, and a back-end built with <b>GO</b> and <b>MySQL</b>. It supports secure user authentication using jwt tokens and bcrypt.
                         </div>
                         <div className="projLinks">
-                            Learn more on Github pages: <a href="https://oeggy03.github.io/h4g-frontend/" className="linkTo" target="_blank" rel="noreferrer noopener">https://oeggy03.github.io/h4g-frontend/</a><br/>
-                            Learn more on DevPost: <a href="https://devpost.com/software/buddy4good" className="linkTo" target="_blank" rel="noreferrer noopener">https://devpost.com/software/buddy4good</a><br/>
-                            View the front-end's Github: <a href="https://github.com/oeggy03/h4g-frontend" className="linkTo" target="_blank" rel="noreferrer noopener">https://github.com/oeggy03/h4g-frontend</a><br/>
-                            View the back-end's Github: <a href="https://github.com/oeggy03/h4g-backend" className="linkTo" target="_blank" rel="noreferrer noopener">https://github.com/oeggy03/h4g-backend</a><br/>
+                            <a href="https://oeggy03.github.io/h4g-frontend/" className="linkTo" target="_blank" rel="noreferrer noopener">Learn more on Github pages</a><br/>
+                            <a href="https://devpost.com/software/buddy4good" className="linkTo" target="_blank" rel="noreferrer noopener">Learn more on DevPost</a><br/>
+                            <a href="https://github.com/oeggy03/h4g-frontend" className="linkTo" target="_blank" rel="noreferrer noopener">View the front-end's Github</a><br/>
+                            <a href="https://github.com/oeggy03/h4g-backend" className="linkTo" target="_blank" rel="noreferrer noopener">View the back-end's Github</a><br/>
                         </div>
                         <div className="projSkills">
                             <div className="skillsIntro">Skills:</div>
@@ -163,9 +162,9 @@ const Projects = () => {
                             Originally built in 24 hours for the LifeHack 2022 hackathon, this project is built with <b>Python</b>, and communicates with the relational database <b>SQLlite</b>.
                         </div>
                         <div className="projLinks">
-                            Learn more on Github pages: <a href="https://oeggy03.github.io/FoodHeroBot/" className="linkTo" target="_blank" rel="noreferrer noopener">https://oeggy03.github.io/FoodHeroBot/</a><br/>
-                            Learn more on DevPost: <a href="https://devpost.com/software/kalilinux" className="linkTo" target="_blank" rel="noreferrer noopener">https://devpost.com/software/kalilinux</a><br/>
-                            View the Github repository: <a href="https://github.com/oeggy03/FoodHeroBot" className="linkTo" target="_blank" rel="noreferrer noopener">https://github.com/oeggy03/FoodHeroBot</a><br/>
+                            <a href="https://oeggy03.github.io/FoodHeroBot/" className="linkTo" target="_blank" rel="noreferrer noopener">Learn more on Github pages</a><br/>
+                            <a href="https://devpost.com/software/kalilinux" className="linkTo" target="_blank" rel="noreferrer noopener">Learn more on DevPost</a><br/>
+                            <a href="https://github.com/oeggy03/FoodHeroBot" className="linkTo" target="_blank" rel="noreferrer noopener">View the Github repository</a><br/>
                         </div>
                         <div className="projSkills">
                             <div className="skillsIntro">Skills:</div>
