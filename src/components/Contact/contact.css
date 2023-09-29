@@ -12,12 +12,13 @@
 .contactsTitle {
     font-size: 3rem;
     font-weight: 600;
-    margin: 3rem 0 1.5rem 0;
+    margin: 3rem 1rem 1.5rem 1rem;
     color: #61DAFB;
 }
 
 .contactDesc {
     font-size: 2rem;
+    margin: 0 1rem;
 }
 
 .contactLinks {
@@ -35,11 +36,12 @@
     align-items: center;
     justify-content: center;
     margin: 0.5rem;
+    font-size: 1.2rem;  
 }
 
 .contactText {
     margin: 1rem 2rem 1rem 2rem;
-    font-size: 1.2rem;
+    
 }
 
 .linkedinlink {
@@ -55,5 +57,14 @@
     .contactDesc {
         font-size: 1.5rem;
     }
-  
+    
+    .contactText {
+        font-size: 1rem;
+    }
+}
+
+@media only screen and (max-width: 400px) {
+    .contactText {
+        font-size: 0.8rem;
+    }
 }

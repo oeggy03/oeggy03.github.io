@@ -11,7 +11,7 @@ const Contact = () => {
             <div className="contactText">Email: tranhathu@u.nus.edu</div>
           </div>
           <div className="contactCard">
-            <div className="contactText">LinkedIn: <a href="https://www.linkedin.com/in/tran-ha-thu/" className="linkedinlink">https://www.linkedin.com/in/tran-ha-thu/</a></div>
+            <div className="contactText">LinkedIn: <a href="https://www.linkedin.com/in/tran-ha-thu/" className="linkedinlink">linkedin.com/in/tran-ha-thu/</a></div>
           </div>
         </div>
     </section>
