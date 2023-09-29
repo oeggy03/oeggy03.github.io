@@ -2,6 +2,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    text-align: center;
     width: 100vw;
     padding: 0 1rem;
 }
@@ -13,17 +14,18 @@
     color: #61DAFB;
 }
 
+.expCards {
+    text-align: left;
+}
+
 .expCard {
     background-color: #20232A;
     display: flex;
     margin: 1.5rem;
     border-radius: 20px;
-}
-
-.expCard:hover {
-    transition: 0.4s;
     filter: drop-shadow(0px 0px 5px #61DAFB);
 }
+
 
 .cardContent {
     margin: 5px 5% 5px 5%;
@@ -68,12 +70,12 @@
     margin-top: 20px;
 }
 
-.techStackIconExp {
+.techStackIconExp, .techStackIconProj {
     height: 2rem;
     margin: 10px 0px 5px 15px;
 }
 
-.techStackIconExp:hover {
+.techStackIconExp:hover, .techStackIconProj:hover {
     filter: drop-shadow(0px 0px 10px #20232A);
 }
 
@@ -83,3 +85,16 @@
     margin: 10px 0px 5px 15px;
 }
 
+
+@media only screen and (max-width: 1152px) {
+
+    .cardContent {
+        flex-direction: column;
+        align-items: start;
+    }
+    
+    .companyIcon {
+        margin: 2rem 0 0 2rem
+    }
+  
+  }

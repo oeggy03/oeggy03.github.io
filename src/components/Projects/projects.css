@@ -1,0 +1,99 @@
+#projectsSec {
+    overflow: hidden;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background-color: #20232A;
+}
+
+.projCardContent {
+    margin: 5px 3% 5px 3%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.projectsTitle {
+    font-size: 3rem;
+    font-weight: 600;
+    margin: 3rem 0 1.5rem 0;
+    color: #61DAFB;
+}
+
+.projCards {
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: left;
+    margin: 0px 10px 0px 5px;
+}
+
+.projCard {
+    background-color: rgb(40, 44, 52);
+    width: fit-content;
+    display: flex;
+    align-items: center;
+    margin: 1.5rem;
+    border-radius: 20px;
+    filter: drop-shadow(0px 0px 5px #61DAFB);
+}
+
+.projTitle {
+    font-weight: 600;
+    font-size: 2rem;
+    margin-bottom: 3%;
+}
+
+.projUi {
+    max-width: 600px;
+    height: fit-content;
+    filter: drop-shadow(0px 0px 5px #61DAFB);
+    margin: 40px 0px 40px 40px;
+}
+
+.projSkills {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: white;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+.projCardContent, .projContent, .projSkills, .projLinks, .projTitle, .projDescription {
+    max-width: 800px;
+}
+
+.projLinks {
+    margin: 30px 0px 10px 0px;
+}
+
+.linkTo {
+    color: #61DAFB;
+}
+
+b {
+    color: #61DAFB;
+}
+
+.projDescription {
+    margin-bottom: 20px;
+}
+
+@media only screen and (max-width: 1152px) {
+
+    .projCard {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .projUi {
+        width: 90%;
+        margin: 40px 0px 0px 20px;
+    }
+  
+  }
