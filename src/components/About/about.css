@@ -1,0 +1,56 @@
+#aboutSection {
+    overflow: hidden;
+    width: 100vw;
+    height: 65rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background-color: #20232A;
+}
+
+.aboutMe {
+    margin: 0 10%;
+}
+
+.aboutMeTitle {
+    font-size: 3rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.aboutMeDesc {
+    font-weight: 300;
+    font-size: 1.4rem;
+}
+
+
+.techStacks {
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #20232A;
+    border-radius: 20px;
+    margin: 5% 10%;
+}
+
+.techStackIntro {
+    font-weight: 400;
+    font-size: 1.5rem;
+    margin: 10px;
+}
+
+
+
+.techStackIcon {
+    height: 3rem;
+    margin: 10px 20px;
+}
+
+.techStackIcon:hover {
+    filter: drop-shadow(0px 0px 10px #20232A);
+}
+
