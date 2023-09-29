@@ -4,6 +4,7 @@ import logo_nav from "../../assets/logo_navbar.png"
 import linkedin from "../../assets/linkedin.png"
 import github from "../../assets/github.png"
 import {Link} from 'react-scroll'
+import Resume from "../../assets/files/Resume.pdf"
 
 const Navbar = () => {
   return (
@@ -15,7 +16,8 @@ const Navbar = () => {
           <Link className="navbarItem">Experience</Link>
           <Link className="navbarItem">Projects</Link>
           <Link className="navbarItem">Contact</Link>
-          <Link className="navbarItem">Resume</Link>
+          <a href={Resume} target='_blank'className="navbarItem">Resume</a>
+          
         </div>
       </div>
       <div className="externalLinks">
