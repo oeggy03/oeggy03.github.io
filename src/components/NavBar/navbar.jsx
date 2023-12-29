@@ -5,7 +5,7 @@ import linkedin from "../../assets/linkedin.png"
 import github from "../../assets/github.png"
 import burger from "../../assets/burgermenu.png"
 import {Link} from 'react-scroll'
-import Resume from "../../assets/files/Resume.pdf"
+import Resume from "../../assets/Resume.pdf"
 
 const Navbar = () => {
   const [showBurgerMenu, setShowBurgerMenu] = useState(false);
