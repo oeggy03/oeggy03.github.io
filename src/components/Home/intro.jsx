@@ -5,7 +5,7 @@ import {Link} from 'react-scroll'
 
 const Intro = () => {
     const [text] = useTypewriter({
-        words:['Software Engineer.', 'Data Engineer.', 'Full Stack Web Developer.'],
+        words:['Software Engineer.', 'Data Engineer.', 'Full Stack Web Developer.', 'Data Analyst.', 'Data Scientist.'],
         loop: {},
         typeSpeed: 120,
     })
@@ -13,8 +13,8 @@ const Intro = () => {
     <section id="homepage">
         <div className="homepageContent">
             <div className="homeIntroduction">
-                <span className="helloIntro">Hello,</span><br/>
-                <span className="nameIntro">I'm <span className="name">Ha Thu</span></span>
+                <span className="helloIntro">Hello, my name is </span><br/>
+                <h1 className="name">Tran Ha Thu</h1>
             </div>
             <div className="homeIntroContent">
                 Computer Science major @NUS and <span className="introContentJob">{text}</span>

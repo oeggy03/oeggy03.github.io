@@ -1,7 +1,7 @@
 #homepage {
     height: 100vh;
     width: 100vw;
-    
+
     max-width: 75rem;
     margin: 0 auto;
     overflow: hidden;
@@ -27,7 +27,8 @@
     font-weight: 300;
 }
 
-.name, .introContentJob {
+.name,
+.introContentJob {
     color: #61DAFB;
 }
 
@@ -66,4 +67,18 @@
     font-size: 1.5rem;
     font-weight: 500;
     padding: 3% 0px;
+}
+
+@media only screen and (max-width: 840px) {
+    .name {
+        font-size: 3.5rem;
+    }
+
+    .homeIntroContent {
+        font-size: 1.5rem;
+    }
+
+    .homeFindOutMoreBtnText {
+        font-size: 1.5rem;
+    }
 }
