@@ -16,10 +16,10 @@ const Intro = () => {
                 <span className="helloIntro">Hello, my name is </span><br/>
                 <h1 className="name">Tran Ha Thu</h1>
             </div>
-            <div className="homeIntroContent">
-                Computer Science major @NUS and <span className="introContentJob">{text}</span>
+            <h2 className="homeIntroContent">
+                Computer Science major @ NUS and <span className="introContentJob">{text}</span>
                 <span><Cursor cursorStyle="|" cursorBlinking={true} cursorColor='#61DAFB'/></span>
-            </div>
+            </h2>
             <Link >
                 <Link className="homeFindOutMoreBtn" activeClass="active" to='aboutSection' spy={true} smooth={true}>
                     <a className='homeFindOutMoreBtnText'>Find Out More</a>
