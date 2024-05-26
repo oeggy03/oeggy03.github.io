@@ -5,7 +5,7 @@ import linkedin from "../../assets/linkedin.png"
 import github from "../../assets/github.png"
 import burger from "../../assets/burgermenu.png"
 import {Link} from 'react-scroll'
-import Resume from "../../assets/Resume.pdf"
+import Resume from "../../assets/Resume_TranHaThu.pdf"
 
 const Navbar = () => {
   const [showBurgerMenu, setShowBurgerMenu] = useState(false);
@@ -19,7 +19,7 @@ const Navbar = () => {
           <Link activeClass="active" to='experiencesSec' spy={true} smooth={true} className="navbarItem">Experience</Link>
           <Link activeClass="active" to='projectsSec' spy={true} smooth={true} className="navbarItem">Projects</Link>
           <Link activeClass="active" to='contactSec' spy={true} smooth={true} className="navbarItem">Contact</Link>
-          <a href={Resume} target='_blank'className="navbarItem" download="Tran_Ha_Thu_Resume">Resume</a>
+          <a href={Resume} target='_blank'className="burgerMenuItem">Resume</a>
           
         </div>
       </div>
@@ -38,7 +38,7 @@ const Navbar = () => {
           <Link activeClass="active" to='experiencesSec' spy={true} smooth={true} className="burgerMenuItem" onClick={() => setShowBurgerMenu(false)}>Experience</Link>
           <Link activeClass="active" to='projectsSec' spy={true} smooth={true} className="burgerMenuItem" onClick={() => setShowBurgerMenu(false)}>Projects</Link>
           <Link activeClass="active" to='contactSec' spy={true} smooth={true} className="burgerMenuItem" onClick={() => setShowBurgerMenu(false)}>Contact</Link>
-          <a href={Resume} target='_blank'className="burgerMenuItem" download="Tran_Ha_Thu_Resume">Resume</a>
+          <a href={Resume} target='_blank'className="burgerMenuItem">Resume</a>
         
         </div>
         <div className="externalLinks">
