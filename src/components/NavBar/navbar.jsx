@@ -59,18 +59,6 @@ const Navbar = () => {
         <Link activeClass="active" to='contactSec' spy={true} smooth={true} className="burgerMenuItem" onClick={updateBurgerMenu}>Contact</Link>
         <a href={Resume} target='_blank' className="burgerMenuItem">Resume</a>
       </div>
-      {/* <img className="burgerMenuImg" src={burger} alt="Menu" onClick={() => setShowBurgerMenu(!showBurgerMenu)}/> */}
-      {/* <div className="burgerNavMenu" style={{ display: showBurgerMenu ? 'flex' : 'none' }}>
-        <div className="burgerMenuInternalLinks">
-          <Link activeClass="active" to='aboutSection' spy={true} smooth={true} className="burgerMenuItem" onClick={updateBurgerMenu}>About</Link>
-          <Link activeClass="active" to='experiencesSec' spy={true} smooth={true} className="burgerMenuItem" onClick={() => setShowBurgerMenu(false)}>Experience</Link>
-          <Link activeClass="active" to='projectsSec' spy={true} smooth={true} className="burgerMenuItem" onClick={() => setShowBurgerMenu(false)}>Projects</Link>
-          <Link activeClass="active" to='contactSec' spy={true} smooth={true} className="burgerMenuItem" onClick={() => setShowBurgerMenu(false)}>Contact</Link>
-          <a href={Resume} target='_blank' className="burgerMenuItem">Resume</a>
-
-        </div>
-      </div> */}
-
     </nav>
   )
 }
