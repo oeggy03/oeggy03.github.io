@@ -10,20 +10,25 @@
 .experienceTitle {
     font-size: 3rem;
     font-weight: 600;
-    margin: 10rem 0 1.5rem 0;
+    margin: 6rem 0 1.5rem 0;
     color: #61DAFB;
 }
 
 .expCards {
     text-align: left;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .expCard {
     background-color: #20232A;
     display: flex;
+    align-items: center;
     margin: 1.5rem;
     border-radius: 20px;
     filter: drop-shadow(0px 0px 5px #61DAFB);
+    width: 100%;
 }
 
 
@@ -39,6 +44,7 @@
     width: 5rem;
     border-radius: 10px;
     object-fit: cover;
+    margin-left: 1.6rem;
 }
 
 .astar {
@@ -100,22 +106,67 @@
   
 }
 
-@media only screen and (max-width: 840px) {
+@media only screen and (max-width: 840px),
+screen and (max-height: 900px) {
+    .expCard {
+        width: 90%;
+    }
+
     .experienceTitle {
         font-size: 2rem;
         margin-top: 8rem;
     }
 
     .techStackIconExp {
-        height: 1.2 rem;
-        margin: 10px 5px 5px 5px;
+        height: 1.5rem;
+        margin: 10px 10px 5px 10px;
+    }
+
+    .expTitle {
+        font-size: 1.5rem;
+    }
+
+    .expCompany {
+        font-size: 1.2rem;
+    }
+
+    .expDates, .expDescription {
+        font-size: 1rem;
     }
   
 }
 
-@media only screen and (max-width: 345px) {
-    .expSkills {
-        display: none;
+@media only screen and (max-width: 450px),
+screen and (max-height: 650px) {
+    .experienceTitle {
+        font-size: 1.8rem;
     }
 
+    .cardContent {
+        margin: 0;
+    }
+
+    .companyIcon {
+        width: 4rem;
+    }
+
+    .techStackIconExp {
+        height: 1.2rem;
+    }
+    
+    .skillsIntro {
+        font-size: 0.9rem;
+    }
+
+    .expTitle {
+        font-size: 1.2rem;
+    }
+
+    .expCompany {
+        font-size: 1rem;
+    }
+
+    .expDates, .expDescription {
+        font-size: 0.9rem;
+    }
 }

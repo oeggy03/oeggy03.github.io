@@ -1,5 +1,5 @@
 #homepage {
-    height: 100vh;
+    min-height: 100vh;
     width: 100vw;
 
     max-width: 75rem;
@@ -10,7 +10,8 @@
 }
 
 .homepageContent {
-    height: 100vh;
+    margin: 4rem 0 2rem 0;
+    min-height: 100vh;
     width: 100vw;
     padding-left: 2rem;
     padding-right: 1rem;
@@ -46,7 +47,8 @@
     cursor: pointer;
     margin-top: 2rem;
     height: auto;
-    width: 250px;
+    width: fit-content;
+    max-width: 250px;
     background: -webkit-linear-gradient(0deg, transparent 50%, #61DAFB 50%);
     background-size: 800px 80px;
     border: 2.5px solid #61DAFB;
@@ -67,9 +69,11 @@
     font-size: 1.5rem;
     font-weight: 500;
     padding: 3% 0px;
+    margin: 0 25px 0 25px;
 }
 
-@media only screen and (max-width: 840px) {
+@media only screen and (max-width: 840px), 
+screen and (max-height: 900px) {
     .name {
         font-size: 3.5rem;
     }
@@ -80,5 +84,27 @@
 
     .homeFindOutMoreBtnText {
         font-size: 1.5rem;
+    }
+}
+
+@media only screen and (max-width: 450px),
+screen and (max-height: 650px) {
+    .helloIntro {
+        font-size: 1.2rem;
+    }
+    .name {
+        font-size: 2.2rem;
+    }
+
+    .homeIntroContent {
+        font-size: 1rem;
+    }
+
+    .homeFindOutMoreBtnText {
+        font-size: 1rem;
+    }
+
+    .homeFindOutMoreBtn {
+        width: fit-content;
     }
 }

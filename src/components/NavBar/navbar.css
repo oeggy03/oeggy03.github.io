@@ -19,14 +19,18 @@
     justify-content: space-between;
 }
 
-.logo_nav, .linkedIn, .github {
+.logo_nav,
+.linkedIn,
+.github {
     object-fit: cover;
     height: 2.5rem;
     cursor: pointer;
     transition: 0.5s;
 }
 
-.logo_nav:hover, .linkedIn:hover, .github:hover {
+.logo_nav:hover,
+.linkedIn:hover,
+.github:hover {
     filter: drop-shadow(0px 0px 5px #61DAFB);
     transition: 0.5s;
 }
@@ -54,7 +58,8 @@
     color: #61DAFB;
 }
 
-.linkedIn, .github {
+.linkedIn,
+.github {
     padding: 0px 8px 0px 8px;
 }
 
@@ -93,7 +98,7 @@
     cursor: pointer;
     padding-bottom: 0.25rem;
     color: white;
-    
+
 }
 
 .burgerMenuItem:hover {
@@ -104,7 +109,7 @@
     cursor: pointer;
 }
 
-@media only screen and (max-width: 840px) {
+@media only screen and (max-width: 900px) {
 
     .burgerMenuImg {
         display: flex;
@@ -113,7 +118,7 @@
     .burgerNavMenu {
         display: flex;
     }
-    
+
     .allNavbarItems {
         display: none;
     }
@@ -121,4 +126,10 @@
     .externalLinks {
         display: none;
     }
-  }
+}
+
+@media only screen and (max-height: 420px) {
+    .burgerMenuItem {
+        margin: 0.4rem;
+    }
+}

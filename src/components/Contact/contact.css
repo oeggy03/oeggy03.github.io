@@ -1,7 +1,7 @@
 #contactSec {
     overflow: hidden;
     width: 100vw;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -12,7 +12,7 @@
 .contactsTitle {
     font-size: 3rem;
     font-weight: 600;
-    margin: 3rem 1rem 1.5rem 1rem;
+    margin: 8rem 1rem 1.5rem 1rem;
     color: #61DAFB;
 }
 
@@ -49,7 +49,8 @@
     text-decoration: underline;
 }
 
-@media only screen and (max-width: 840px) {
+@media only screen and (max-width: 840px),
+screen and (max-height: 900px) {
     .contactsTitle {
         font-size: 2rem;
     }
@@ -63,8 +64,17 @@
     }
 }
 
-@media only screen and (max-width: 400px) {
+@media only screen and (max-width: 450px),
+screen and (max-height: 650px) {
+    .contactsTitle {
+        font-size: 2rem;
+    }
+
+    .contactDesc {
+        font-size: 1.2rem;
+    }
+
     .contactText {
-        font-size: 0.8rem;
+        font-size: 0.9rem;
     }
 }

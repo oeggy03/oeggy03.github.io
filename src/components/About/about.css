@@ -1,7 +1,7 @@
 #aboutSection {
     overflow: hidden;
     width: 100vw;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -17,7 +17,7 @@
 .aboutMeTitle {
     font-size: 3rem;
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin: 5rem 0 1rem 0;
     color: #61DAFB;
 }
 
@@ -35,7 +35,7 @@
     justify-content: center;
     color: #20232A;
     border-radius: 20px;
-    margin: 5% 10%;
+    margin: 5% 10% 10% 10%;
 }
 
 .techStackIntro {
@@ -55,15 +55,16 @@
     filter: drop-shadow(0px 0px 10px #20232A);
 }
 
-@media only screen and (max-width: 840px) {
+@media only screen and (max-width: 840px),
+screen and (max-height: 900px) {
 
     .aboutMeTitle {
-      font-size: 2rem;
+        font-size: 2rem;
     }
 
     .aboutMeDesc {
         font-weight: 300;
-        font-size: 1rem;
+        font-size: 1.2rem;
         line-height: 1.8rem;
     }
 
@@ -73,7 +74,29 @@
     }
 
     .techStackIntro {
-        font-size: 1rem;
+        font-size: 1.2rem;
     }
-  
-  }
+
+}
+
+@media only screen and (max-width: 450px),
+screen and (max-height: 650px) {
+    .aboutMeTitle {
+        font-size: 1.8rem;
+    }
+
+    .aboutMeDesc {
+        font-weight: 300;
+        font-size: 0.9rem;
+        line-height: 1.8rem;
+    }
+
+    .techStackIcon {
+        height: 1.4rem;
+        margin: 5px 10px;
+    }
+
+    .techStackIntro {
+        font-size: 0.9rem;
+    }
+}

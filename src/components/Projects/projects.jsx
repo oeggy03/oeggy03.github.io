@@ -23,12 +23,12 @@ import mss from "../../assets/mss.png"
 const Projects = () => {
   return (
     <section id="projectsSec">
-        <div className="projectsTitle">My Personal Projects</div>
+        <h2 className="projectsTitle">Projects</h2>
         <div className="projCards">
             <div className="projCard">
             <img className="projUi" src={port} alt=""/>
                 <div className="projCardContent">
-                    <div className="expDescSec">
+                    <div className="projDescSec">
                         <div className="projTitle">This Portfolio Website!</div>
                         <div className="projDescription">A responsive and mobile-friendly website that tells you all about my work!</div>
                         <div className="projContent">
@@ -53,7 +53,7 @@ const Projects = () => {
             <div className="projCard">
                 <img className="projUi" src={eggbot} alt=""/>
                 <div className="projCardContent">
-                    <div className="expDescSec">
+                    <div className="projDescSec">
                         <div className="projTitle">Eggbot</div>
                         <div className="projDescription">A task-tracking chatbot with an interactive GUI.</div>
                         <div className="projContent">
@@ -77,7 +77,7 @@ const Projects = () => {
             <div className="projCard">
                 <img className="projUi" src={teleai} alt=""/>
                 <div className="projCardContent">
-                    <div className="expDescSec">
+                    <div className="projDescSec">
                         <div className="projTitle">TeleAI</div>
                         <div className="projDescription">A Telegram bot, capable of recognising select objects in photos sent to it.</div>
                         <div className="projContent">
@@ -99,7 +99,7 @@ const Projects = () => {
             <div className="projCard">
                 <img className="projUi" src={foroom} alt=""/>
                 <div className="projCardContent">
-                    <div className="expDescSec">
+                    <div className="projDescSec">
                         <div className="projTitle">FoROOM</div>
                         <div className="projDescription">A minimalistic forum that facilitates discussion between people with different interests and of different backgrounds.</div>
                         <div className="projContent">
@@ -126,7 +126,7 @@ const Projects = () => {
             <div className="projCard">
                 <img className="projUi" src={buddy4good} alt=""/>
                 <div className="projCardContent">
-                    <div className="expDescSec">
+                    <div className="projDescSec">
                         <div className="projTitle">Buddy4Good</div>
                         <div className="projDescription"> A platform that encourages the buddying up of able-bodied people with disabled people to spend time doing activities together. </div>
                         <div className="projContent">
@@ -155,7 +155,7 @@ const Projects = () => {
             <div className="projCard">
                 <img className="projUi" src={foodhero} alt=""/>
                 <div className="projCardContent">
-                    <div className="expDescSec">
+                    <div className="projDescSec">
                         <div className="projTitle">FoodHero</div>
                         <div className="projDescription"> A telegram bot that allows users to share their leftover food by posting it into the bot's database, and for users who would like the leftovers to retrieve it later on. </div>
                         <div className="projContent">
