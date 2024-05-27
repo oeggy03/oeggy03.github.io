@@ -140,6 +140,14 @@ screen and (max-height: 650px) {
         font-size: 1.8rem;
     }
 
+    .cardContent {
+        margin: 0;
+    }
+
+    .companyIcon {
+        width: 4rem;
+    }
+
     .techStackIconExp {
         height: 1.2rem;
     }
@@ -157,9 +165,9 @@ screen and (max-height: 650px) {
     }
 }
 
-@media only screen and (max-width: 345px) {
+/* @media only screen and (max-width: 345px) {
     .expSkills {
         display: none;
     }
 
-}
+} */
