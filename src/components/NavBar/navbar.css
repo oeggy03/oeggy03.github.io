@@ -63,7 +63,88 @@
     padding: 0px 8px 0px 8px;
 }
 
-.burgerMenuImg {
+/* For burger menu */
+
+.burger-menu {
+    height: 65%;
+    width: 1.5em;
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.burger-bar {
+    width: 2.2em;
+    height: 0.2em;
+    background-color: white;
+    border-radius: 0.8em;
+}
+
+/* For burger -> cross animation */
+.burger-bar.clicked:nth-child(1) {
+    transform: rotate(45deg) translate(0.6em, 1em);
+    transition: ease-out 0.5s;
+}
+
+.burger-bar.clicked:nth-child(2) {
+    transform: scale(0.0001);
+    transition: ease-out 0.5s;
+}
+
+.burger-bar.clicked:nth-child(3) {
+    transform: rotate(135deg) translate(0em, 0.4em);
+    transition: ease-out 0.5s;
+}
+
+/* For cross -> burger animation */
+.burger-bar.unclicked {
+    transform: rotate(0) translate(0);
+    transition: cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.5s;
+}
+
+.burgerNavMenu {
+    position: absolute;
+    top: 4rem;
+    right: 0rem;
+    z-index: 2;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0.5rem;
+    height: 100vh;
+    width: 100vw;
+    background: #20232A;
+}
+
+.burgerMenuItem {
+    margin: 1rem;
+    cursor: pointer;
+    padding-bottom: 0.25rem;
+    color: white;
+
+}
+
+.burgerMenuItem:hover {
+    color: #61DAFB;
+    left: 0;
+    right: auto;
+    border-bottom: 3px solid #61DAFB;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
+
+.visible {
+    display: flex;
+}
+
+/* .burgerMenuImg {
     height: 2.5rem;
     display: none;
 }
@@ -93,29 +174,10 @@
     flex-direction: column;
 }
 
-.burgerMenuItem {
-    margin: 1rem;
-    cursor: pointer;
-    padding-bottom: 0.25rem;
-    color: white;
-
-}
-
-.burgerMenuItem:hover {
-    color: #61DAFB;
-    left: 0;
-    right: auto;
-    border-bottom: 3px solid #61DAFB;
-    cursor: pointer;
-}
+ */
 
 @media only screen and (max-width: 900px) {
-
-    .burgerMenuImg {
-        display: flex;
-    }
-
-    .burgerNavMenu {
+    .burger-menu {
         display: flex;
     }
 
