@@ -58,7 +58,7 @@
 @media only screen and (max-width: 840px) {
 
     .aboutMeTitle {
-      font-size: 2rem;
+        font-size: 2rem;
     }
 
     .aboutMeDesc {
@@ -75,5 +75,26 @@
     .techStackIntro {
         font-size: 1rem;
     }
-  
-  }
+
+}
+
+@media only screen and (max-width: 450px) {
+    .aboutMeTitle {
+        font-size: 1.8rem;
+    }
+
+    .aboutMeDesc {
+        font-weight: 300;
+        font-size: 0.9rem;
+        line-height: 1.8rem;
+    }
+
+    .techStackIcon {
+        height: 1.4rem;
+        margin: 5px 10px;
+    }
+
+    .techStackIntro {
+        font-size: 0.9rem;
+    }
+}

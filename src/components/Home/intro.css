@@ -46,7 +46,8 @@
     cursor: pointer;
     margin-top: 2rem;
     height: auto;
-    width: 250px;
+    width: fit-content;
+    max-width: 250px;
     background: -webkit-linear-gradient(0deg, transparent 50%, #61DAFB 50%);
     background-size: 800px 80px;
     border: 2.5px solid #61DAFB;
@@ -67,6 +68,7 @@
     font-size: 1.5rem;
     font-weight: 500;
     padding: 3% 0px;
+    margin: 0 25px 0 25px;
 }
 
 @media only screen and (max-width: 840px) {
@@ -80,5 +82,26 @@
 
     .homeFindOutMoreBtnText {
         font-size: 1.5rem;
+    }
+}
+
+@media only screen and (max-width: 450px) {
+    .helloIntro {
+        font-size: 1.2rem;
+    }
+    .name {
+        font-size: 2.2rem;
+    }
+
+    .homeIntroContent {
+        font-size: 1rem;
+    }
+
+    .homeFindOutMoreBtnText {
+        font-size: 1rem;
+    }
+
+    .homeFindOutMoreBtn {
+        width: fit-content;
     }
 }

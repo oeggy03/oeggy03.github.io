@@ -19,7 +19,7 @@ const About = () => {
     return (
         <section id="aboutSection">
             <div className="aboutMe">
-                <div className="aboutMeTitle">About Me</div>
+                <h2 className="aboutMeTitle">About Me</h2>
                 <div className="aboutMeDesc aboutMeDesc1">Hello! I'm a <b>Computer Science</b> sophomore at the <b>National University of Singapore (NUS)</b> who also minors in Quantitative Finance and Management.</div>
                 <br/>
                 <div className="aboutMeDesc aboutMeDesc2"> 
