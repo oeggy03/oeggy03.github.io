@@ -71,7 +71,8 @@
     margin: 0 25px 0 25px;
 }
 
-@media only screen and (max-width: 840px) {
+@media only screen and (max-width: 840px), 
+screen and (max-height: 900px) {
     .name {
         font-size: 3.5rem;
     }
@@ -85,7 +86,8 @@
     }
 }
 
-@media only screen and (max-width: 450px) {
+@media only screen and (max-width: 450px),
+screen and (max-height: 650px) {
     .helloIntro {
         font-size: 1.2rem;
     }

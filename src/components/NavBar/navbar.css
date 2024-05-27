@@ -104,7 +104,7 @@
     cursor: pointer;
 }
 
-@media only screen and (max-width: 840px) {
+@media only screen and (max-width: 900px) {
 
     .burgerMenuImg {
         display: flex;

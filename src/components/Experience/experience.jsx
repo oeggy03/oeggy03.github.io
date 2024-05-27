@@ -17,7 +17,7 @@ import html from "../../assets/html.png"
 const Experience = () => {
     return (
     <section id="experiencesSec">
-        <div className="experienceTitle">My Work Experience</div>
+        <h2 className="experienceTitle">Work Experience</h2>
         <div className="expCards">
             <div className="expCard">
                 <div className="cardContent">
