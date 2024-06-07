@@ -13,6 +13,7 @@ import react from "../../assets/react.png"
 import expressjs from "../../assets/expressjs.png"
 import oop from "../../assets/oop.png"
 import mss from "../../assets/mss.png"
+import cpp from "../../assets/cpp.png" 
 
 const About = () => {
 
@@ -43,6 +44,7 @@ const About = () => {
                     <a href='https://en.wikipedia.org/wiki/Microsoft_SQL_Server' target="_blank" rel="noreferrer noopener"><img className="techStackIcon mss" src={mss} alt=""/></a>
                     <a href='https://en.wikipedia.org/wiki/Java_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIcon java" src={java} alt=""/></a>
                     <a href='https://en.wikipedia.org/wiki/Python_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIcon python" src={python} alt=""/></a>
+                    <a href='https://en.wikipedia.org/wiki/C%2B%2B' target="_blank" rel="noreferrer noopener"><img className="techStackIcon cpp" src={cpp} alt=""/></a>
                 </div>
             </div>
         </section>
