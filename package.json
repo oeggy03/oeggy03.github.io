@@ -1,5 +1,5 @@
 {
-  "homepage": "https://oeggy03.github.io/",
+  "homepage": "https://www.tranhathu.com/",
   "name": "portfolio-website",
   "private": true,
   "version": "0.0.0",
@@ -8,7 +8,8 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist --dotfiles",
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/build.mjs",
+    "check:seo": "node scripts/check-seo.mjs",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },

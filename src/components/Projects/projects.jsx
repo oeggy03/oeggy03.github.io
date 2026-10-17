@@ -26,10 +26,10 @@ const Projects = () => {
         <h2 className="projectsTitle">Projects</h2>
         <div className="projCards">
             <div className="projCard">
-            <img className="projUi" src={port} alt=""/>
+            <img className="projUi" src={port} alt="Tran Ha Thu's portfolio homepage" width="1411" height="872" loading="lazy" decoding="async"/>
                 <div className="projCardContent">
                     <div className="projDescSec">
-                        <div className="projTitle">This Portfolio Website!</div>
+                        <h3 className="projTitle">This Portfolio Website!</h3>
                         <div className="projDescription">A responsive and mobile-friendly website that tells you all about my work!</div>
                         <div className="projContent">
                             Built with <b>React</b> using the Vite build template, my portfolio website is a basic demonstration of my capabilities in Frontend Web Development.
@@ -39,22 +39,22 @@ const Projects = () => {
                         </div>
                         <div className="projSkills">
                             <div className="skillsIntro">Skills:</div>
-                            <a href='https://en.wikipedia.org/wiki/HTML' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj html" src={html} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/CSS' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj css" src={css} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/JavaScript' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj js" src={js} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/React_(software)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj react" src={react} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/Git' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj git" src={git} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/Object-oriented_programming' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj oop" src={oop} alt=""/></a>
+                            <a href='https://en.wikipedia.org/wiki/HTML' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj html" src={html} alt="HTML"/></a>
+                            <a href='https://en.wikipedia.org/wiki/CSS' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj css" src={css} alt="CSS"/></a>
+                            <a href='https://en.wikipedia.org/wiki/JavaScript' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj js" src={js} alt="JavaScript"/></a>
+                            <a href='https://en.wikipedia.org/wiki/React_(software)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj react" src={react} alt="React"/></a>
+                            <a href='https://en.wikipedia.org/wiki/Git' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj git" src={git} alt="Git"/></a>
+                            <a href='https://en.wikipedia.org/wiki/Object-oriented_programming' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj oop" src={oop} alt="Object-oriented programming"/></a>
                         </div>
 
                     </div>
                 </div>
             </div>
             <div className="projCard">
-                <img className="projUi" src={eggbot} alt=""/>
+                <img className="projUi" src={eggbot} alt="Eggbot task-tracking chatbot interface" width="762" height="912" loading="lazy" decoding="async"/>
                 <div className="projCardContent">
                     <div className="projDescSec">
-                        <div className="projTitle">Eggbot</div>
+                        <h3 className="projTitle">Eggbot</h3>
                         <div className="projDescription">A task-tracking chatbot with an interactive GUI.</div>
                         <div className="projContent">
                             Eggbot is a chatbot created to help me manage my tasks. It is built with <b>Java</b> and <b>JavaFX</b>, and the code follows the <b>Object-Oriented Programming</b> paradigm very closely.
@@ -66,19 +66,19 @@ const Projects = () => {
                         </div>
                         <div className="projSkills">
                             <div className="skillsIntro">Skills:</div>
-                            <a href='https://en.wikipedia.org/wiki/Java_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj java" src={java} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/Git' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj git" src={git} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/Object-oriented_programming' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj oop" src={oop} alt=""/></a>
+                            <a href='https://en.wikipedia.org/wiki/Java_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj java" src={java} alt="Java"/></a>
+                            <a href='https://en.wikipedia.org/wiki/Git' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj git" src={git} alt="Git"/></a>
+                            <a href='https://en.wikipedia.org/wiki/Object-oriented_programming' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj oop" src={oop} alt="Object-oriented programming"/></a>
                         </div>
 
                     </div>
                 </div>
             </div>
             <div className="projCard">
-                <img className="projUi" src={teleai} alt=""/>
+                <img className="projUi" src={teleai} alt="TeleAI image-recognition Telegram bot" width="538" height="687" loading="lazy" decoding="async"/>
                 <div className="projCardContent">
                     <div className="projDescSec">
-                        <div className="projTitle">TeleAI</div>
+                        <h3 className="projTitle">TeleAI</h3>
                         <div className="projDescription">A Telegram bot, capable of recognising select objects in photos sent to it.</div>
                         <div className="projContent">
                             This bot has been trained using <b>OpenCV</b>, <b>Tensorflow</b> and the keras deep learning API, using the CIFAR10 dataset. It was programmed using <b>Python</b>.
@@ -90,17 +90,17 @@ const Projects = () => {
                         </div>
                         <div className="projSkills">
                             <div className="skillsIntro">Skills:</div>
-                            <a href='https://en.wikipedia.org/wiki/Python_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj python" src={python} alt=""/></a>
+                            <a href='https://en.wikipedia.org/wiki/Python_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj python" src={python} alt="Python"/></a>
                         </div>
 
                     </div>
                 </div>
             </div>
             <div className="projCard">
-                <img className="projUi" src={foroom} alt=""/>
+                <img className="projUi" src={foroom} alt="FoROOM discussion forum interface" width="1920" height="1080" loading="lazy" decoding="async"/>
                 <div className="projCardContent">
                     <div className="projDescSec">
-                        <div className="projTitle">FoROOM</div>
+                        <h3 className="projTitle">FoROOM</h3>
                         <div className="projDescription">A minimalistic forum that facilitates discussion between people with different interests and of different backgrounds.</div>
                         <div className="projContent">
                             This project incorporates both a front-end built with <b>React</b>, and a back-end built with <b>GO</b> and <b>MySQL</b>. It supports secure user authentication using jwt tokens and bcrypt.
@@ -112,22 +112,22 @@ const Projects = () => {
                         </div>
                         <div className="projSkills">
                             <div className="skillsIntro">Skills:</div>
-                            <a href='https://en.wikipedia.org/wiki/HTML' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj html" src={html} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/CSS' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj css" src={css} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/JavaScript' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj js" src={js} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/React_(software)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj react" src={react} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/Go_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj go" src={go} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/MySQL' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj mysql" src={mysql} alt=""/></a>
+                            <a href='https://en.wikipedia.org/wiki/HTML' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj html" src={html} alt="HTML"/></a>
+                            <a href='https://en.wikipedia.org/wiki/CSS' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj css" src={css} alt="CSS"/></a>
+                            <a href='https://en.wikipedia.org/wiki/JavaScript' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj js" src={js} alt="JavaScript"/></a>
+                            <a href='https://en.wikipedia.org/wiki/React_(software)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj react" src={react} alt="React"/></a>
+                            <a href='https://en.wikipedia.org/wiki/Go_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj go" src={go} alt="Go"/></a>
+                            <a href='https://en.wikipedia.org/wiki/MySQL' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj mysql" src={mysql} alt="MySQL"/></a>
                         </div>
 
                     </div>
                 </div>
             </div>
             <div className="projCard">
-                <img className="projUi" src={buddy4good} alt=""/>
+                <img className="projUi" src={buddy4good} alt="Buddy4Good activity platform interface" width="1920" height="1080" loading="lazy" decoding="async"/>
                 <div className="projCardContent">
                     <div className="projDescSec">
-                        <div className="projTitle">Buddy4Good</div>
+                        <h3 className="projTitle">Buddy4Good</h3>
                         <div className="projDescription"> A platform that encourages the buddying up of able-bodied people with disabled people to spend time doing activities together. </div>
                         <div className="projContent">
                             Originally built for the Hack For Good 2023 hackathon for SGEnable, this project incorporates both a front-end built with <b>React</b>, and a back-end built with <b>GO</b> and <b>MySQL</b>. It supports secure user authentication using jwt tokens and bcrypt.
@@ -140,23 +140,23 @@ const Projects = () => {
                         </div>
                         <div className="projSkills">
                             <div className="skillsIntro">Skills:</div>
-                            <a href='https://en.wikipedia.org/wiki/Git' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj git" src={git} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/HTML' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj html" src={html} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/CSS' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj css" src={css} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/JavaScript' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj js" src={js} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/React_(software)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj react" src={react} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/Go_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj go" src={go} alt=""/></a>
-                            <a href='https://en.wikipedia.org/wiki/MySQL' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj mysql" src={mysql} alt=""/></a>
+                            <a href='https://en.wikipedia.org/wiki/Git' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj git" src={git} alt="Git"/></a>
+                            <a href='https://en.wikipedia.org/wiki/HTML' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj html" src={html} alt="HTML"/></a>
+                            <a href='https://en.wikipedia.org/wiki/CSS' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj css" src={css} alt="CSS"/></a>
+                            <a href='https://en.wikipedia.org/wiki/JavaScript' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj js" src={js} alt="JavaScript"/></a>
+                            <a href='https://en.wikipedia.org/wiki/React_(software)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj react" src={react} alt="React"/></a>
+                            <a href='https://en.wikipedia.org/wiki/Go_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj go" src={go} alt="Go"/></a>
+                            <a href='https://en.wikipedia.org/wiki/MySQL' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj mysql" src={mysql} alt="MySQL"/></a>
                         </div>
 
                     </div>
                 </div>
             </div>
             <div className="projCard">
-                <img className="projUi" src={foodhero} alt=""/>
+                <img className="projUi" src={foodhero} alt="FoodHero food-sharing application interface" width="959" height="1041" loading="lazy" decoding="async"/>
                 <div className="projCardContent">
                     <div className="projDescSec">
-                        <div className="projTitle">FoodHero</div>
+                        <h3 className="projTitle">FoodHero</h3>
                         <div className="projDescription"> A telegram bot that allows users to share their leftover food by posting it into the bot's database, and for users who would like the leftovers to retrieve it later on. </div>
                         <div className="projContent">
                             Originally built in 24 hours for the LifeHack 2022 hackathon, this project is built with <b>Python</b>, and communicates with the relational database <b>SQLlite</b>.
@@ -168,7 +168,7 @@ const Projects = () => {
                         </div>
                         <div className="projSkills">
                             <div className="skillsIntro">Skills:</div>
-                            <a href='https://en.wikipedia.org/wiki/Python_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj python" src={python} alt=""/></a>
+                            <a href='https://en.wikipedia.org/wiki/Python_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIconProj python" src={python} alt="Python"/></a>
                         </div>
 
                     </div>

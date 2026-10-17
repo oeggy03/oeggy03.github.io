@@ -20,10 +20,8 @@ const Intro = () => {
                 Computer Science major @ NUS and <span className="introContentJob">{text}</span>
                 <span><Cursor cursorStyle="|" cursorBlinking={true} cursorColor='#61DAFB'/></span>
             </h2>
-            <Link >
-                <Link className="homeFindOutMoreBtn" activeClass="active" to='aboutSection' spy={true} smooth={true}>
-                    <a className='homeFindOutMoreBtnText'>Find Out More</a>
-                </Link>  
+            <Link href="#aboutSection" className="homeFindOutMoreBtn" activeClass="active" to="aboutSection" spy={true} smooth={true}>
+                <span className="homeFindOutMoreBtnText">Find Out More</span>
             </Link>
         </div>
     </section>

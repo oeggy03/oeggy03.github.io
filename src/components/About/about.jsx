@@ -31,20 +31,20 @@ const About = () => {
             <div className="techStacks">
                 <span className="techStackIntro">I am proficient in:</span>
                 <div className="techStackIcons">
-                    <a href='https://en.wikipedia.org/wiki/Git' target="_blank" rel="noreferrer noopener"><img className="techStackIcon git" src={git} alt=""/></a>
-                    <a href='https://en.wikipedia.org/wiki/Object-oriented_programming' target="_blank" rel="noreferrer noopener"><img className="techStackIcon oop" src={oop} alt=""/></a>
-                    <a href='https://en.wikipedia.org/wiki/HTML' target="_blank" rel="noreferrer noopener"><img className="techStackIcon html" src={html} alt=""/></a>
-                    <a href='https://en.wikipedia.org/wiki/CSS' target="_blank" rel="noreferrer noopener"><img className="techStackIcon css" src={css} alt=""/></a>
-                    <a href='https://en.wikipedia.org/wiki/JavaScript' target="_blank" rel="noreferrer noopener"><img className="techStackIcon js" src={js} alt=""/></a>
-                    <a href='https://en.wikipedia.org/wiki/React_(software)' target="_blank" rel="noreferrer noopener"><img className="techStackIcon react" src={react} alt=""/></a>
-                    <a href='https://en.wikipedia.org/wiki/Go_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIcon go" src={go} alt=""/></a>
-                    <a href='https://en.wikipedia.org/wiki/Express.js' target="_blank" rel="noreferrer noopener"><img className="techStackIcon expressjs" src={expressjs} alt=""/></a>
-                    <a href='https://en.wikipedia.org/wiki/MySQL' target="_blank" rel="noreferrer noopener"><img className="techStackIcon mysql" src={mysql} alt=""/></a>
-                    <a href='https://en.wikipedia.org/wiki/PostgreSQL' target="_blank" rel="noreferrer noopener"><img className="techStackIcon postgre" src={postgre} alt=""/></a>
-                    <a href='https://en.wikipedia.org/wiki/Microsoft_SQL_Server' target="_blank" rel="noreferrer noopener"><img className="techStackIcon mss" src={mss} alt=""/></a>
-                    <a href='https://en.wikipedia.org/wiki/Java_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIcon java" src={java} alt=""/></a>
-                    <a href='https://en.wikipedia.org/wiki/Python_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIcon python" src={python} alt=""/></a>
-                    <a href='https://en.wikipedia.org/wiki/C%2B%2B' target="_blank" rel="noreferrer noopener"><img className="techStackIcon cpp" src={cpp} alt=""/></a>
+                    <a href='https://en.wikipedia.org/wiki/Git' target="_blank" rel="noreferrer noopener"><img className="techStackIcon git" src={git} alt="Git"/></a>
+                    <a href='https://en.wikipedia.org/wiki/Object-oriented_programming' target="_blank" rel="noreferrer noopener"><img className="techStackIcon oop" src={oop} alt="Object-oriented programming"/></a>
+                    <a href='https://en.wikipedia.org/wiki/HTML' target="_blank" rel="noreferrer noopener"><img className="techStackIcon html" src={html} alt="HTML"/></a>
+                    <a href='https://en.wikipedia.org/wiki/CSS' target="_blank" rel="noreferrer noopener"><img className="techStackIcon css" src={css} alt="CSS"/></a>
+                    <a href='https://en.wikipedia.org/wiki/JavaScript' target="_blank" rel="noreferrer noopener"><img className="techStackIcon js" src={js} alt="JavaScript"/></a>
+                    <a href='https://en.wikipedia.org/wiki/React_(software)' target="_blank" rel="noreferrer noopener"><img className="techStackIcon react" src={react} alt="React"/></a>
+                    <a href='https://en.wikipedia.org/wiki/Go_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIcon go" src={go} alt="Go"/></a>
+                    <a href='https://en.wikipedia.org/wiki/Express.js' target="_blank" rel="noreferrer noopener"><img className="techStackIcon expressjs" src={expressjs} alt="Express.js"/></a>
+                    <a href='https://en.wikipedia.org/wiki/MySQL' target="_blank" rel="noreferrer noopener"><img className="techStackIcon mysql" src={mysql} alt="MySQL"/></a>
+                    <a href='https://en.wikipedia.org/wiki/PostgreSQL' target="_blank" rel="noreferrer noopener"><img className="techStackIcon postgre" src={postgre} alt="PostgreSQL"/></a>
+                    <a href='https://en.wikipedia.org/wiki/Microsoft_SQL_Server' target="_blank" rel="noreferrer noopener"><img className="techStackIcon mss" src={mss} alt="Microsoft SQL Server"/></a>
+                    <a href='https://en.wikipedia.org/wiki/Java_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIcon java" src={java} alt="Java"/></a>
+                    <a href='https://en.wikipedia.org/wiki/Python_(programming_language)' target="_blank" rel="noreferrer noopener"><img className="techStackIcon python" src={python} alt="Python"/></a>
+                    <a href='https://en.wikipedia.org/wiki/C%2B%2B' target="_blank" rel="noreferrer noopener"><img className="techStackIcon cpp" src={cpp} alt="C++"/></a>
                 </div>
             </div>
         </section>
