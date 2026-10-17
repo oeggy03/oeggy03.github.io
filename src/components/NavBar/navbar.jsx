@@ -25,24 +25,24 @@ const Navbar = () => {
   }
 
   return (
-    <nav className='navbar'>
+    <nav className='navbar' aria-label='Main navigation'>
       <div className='internalLinks'>
-        <Link to='homepage' activeClass="activeHome" spy={true} smooth={true}><img className="logo_nav" src={logo_nav} alt="Ha Thu" /></Link>
+        <Link href='#homepage' to='homepage' activeClass="activeHome" spy={true} smooth={true}><img className="logo_nav" src={logo_nav} alt="Tran Ha Thu - home" /></Link>
         <div className="allNavbarItems">
-          <Link activeClass="active" to='aboutSection' spy={true} smooth={true} className="navbarItem">About</Link>
-          <Link activeClass="active" to='experiencesSec' spy={true} smooth={true} className="navbarItem">Experience</Link>
-          <Link activeClass="active" to='projectsSec' spy={true} smooth={true} className="navbarItem">Projects</Link>
-          <Link activeClass="active" to='contactSec' spy={true} smooth={true} className="navbarItem">Contact</Link>
-          <a href={Resume} target='_blank' className="burgerMenuItem">Resume</a>
+          <Link href='#aboutSection' activeClass="active" to='aboutSection' spy={true} smooth={true} className="navbarItem">About</Link>
+          <Link href='#experiencesSec' activeClass="active" to='experiencesSec' spy={true} smooth={true} className="navbarItem">Experience</Link>
+          <Link href='#projectsSec' activeClass="active" to='projectsSec' spy={true} smooth={true} className="navbarItem">Projects</Link>
+          <Link href='#contactSec' activeClass="active" to='contactSec' spy={true} smooth={true} className="navbarItem">Contact</Link>
+          <a href={Resume} target='_blank' rel='noopener noreferrer' className="burgerMenuItem">Resume</a>
 
         </div>
       </div>
       <div className="externalLinks">
         <a href='https://www.linkedin.com/in/tran-ha-thu' target="_blank" rel="noreferrer noopener">
-          <img className="linkedIn" src={linkedin} alt="" />
+          <img className="linkedIn" src={linkedin} alt="Tran Ha Thu on LinkedIn" />
         </a>
         <a href='https://github.com/oeggy03' target="_blank" rel="noreferrer noopener">
-          <img className="github" src={github} alt="" />
+          <img className="github" src={github} alt="Tran Ha Thu on GitHub" />
         </a>
       </div>
 
@@ -53,11 +53,11 @@ const Navbar = () => {
       </div>
 
       <div className={menu_class}>
-        <Link activeClass="active" to='aboutSection' spy={true} smooth={true} className="burgerMenuItem" onClick={updateBurgerMenu}>About</Link>
-        <Link activeClass="active" to='experiencesSec' spy={true} smooth={true} className="burgerMenuItem" onClick={updateBurgerMenu}>Experience</Link>
-        <Link activeClass="active" to='projectsSec' spy={true} smooth={true} className="burgerMenuItem" onClick={updateBurgerMenu}>Projects</Link>
-        <Link activeClass="active" to='contactSec' spy={true} smooth={true} className="burgerMenuItem" onClick={updateBurgerMenu}>Contact</Link>
-        <a href={Resume} target='_blank' className="burgerMenuItem">Resume</a>
+        <Link href='#aboutSection' activeClass="active" to='aboutSection' spy={true} smooth={true} className="burgerMenuItem" onClick={updateBurgerMenu}>About</Link>
+        <Link href='#experiencesSec' activeClass="active" to='experiencesSec' spy={true} smooth={true} className="burgerMenuItem" onClick={updateBurgerMenu}>Experience</Link>
+        <Link href='#projectsSec' activeClass="active" to='projectsSec' spy={true} smooth={true} className="burgerMenuItem" onClick={updateBurgerMenu}>Projects</Link>
+        <Link href='#contactSec' activeClass="active" to='contactSec' spy={true} smooth={true} className="burgerMenuItem" onClick={updateBurgerMenu}>Contact</Link>
+        <a href={Resume} target='_blank' rel='noopener noreferrer' className="burgerMenuItem">Resume</a>
       </div>
     </nav>
   )
