@@ -1,0 +1,6 @@
+---
+description: Repository guidance adapter; follow the canonical project policy and shared skills.
+alwaysApply: true
+---
+
+Read the repository's [`AGENTS.md`](../../AGENTS.md) and [`docs/agent-workflow.md`](../../docs/agent-workflow.md). Use the shared workflows in `.agents/skills/portfolio-feature/SKILL.md`, `.agents/skills/portfolio-verify/SKILL.md`, and `.agents/skills/portfolio-pr/SKILL.md` when applicable. These files are canonical; do not duplicate or override their product, role, branch, verification, or delivery rules here. Native client model and reasoning availability must be checked in the client.
