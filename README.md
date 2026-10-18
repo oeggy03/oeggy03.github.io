@@ -73,9 +73,9 @@ Keep the six original projects, five experiences, core skills, full biography, r
 
 ## Hosting
 
-GitHub Pages is configured for legacy branch publishing from `gh-pages` at the repository root, with `https://www.tranhathu.com/` as the site URL. The `gh-pages` branch is the publishing source; pushing a feature branch does not publish it. The redesign work does not deploy the site.
+GitHub Pages is published at `https://www.tranhathu.com/`. The `Verify and deploy portfolio` workflow runs lint, production build, SEO, browser, and accessibility checks on pull requests to `main`. After a change reaches `main`, it runs those checks again and deploys the verified artifact with GitHub Pages Actions. Feature branch pushes do not deploy the site. The one-time Pages source setting must be **GitHub Actions** for this workflow to publish.
 
-When a production publish is authorized, `npm run deploy` builds the site and publishes `dist/` to `gh-pages`, including dotfiles. Keep the domain and `.nojekyll` files in `public/` so every build preserves them. Namecheap DNS records currently route `www` to `oeggy03.github.io` and the bare domain to GitHub Pages. Do not remove unrelated email or domain verification records when editing DNS.
+The workflow transfers the exact `dist/` artifact that passed the checks, including `.nojekyll`. To manually publish the latest `main` build, run **Verify and deploy portfolio** from the Actions tab with the `main` branch selected. Keep `public/CNAME` and `public/.nojekyll` so builds preserve the custom domain and static files. Namecheap DNS records currently route `www` to `oeggy03.github.io` and the bare domain to GitHub Pages. Do not remove unrelated email or domain verification records when editing DNS.
 
 See the [deployment and DNS guide](docs/deployment.md) for GitHub Pages settings, DNS records, Search Console steps, and troubleshooting.
 

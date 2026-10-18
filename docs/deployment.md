@@ -2,24 +2,23 @@
 
 ## Current publishing configuration
 
-GitHub Pages is configured for legacy branch publishing from `gh-pages` at the repository root, with `https://www.tranhathu.com/` as the site URL. Pushing a source or feature branch does not publish the website. The redesign work does not deploy it.
+The site URL is `https://www.tranhathu.com/`. GitHub Pages must use **GitHub Actions** as its publishing source for the workflow at `.github/workflows/deploy-pages.yml`. The workflow runs the quality checks on pull requests to `main`. When a commit reaches `main`, it runs lint, builds and prerenders the site, checks SEO and assets, runs the browser/accessibility suite, then deploys the same verified `dist/` artifact with `actions/deploy-pages`. Feature branch pushes do not publish the site.
 
-When a production publish is authorized, run:
+### One-time activation
 
-```sh
-npm run deploy
-```
+After this workflow is merged, set its publishing source in the repository **Settings > Pages > Build and deployment > Source** to **GitHub Actions**. If the first post-merge run started before the source change and the deploy job failed, rerun **Verify and deploy portfolio** from the Actions tab with `main` selected.
 
-The `predeploy` script builds first. `gh-pages -d dist --dotfiles` then publishes the generated files to the `gh-pages` branch, including `.nojekyll`. Source changes and generated files are separate: push source changes to `main`, then run the deploy command. A successful branch push alone does not confirm that GitHub finished building the deployment.
+The deploy job uses the built-in `GITHUB_TOKEN` with Pages write and OIDC token permissions; no personal access token or separate deploy secret is needed. It is limited to pushes or manual workflow runs from `main`.
+
+To manually publish, run **Verify and deploy portfolio** from the Actions tab and choose the `main` branch. The workflow builds, verifies, and deploys the resulting artifact.
 
 In the repository **Settings > Pages**, use:
 
-- Source: **Deploy from a branch**.
-- Branch: **gh-pages**, folder: **/ (root)**.
+- Source: **GitHub Actions**.
 - Custom domain: **www.tranhathu.com**.
 - Enable **Enforce HTTPS** after GitHub provisions the certificate.
 
-After publishing, check the **pages build and deployment** run in the repository Actions tab.
+After publishing, check the **Verify and deploy portfolio** workflow and the Pages deployment run in the repository Actions tab. Confirm the site is responding at the configured domain.
 
 ## Domain and DNS
 
