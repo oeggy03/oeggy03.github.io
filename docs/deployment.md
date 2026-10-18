@@ -2,15 +2,17 @@
 
 ## Current publishing configuration
 
-GitHub Pages is configured for legacy branch publishing from `gh-pages` at the repository root, with `https://www.tranhathu.com/` as the site URL. Pushing a source or feature branch does not publish the website. The redesign work does not deploy it.
+GitHub Pages uses branch publishing from `gh-pages` at the repository root, with `https://www.tranhathu.com/` as the site URL. The workflow at `.github/workflows/deploy-pages.yml` runs the quality checks for pull requests to `main`. When a commit reaches `main`, it runs lint, builds and prerenders the site, checks SEO and assets, runs the browser/accessibility suite, then publishes the same verified `dist/` artifact to `gh-pages`. The existing Pages branch setting serves that output; no Pages source change is needed. Feature branch pushes do not publish the site.
 
-When a production publish is authorized, run:
+The workflow uses the built-in `GITHUB_TOKEN` with repository content write permission to update `gh-pages`; it requires no personal access token or other deploy secret. GitHub's Pages branch publisher then builds the updated site. Check both the **Verify and deploy portfolio** run and the **pages build and deployment** run in the Actions tab after a merge.
+
+For an authorized manual publish from a checked out branch, run:
 
 ```sh
 npm run deploy
 ```
 
-The `predeploy` script builds first. `gh-pages -d dist --dotfiles` then publishes the generated files to the `gh-pages` branch, including `.nojekyll`. Source changes and generated files are separate: push source changes to `main`, then run the deploy command. A successful branch push alone does not confirm that GitHub finished building the deployment.
+The `predeploy` script builds first. `gh-pages -d dist --dotfiles` then publishes the generated files to the `gh-pages` branch, including `.nojekyll`. Prefer the automated workflow for changes merged into `main`; it runs checks and only deploys after they pass. A successful push to `gh-pages` alone does not confirm that GitHub finished publishing the site.
 
 In the repository **Settings > Pages**, use:
 
@@ -19,7 +21,7 @@ In the repository **Settings > Pages**, use:
 - Custom domain: **www.tranhathu.com**.
 - Enable **Enforce HTTPS** after GitHub provisions the certificate.
 
-After publishing, check the **pages build and deployment** run in the repository Actions tab.
+If GitHub Actions cannot write to `gh-pages`, confirm the workflow token has repository content write access under the repository's Actions settings. After any publish, check the Pages build and deployment run and the deployed site URL.
 
 ## Domain and DNS
 
