@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import {
   ExperienceView,
   OverviewView,
@@ -6,6 +7,7 @@ import {
 } from './views/index.js'
 import PortfolioShell from './components/layout/PortfolioShell.jsx'
 import { profile } from './data/portfolio.js'
+import { resolvePortfolioRoute } from './navigation/routes.js'
 
 const sections = [
   { id: 'overview', label: 'Overview', content: <OverviewView /> },
@@ -14,8 +16,16 @@ const sections = [
   { id: 'skills', label: 'Skills', content: <SkillsView /> },
 ]
 
-function App() {
-  return <PortfolioShell sections={sections} profile={profile} />
+function App({ route = resolvePortfolioRoute('/') }) {
+  return <PortfolioShell sections={sections} profile={profile} initialRoute={route} />
+}
+
+App.propTypes = {
+  route: PropTypes.shape({
+    fragment: PropTypes.string.isRequired,
+    sectionId: PropTypes.string.isRequired,
+    path: PropTypes.string.isRequired,
+  }),
 }
 
 export default App

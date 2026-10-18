@@ -13,6 +13,7 @@ import { ActionLink } from '../ui/index.jsx'
 import { PortfolioNavigationProvider } from '../../navigation/NavigationProvider.jsx'
 import LEGACY_FRAGMENT_ALIASES from '../../navigation/fragment-aliases.js'
 import { usePortfolioNavigation } from '../../navigation/NavigationContext.jsx'
+import { resolvePortfolioRoute, sectionPathFor } from '../../navigation/routes.js'
 
 const sectionIcons = {
   overview: House,
@@ -41,15 +42,11 @@ const portfolioSectionPropType = PropTypes.arrayOf(PropTypes.shape({
 
 const portfolioProfilePropType = PropTypes.shape({
   name: PropTypes.string.isRequired,
+  role: PropTypes.string.isRequired,
   email: PropTypes.string.isRequired,
   github: PropTypes.string.isRequired,
   linkedin: PropTypes.string.isRequired,
   resume: PropTypes.string.isRequired,
-  education: PropTypes.shape({
-    institution: PropTypes.string.isRequired,
-    abbreviation: PropTypes.string.isRequired,
-    programme: PropTypes.string.isRequired,
-  }).isRequired,
 })
 
 function SocialLinks({ profile, mobile = false }) {
@@ -107,8 +104,9 @@ function PortfolioNavigation({ sections, activeId, enhanced, onTabClick, onTabKe
     return (
       <a
         key={id}
-        href={`#${id}`}
+        href={sectionPathFor(id)}
         className={itemClassName}
+        aria-current={active ? 'page' : undefined}
         {...tabProps}
         onClick={(event) => onTabClick(event, id)}
       >
@@ -211,20 +209,13 @@ function PortfolioShellLayout({ sections, profile }) {
     if (!anchor || (anchor.target && anchor.target !== '_self') || anchor.hasAttribute('download')) return
 
     const url = new URL(anchor.href, window.location.href)
-    if (!url.hash || url.origin !== window.location.origin || url.pathname !== window.location.pathname || url.search !== window.location.search) return
-
-    let target
-    try {
-      target = decodeURIComponent(url.hash.slice(1))
-    } catch {
-      return
-    }
-    if (!target) return
+    if (url.origin !== window.location.origin || url.search !== window.location.search || url.hash) return
+    const route = resolvePortfolioRoute(url.pathname)
+    if (!route.isKnownPath) return
     event.preventDefault()
-    const isProject = target.startsWith('project-')
-    navigate(target, {
-      scroll: isProject ? 'project' : 'top',
-      focus: isProject ? 'project' : 'heading',
+    navigate(route.fragment, {
+      scroll: route.projectId ? 'project' : 'top',
+      focus: route.projectId ? 'project' : 'heading',
     })
   }
 
@@ -236,11 +227,9 @@ function PortfolioShellLayout({ sections, profile }) {
         <div className="flex min-w-0 items-center gap-3 lg:block">
           <div aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/5 font-mono text-sm font-medium tracking-[-0.06em] text-sage lg:size-10">TH</div>
           <div className="min-w-0 lg:mt-3">
-            <p className="mb-1 hidden font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-sage lg:block">Backend / Software Engineer</p>
+            <p className="mb-1 hidden font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-sage lg:block">{profile.role}</p>
             <h1 className="text-base font-semibold tracking-[-0.04em] text-paper sm:text-xl lg:text-[27px] lg:leading-tight">{profile.name}</h1>
-            <p className="mt-0.5 text-[11px] leading-4 text-paper/60 sm:text-xs lg:hidden">Backend / Software Engineer</p>
-            <p className="mt-1 hidden max-w-[205px] text-xs leading-5 text-paper/60 lg:block">Computer Science<br />National University of Singapore</p>
-            <p className="mt-1 hidden font-mono text-[9px] uppercase tracking-[0.14em] text-paper/70 lg:block">Singapore</p>
+            <p className="mt-0.5 text-[11px] leading-4 text-paper/60 sm:text-xs lg:hidden">{profile.role}</p>
           </div>
         </div>
 
@@ -258,7 +247,6 @@ function PortfolioShellLayout({ sections, profile }) {
 
         <div className="hidden border-t border-white/10 pt-3 lg:block">
           <SocialLinks profile={profile} />
-          <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.12em] text-paper/70">Singapore &middot; NUS Computer Science</p>
         </div>
       </aside>
 
@@ -298,7 +286,7 @@ function PortfolioShellLayout({ sections, profile }) {
               role={enhanced ? 'tabpanel' : undefined}
               aria-labelledby={enhanced ? `${desktopNavigation ? 'desktop' : 'mobile'}-tab-${id}` : undefined}
               tabIndex={enhanced ? 0 : undefined}
-              hidden={enhanced && activeId !== id}
+              hidden={activeId !== id}
             >
               {legacyAnchorIds[id]?.map((anchorId) => (
                 <span key={anchorId} id={anchorId} aria-hidden="true" className="sr-only" />
@@ -309,7 +297,7 @@ function PortfolioShellLayout({ sections, profile }) {
         </div>
 
         <footer className="border-t border-line px-5 py-5 text-center sm:px-8 lg:px-8 2xl:px-10">
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">&copy; Tran Ha Thu &middot; Built with care in Singapore</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">&copy; Tran Ha Thu</p>
         </footer>
       </div>
     </div>
@@ -321,9 +309,9 @@ PortfolioShellLayout.propTypes = {
   profile: portfolioProfilePropType.isRequired,
 }
 
-function PortfolioShell({ sections, profile }) {
+function PortfolioShell({ sections, profile, initialRoute }) {
   return (
-    <PortfolioNavigationProvider sections={sections}>
+    <PortfolioNavigationProvider initialRoute={initialRoute}>
       <PortfolioShellLayout sections={sections} profile={profile} />
     </PortfolioNavigationProvider>
   )
@@ -332,6 +320,11 @@ function PortfolioShell({ sections, profile }) {
 PortfolioShell.propTypes = {
   sections: portfolioSectionPropType.isRequired,
   profile: portfolioProfilePropType.isRequired,
+  initialRoute: PropTypes.shape({
+    fragment: PropTypes.string.isRequired,
+    sectionId: PropTypes.string.isRequired,
+    path: PropTypes.string.isRequired,
+  }).isRequired,
 }
 
 export default PortfolioShell
