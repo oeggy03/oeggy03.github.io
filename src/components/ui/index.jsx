@@ -62,11 +62,11 @@ ActionLink.propTypes = {
 
 export function SectionHeading({ eyebrow, title, description, aside, className = '' }) {
   return (
-    <div className={`flex flex-col gap-5 border-b border-line pb-6 sm:flex-row sm:items-end sm:justify-between ${className}`}>
+    <div className={`flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-end sm:justify-between ${className}`}>
       <div className="max-w-3xl">
-        {eyebrow ? <p className="mb-3 font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-accent-ink">{eyebrow}</p> : null}
+        {eyebrow ? <p className="mb-2 font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-accent-ink">{eyebrow}</p> : null}
         <h2 className="text-3xl font-semibold leading-tight tracking-[-0.045em] text-ink sm:text-4xl">{title}</h2>
-        {description ? <p className="mt-3 max-w-2xl text-base leading-7 text-muted">{description}</p> : null}
+        {description ? <p className="mt-2 max-w-2xl text-base leading-6 text-muted">{description}</p> : null}
       </div>
       {aside ? <div className="shrink-0">{aside}</div> : null}
     </div>

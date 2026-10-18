@@ -11,9 +11,8 @@ import {
   UserRound,
 } from 'lucide-react'
 import { ActionLink } from '../ui/index.jsx'
-import { projects } from '../../data/portfolio.js'
-
-const projectIds = new Set(projects.map(({ id }) => id))
+import { PortfolioNavigationProvider } from '../../navigation/NavigationProvider.jsx'
+import { usePortfolioNavigation } from '../../navigation/NavigationContext.jsx'
 
 const sectionIcons = {
   overview: House,
@@ -24,14 +23,6 @@ const sectionIcons = {
   contact: Mail,
 }
 
-const legacyFragments = {
-  homepage: 'overview',
-  aboutSection: 'about',
-  experiencesSec: 'experience',
-  projectsSec: 'projects',
-  contactSec: 'contact',
-}
-
 const legacyAnchorIds = {
   overview: 'homepage',
   about: 'aboutSection',
@@ -40,20 +31,24 @@ const legacyAnchorIds = {
   contact: 'contactSec',
 }
 
-function resolveFragment(fragment, sections) {
-  const sectionIds = new Set(sections.map(({ id }) => id))
-  if (sectionIds.has(fragment)) {
-    return { sectionId: fragment, targetId: fragment, replaceFragment: null }
-  }
-  if (legacyFragments[fragment]) {
-    const sectionId = legacyFragments[fragment]
-    return { sectionId, targetId: sectionId, replaceFragment: sectionId }
-  }
-  if (fragment.startsWith('project-') && projectIds.has(fragment.slice('project-'.length))) {
-    return { sectionId: 'projects', targetId: fragment, replaceFragment: null }
-  }
-  return { sectionId: 'overview', targetId: 'overview', replaceFragment: fragment ? 'overview' : null }
-}
+const portfolioSectionPropType = PropTypes.arrayOf(PropTypes.shape({
+  id: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  content: PropTypes.node.isRequired,
+}))
+
+const portfolioProfilePropType = PropTypes.shape({
+  name: PropTypes.string.isRequired,
+  email: PropTypes.string.isRequired,
+  github: PropTypes.string.isRequired,
+  linkedin: PropTypes.string.isRequired,
+  resume: PropTypes.string.isRequired,
+  education: PropTypes.shape({
+    institution: PropTypes.string.isRequired,
+    abbreviation: PropTypes.string.isRequired,
+    programme: PropTypes.string.isRequired,
+  }).isRequired,
+})
 
 function SocialLinks({ profile, mobile = false }) {
   const linkClassName = mobile
@@ -113,7 +108,7 @@ function PortfolioNavigation({ sections, activeId, enhanced, onTabClick, onTabKe
         href={`#${id}`}
         className={itemClassName}
         {...tabProps}
-        onClick={() => onTabClick(id)}
+        onClick={(event) => onTabClick(event, id)}
       >
         <Icon aria-hidden="true" className={`size-[17px] shrink-0 ${active && !mobile ? 'text-sage' : ''}`} />
         <span className={mobile ? 'text-[10px] font-semibold leading-none sm:text-[11px]' : 'flex-1'}>{label}</span>
@@ -150,8 +145,9 @@ PortfolioNavigation.propTypes = {
   mobile: PropTypes.bool,
 }
 
-function PortfolioShell({ sections, profile }) {
-  const [activeId, setActiveId] = useState('overview')
+function PortfolioShellLayout({ sections, profile }) {
+  const { fragment, navigate } = usePortfolioNavigation()
+  const activeId = fragment.startsWith('project-') ? 'projects' : fragment
   const [enhanced, setEnhanced] = useState(false)
   const [desktopNavigation, setDesktopNavigation] = useState(true)
 
@@ -168,53 +164,13 @@ function PortfolioShell({ sections, profile }) {
     }
   }, [])
 
-  useEffect(() => {
-    const setFromLocation = (options = {}) => {
-      const { shouldFocus = false, shouldScroll = false } = options
-      const fragment = window.location.hash.slice(1)
-      const route = resolveFragment(fragment, sections)
+  useEffect(() => setEnhanced(true), [])
 
-      if (route.replaceFragment) {
-        window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#${route.replaceFragment}`)
-      }
-
-      setActiveId(route.sectionId)
-
-      if (shouldFocus || shouldScroll) {
-        window.requestAnimationFrame(() => {
-          window.requestAnimationFrame(() => {
-            const panel = document.getElementById(route.sectionId)
-            const target = document.getElementById(route.targetId) || panel
-            target?.scrollIntoView({ block: 'start', behavior: 'auto' })
-            if (shouldFocus && target) {
-              if (target !== panel && !target.matches('a[href], button, input, select, textarea, [tabindex]')) {
-                target.setAttribute('tabindex', '-1')
-              }
-              target.focus({ preventScroll: true })
-            }
-          })
-        })
-      }
-    }
-
-    setFromLocation({ shouldScroll: Boolean(window.location.hash) })
-    setEnhanced(true)
-
-    const handleHashChange = () => setFromLocation({ shouldFocus: true, shouldScroll: true })
-    const handlePopState = () => setFromLocation({ shouldScroll: true })
-    window.addEventListener('hashchange', handleHashChange)
-    window.addEventListener('popstate', handlePopState)
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange)
-      window.removeEventListener('popstate', handlePopState)
-    }
-  }, [sections])
-
-  const handleTabClick = (id) => {
-    setActiveId(id)
-    if (window.location.hash === `#${id}`) {
-      window.requestAnimationFrame(() => document.getElementById(id)?.focus({ preventScroll: true }))
-    }
+  const handleTabClick = (event, id) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.currentTarget.target || event.currentTarget.hasAttribute('download')) return
+    event.preventDefault()
+    navigate(id, { focus: 'preserve' })
+    event.currentTarget.focus({ preventScroll: true })
   }
 
   const handleTabKeyDown = (event, instanceId) => {
@@ -232,24 +188,58 @@ function PortfolioShell({ sections, profile }) {
 
     event.preventDefault()
     const nextId = sections[nextIndex].id
-    setActiveId(nextId)
-    window.history.pushState(null, '', `#${nextId}`)
-    document.getElementById(`${instanceId}-tab-${nextId}`)?.focus()
+    navigate(nextId, { focus: 'preserve' })
+    const tab = document.getElementById(`${instanceId}-tab-${nextId}`)
+    tab?.focus({ preventScroll: true })
+
+    if (instanceId === 'desktop' && tab) {
+      const rail = document.querySelector('[data-portfolio-sidebar]')
+      const railRect = rail?.getBoundingClientRect()
+      const tabRect = tab.getBoundingClientRect()
+      if (rail && railRect && tabRect.bottom > railRect.bottom) {
+        rail.scrollTop += tabRect.bottom - railRect.bottom
+      } else if (rail && railRect && tabRect.top < railRect.top) {
+        rail.scrollTop -= railRect.top - tabRect.top
+      }
+    }
+  }
+
+  const handleInternalAnchorClick = (event) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    const anchor = event.target.closest?.('a[href]')
+    if (!anchor || (anchor.target && anchor.target !== '_self') || anchor.hasAttribute('download')) return
+
+    const url = new URL(anchor.href, window.location.href)
+    if (!url.hash || url.origin !== window.location.origin || url.pathname !== window.location.pathname || url.search !== window.location.search) return
+
+    let target
+    try {
+      target = decodeURIComponent(url.hash.slice(1))
+    } catch {
+      return
+    }
+    if (!target) return
+    event.preventDefault()
+    const isProject = target.startsWith('project-')
+    navigate(target, {
+      scroll: isProject ? 'project' : 'top',
+      focus: isProject ? 'project' : 'heading',
+    })
   }
 
   const activeLabel = sections.find(({ id }) => id === activeId)?.label || 'Overview'
 
   return (
-    <div className="grid min-h-screen bg-canvas text-ink lg:grid-cols-[260px_minmax(0,1fr)]">
-      <aside className="flex items-center justify-between gap-4 border-b border-white/10 bg-ink px-4 py-3 text-paper sm:px-6 lg:sticky lg:top-0 lg:row-span-2 lg:h-screen lg:flex-col lg:items-stretch lg:justify-between lg:border-b-0 lg:border-r lg:px-6 lg:py-8">
+    <div className="grid min-h-screen bg-ink text-ink lg:grid-cols-[260px_minmax(0,1fr)]" onClick={handleInternalAnchorClick}>
+      <aside data-portfolio-sidebar className="flex items-center justify-between gap-4 border-b border-white/10 bg-ink px-4 py-3 text-paper sm:px-6 lg:sticky lg:top-0 lg:row-span-1 lg:self-start lg:h-dvh lg:max-h-dvh lg:overflow-y-auto lg:flex-col lg:items-stretch lg:justify-between lg:border-b-0 lg:border-r lg:px-5 lg:py-4">
         <div className="flex min-w-0 items-center gap-3 lg:block">
-          <div aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/5 font-mono text-sm font-medium tracking-[-0.06em] text-sage lg:size-12">TH</div>
-          <div className="min-w-0 lg:mt-5">
-            <p className="mb-1 hidden font-mono text-[10px] font-medium uppercase tracking-[0.15em] text-sage lg:block">Backend / Software Engineer</p>
+          <div aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/5 font-mono text-sm font-medium tracking-[-0.06em] text-sage lg:size-10">TH</div>
+          <div className="min-w-0 lg:mt-3">
+            <p className="mb-1 hidden font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-sage lg:block">Backend / Software Engineer</p>
             <h1 className="truncate text-lg font-semibold tracking-[-0.04em] text-paper sm:text-xl lg:whitespace-normal lg:text-[27px] lg:leading-tight">{profile.name}</h1>
             <p className="mt-0.5 truncate text-[11px] text-paper/60 sm:text-xs lg:hidden">Backend / Software Engineer</p>
-            <p className="mt-2 hidden max-w-[205px] text-sm leading-6 text-paper/60 lg:block">Computer Science<br />National University of Singapore</p>
-            <p className="mt-1 hidden font-mono text-[10px] uppercase tracking-[0.14em] text-paper/70 lg:block">Singapore</p>
+            <p className="mt-1 hidden max-w-[205px] text-xs leading-5 text-paper/60 lg:block">Computer Science<br />National University of Singapore</p>
+            <p className="mt-1 hidden font-mono text-[9px] uppercase tracking-[0.14em] text-paper/70 lg:block">Singapore</p>
           </div>
         </div>
 
@@ -258,7 +248,7 @@ function PortfolioShell({ sections, profile }) {
         </div>
 
         <div className="hidden lg:block">
-          <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-paper/70">Sections</div>
+          <div className="mb-2 font-mono text-[9px] font-medium uppercase tracking-[0.16em] text-paper/70">Sections</div>
           <PortfolioNavigation
             sections={sections}
             activeId={activeId}
@@ -269,14 +259,14 @@ function PortfolioShell({ sections, profile }) {
           />
         </div>
 
-        <div className="hidden border-t border-white/10 pt-5 lg:block">
+        <div className="hidden border-t border-white/10 pt-3 lg:block">
           <SocialLinks profile={profile} />
-          <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-paper/70">Singapore &middot; NUS Computer Science</p>
+          <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.12em] text-paper/70">Singapore &middot; NUS Computer Science</p>
         </div>
       </aside>
 
-      <div className="min-w-0 lg:col-start-2">
-        <div className="sticky top-0 z-20 border-b border-line bg-canvas px-4 py-3 sm:px-6 lg:hidden">
+      <div className="flex min-h-screen min-w-0 flex-col bg-canvas lg:col-start-2">
+        <div data-portfolio-mobile-navigation className="sticky top-0 z-20 border-b border-line bg-canvas px-4 py-3 sm:px-6 lg:hidden">
           <PortfolioNavigation
             sections={sections}
             activeId={activeId}
@@ -288,7 +278,7 @@ function PortfolioShell({ sections, profile }) {
           />
         </div>
 
-        <header className="flex min-h-[68px] items-center justify-between gap-4 border-b border-line px-5 py-3 sm:px-8 lg:px-12 2xl:px-16">
+        <header data-portfolio-toolbar className="flex min-h-[68px] items-center justify-between gap-4 border-b border-line bg-canvas px-5 py-3 sm:px-8 lg:sticky lg:top-0 lg:z-30 lg:px-8 2xl:px-10">
           <p className="min-w-0 truncate font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted sm:text-[11px]">
             <span className="text-ink">Portfolio</span>
             <span className="mx-2 text-line" aria-hidden="true">/</span>
@@ -299,7 +289,7 @@ function PortfolioShell({ sections, profile }) {
           </ActionLink>
         </header>
 
-        <div className="mx-auto min-h-[calc(100vh-128px)] w-full max-w-[1500px] px-5 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-12 2xl:px-16 2xl:py-14">
+        <div className="mx-auto w-full max-w-[1500px] flex-1 px-5 py-8 sm:px-8 sm:py-8 lg:px-8 lg:py-8 2xl:px-10">
           {sections.map(({ id, content }) => (
             <section
               key={id}
@@ -316,7 +306,7 @@ function PortfolioShell({ sections, profile }) {
           ))}
         </div>
 
-        <footer className="border-t border-line px-5 py-5 text-center sm:px-8 lg:px-12 2xl:px-16">
+        <footer className="border-t border-line px-5 py-5 text-center sm:px-8 lg:px-8 2xl:px-10">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">&copy; Tran Ha Thu &middot; Built with care in Singapore</p>
         </footer>
       </div>
@@ -324,24 +314,22 @@ function PortfolioShell({ sections, profile }) {
   )
 }
 
+PortfolioShellLayout.propTypes = {
+  sections: portfolioSectionPropType.isRequired,
+  profile: portfolioProfilePropType.isRequired,
+}
+
+function PortfolioShell({ sections, profile }) {
+  return (
+    <PortfolioNavigationProvider sections={sections}>
+      <PortfolioShellLayout sections={sections} profile={profile} />
+    </PortfolioNavigationProvider>
+  )
+}
+
 PortfolioShell.propTypes = {
-  sections: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-    content: PropTypes.node.isRequired,
-  })).isRequired,
-  profile: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    email: PropTypes.string.isRequired,
-    github: PropTypes.string.isRequired,
-    linkedin: PropTypes.string.isRequired,
-    resume: PropTypes.string.isRequired,
-    education: PropTypes.shape({
-      institution: PropTypes.string.isRequired,
-      abbreviation: PropTypes.string.isRequired,
-      programme: PropTypes.string.isRequired,
-    }).isRequired,
-  }).isRequired,
+  sections: portfolioSectionPropType.isRequired,
+  profile: portfolioProfilePropType.isRequired,
 }
 
 export default PortfolioShell
