@@ -61,20 +61,37 @@ export function PortfolioNavigationProvider({ sections, children }) {
   const pendingTransitionRef = useRef(null)
   const scrollFrameRef = useRef(0)
   const sameFragmentFrameRef = useRef(0)
+  const deferredFrameRef = useRef(0)
   const hashSuppressionTimerRef = useRef(0)
   const entrySequenceRef = useRef(0)
   const entryScrollCacheRef = useRef(new Map())
   const activeEntryIdRef = useRef(null)
+
+  const saveSettledOffset = useCallback(() => {
+    const state = window.history.state && typeof window.history.state === 'object'
+      ? window.history.state
+      : {}
+    const entryId = state[ENTRY_STATE_KEY]
+    const url = currentUrl()
+    if (!entryId || state[ENTRY_URL_KEY] !== url) return
+    const offset = window.scrollY
+    window.history.replaceState({
+      ...state,
+      [SCROLL_STATE_KEY]: offset,
+    }, '', url)
+    entryScrollCacheRef.current.set(entryId, offset)
+    activeEntryIdRef.current = entryId
+  }, [])
 
   const flushTransition = useCallback(() => {
     const pending = pendingTransitionRef.current
     if (!pending) return
     pendingTransitionRef.current = null
     const { route, options, previousSectionId, mode } = pending
-
     if (mode === 'restore') {
       const storedY = Number(options.scrollY)
       window.scrollTo({ top: Number.isFinite(storedY) && storedY >= 0 ? storedY : 0, behavior: 'auto' })
+      saveSettledOffset()
       return
     }
 
@@ -134,15 +151,29 @@ export function PortfolioNavigationProvider({ sections, children }) {
         focusWithoutScroll(destination)
       }
     }
-  }, [])
+    saveSettledOffset()
+  }, [saveSettledOffset])
 
   const queueTransition = useCallback((transition) => {
     if (sameFragmentFrameRef.current) {
       cancelAnimationFrame(sameFragmentFrameRef.current)
       sameFragmentFrameRef.current = 0
     }
+    if (deferredFrameRef.current) {
+      cancelAnimationFrame(deferredFrameRef.current)
+      deferredFrameRef.current = 0
+    }
     pendingTransitionRef.current = transition
-    if (transition.sameFragment) {
+    if (transition.deferUntilPaint) {
+      deferredFrameRef.current = requestAnimationFrame(() => {
+        deferredFrameRef.current = requestAnimationFrame(() => {
+          deferredFrameRef.current = 0
+          if (pendingTransitionRef.current !== transition) return
+          transition.deferUntilPaint = false
+          flushTransition()
+        })
+      })
+    } else if (transition.sameFragment) {
       sameFragmentFrameRef.current = requestAnimationFrame(() => {
         sameFragmentFrameRef.current = 0
         flushTransition()
@@ -216,7 +247,9 @@ export function PortfolioNavigationProvider({ sections, children }) {
   }, [createEntryId, projectIds, queueTransition, saveCurrentOffset, sectionIds, writeCurrentEntryOffset])
 
   useIsomorphicLayoutEffect(() => {
-    if (pendingTransitionRef.current && pendingTransitionRef.current.route.fragment === fragment) {
+    if (pendingTransitionRef.current
+      && !pendingTransitionRef.current.deferUntilPaint
+      && pendingTransitionRef.current.route.fragment === fragment) {
       flushTransition()
     }
   }, [flushTransition, fragment])
@@ -226,16 +259,38 @@ export function PortfolioNavigationProvider({ sections, children }) {
     window.history.scrollRestoration = 'manual'
     writeCurrentEntryOffset(window.scrollY, currentUrl())
 
-    const replaceCanonicalUrl = (route) => {
+    const replaceCanonicalUrl = (route, { forceNewEntry = false, offset = window.scrollY } = {}) => {
       const currentHash = window.location.hash.slice(1)
       if (currentHash !== route.fragment && (currentHash || route.fragment !== 'overview')) {
-        writeCurrentEntryOffset(window.scrollY, fragmentUrl(route.fragment))
+        writeCurrentEntryOffset(offset, fragmentUrl(route.fragment), forceNewEntry)
+        return true
       }
+      return false
     }
 
-    const updateFromLocation = (mode) => {
-      const route = resolveFragment(window.location.hash.slice(1), sectionIds, projectIds)
-      replaceCanonicalUrl(route)
+    const isManagedHistoryEntry = () => {
+      const state = window.history.state && typeof window.history.state === 'object'
+        ? window.history.state
+        : null
+      const entryId = state?.[ENTRY_STATE_KEY]
+      return typeof entryId === 'string'
+        && state[ENTRY_URL_KEY] === currentUrl()
+        && (entryScrollCacheRef.current.has(entryId) || Number.isFinite(state[SCROLL_STATE_KEY]))
+    }
+
+    const updateFromLocation = (mode, rawFragment, deferUntilPaint = false) => {
+      const route = resolveFragment(rawFragment, sectionIds, projectIds)
+      const currentState = window.history.state && typeof window.history.state === 'object'
+        ? window.history.state
+        : {}
+      const currentEntryId = currentState[ENTRY_STATE_KEY]
+      const restoreOffset = currentEntryId && entryScrollCacheRef.current.has(currentEntryId)
+        ? entryScrollCacheRef.current.get(currentEntryId)
+        : currentState[SCROLL_STATE_KEY]
+      const wasCanonicalized = replaceCanonicalUrl(route, {
+        forceNewEntry: mode === 'navigate',
+        offset: mode === 'restore' && Number.isFinite(restoreOffset) ? restoreOffset : 0,
+      })
       const previousSectionId = resolveFragment(fragmentRef.current, sectionIds, projectIds).sectionId
       const sameFragment = route.fragment === fragmentRef.current
       fragmentRef.current = route.fragment
@@ -247,21 +302,27 @@ export function PortfolioNavigationProvider({ sections, children }) {
         const storedY = entryId && entryScrollCacheRef.current.has(entryId)
           ? entryScrollCacheRef.current.get(entryId)
           : state[SCROLL_STATE_KEY]
+        activeEntryIdRef.current = state[ENTRY_STATE_KEY] || activeEntryIdRef.current
         queueTransition({
           route,
           options: { scrollY: storedY },
           previousSectionId,
           mode: 'restore',
           sameFragment,
+          deferUntilPaint,
         })
       } else {
-        writeCurrentEntryOffset(window.scrollY, currentUrl())
+        if (!wasCanonicalized) writeCurrentEntryOffset(window.scrollY, currentUrl(), true)
         queueTransition({
           route,
-          options: { scroll: route.projectId ? 'project' : 'top', focus: 'heading' },
+          options: {
+            scroll: route.projectId ? 'project' : 'top',
+            focus: 'heading',
+          },
           previousSectionId,
           mode: 'navigate',
           sameFragment,
+          deferUntilPaint,
         })
       }
       setFragment(route.fragment)
@@ -296,7 +357,9 @@ export function PortfolioNavigationProvider({ sections, children }) {
       })
     }
     const handlePopState = () => {
-      if (activeEntryIdRef.current) {
+      const isManagedEntry = isManagedHistoryEntry()
+      const rawFragment = window.location.hash.slice(1)
+      if (isManagedEntry && activeEntryIdRef.current) {
         entryScrollCacheRef.current.set(activeEntryIdRef.current, window.scrollY)
       }
       if (scrollFrameRef.current) {
@@ -307,11 +370,12 @@ export function PortfolioNavigationProvider({ sections, children }) {
       hashSuppressionTimerRef.current = window.setTimeout(() => {
         hashSuppressionTimerRef.current = 0
       }, 0)
-      updateFromLocation('restore')
+      updateFromLocation(isManagedEntry ? 'restore' : 'navigate', rawFragment, true)
     }
     const handleHashChange = () => {
       if (hashSuppressionTimerRef.current) return
-      updateFromLocation('navigate')
+      const rawFragment = window.location.hash.slice(1)
+      updateFromLocation('navigate', rawFragment, true)
     }
     const handlePageHide = () => writeCurrentEntryOffset(window.scrollY, currentUrl())
 
@@ -329,6 +393,7 @@ export function PortfolioNavigationProvider({ sections, children }) {
       window.clearTimeout(hashSuppressionTimerRef.current)
       if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current)
       if (sameFragmentFrameRef.current) cancelAnimationFrame(sameFragmentFrameRef.current)
+      if (deferredFrameRef.current) cancelAnimationFrame(deferredFrameRef.current)
     }
   }, [projectIds, queueTransition, sectionIds, writeCurrentEntryOffset])
 
