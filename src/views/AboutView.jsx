@@ -1,5 +1,5 @@
 import { ArrowUpRight } from "lucide-react"
-import { ActionLink, Badge, Panel, SectionHeading } from "../components/ui"
+import { ActionLink, Panel, SectionHeading } from "../components/ui"
 import { profile } from "../data/portfolio"
 import nusLogo from "../assets/NUS.png"
 
@@ -7,19 +7,15 @@ export default function AboutView() {
   return (
     <div className="space-y-7">
       <SectionHeading
-        eyebrow="A little context"
+        eyebrow="Education & interests"
         title="About"
-        description="My interests sit where practical software, data and thoughtful problem solving meet."
       />
 
       <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         <Panel className="flex flex-col justify-between">
           <div>
-            <p className="text-lg leading-8 text-ink">My academic background at the National University of Singapore combines Computer Science with minors in Quantitative Finance and Management. I’m drawn to software engineering, quantitative finance and trading, and artificial intelligence.</p>
+            <p className="text-lg leading-8 text-ink">My interests include software engineering, quantitative finance and trading, and artificial intelligence.</p>
             <p className="mt-5 text-base leading-7 text-muted">{profile.aspiration}</p>
-          </div>
-          <div className="mt-6 flex flex-wrap gap-2">
-            {profile.interests.map((interest) => <Badge key={interest} tone="sage">{interest}</Badge>)}
           </div>
         </Panel>
 

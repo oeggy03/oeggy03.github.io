@@ -7,7 +7,7 @@ export default function ProjectsView() {
       <SectionHeading
         eyebrow="Selected work"
         title="Projects"
-        description="A mix of backend systems, small bots and interface work. Select a category or project to explore the details."
+        description="Backend applications, data tools and automation, with source code and technical details."
       />
       <ProjectExplorer />
     </div>

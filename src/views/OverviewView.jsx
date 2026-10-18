@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowUpRight } from "lucide-react"
 import { ActionLink, Badge, Panel } from "../components/ui"
 import ArchitectureDiagram from "../components/content/ArchitectureDiagram"
-import { experiences, profile, projects } from "../data/portfolio"
+import { experiences, projects } from "../data/portfolio"
 
 const featuredProject = projects.find((project) => project.id === "foroom")
 const currentExperience = experiences[0]
@@ -12,9 +12,9 @@ export default function OverviewView() {
       <section className="grid min-w-0 gap-7 lg:grid-cols-[1.12fr_0.88fr] lg:items-center lg:gap-10">
         <div className="min-w-0">
           <p className="mb-4 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-ink">Backend / Software Engineering</p>
-          <h2 className="max-w-xl break-words text-4xl font-bold leading-[1.08] tracking-[-0.055em] text-ink sm:text-5xl lg:text-[3.5rem]">Good systems.<br className="hidden sm:block" /> Thoughtful software.</h2>
+          <h2 className="max-w-2xl break-words text-4xl font-bold leading-[1.1] tracking-[-0.05em] text-ink sm:text-5xl lg:text-5xl">Backend engineering.<br className="hidden sm:block" /> Practical solutions.</h2>
           <p className="mt-5 max-w-xl text-base leading-7 text-muted sm:text-lg">
-            I’m Tran Ha Thu. My project work spans APIs, data-backed tools and useful interfaces built with Go, Java and Python.
+            I&apos;m Tran Ha Thu, a software engineer focused on backend development. I build applications with Go, Java and Python, with experience in data engineering and machine learning.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <ActionLink href="#projects">View projects</ActionLink>
@@ -53,12 +53,12 @@ export default function OverviewView() {
               <img className="h-full w-full object-contain" src={featuredProject.image} alt={featuredProject.imageAlt} width={featuredProject.imageWidth} height={featuredProject.imageHeight} loading="eager" decoding="async" />
             </div>
             <div className="p-5 sm:p-6">
-              <p className="text-sm leading-6 text-muted">A minimalistic forum for people with different interests and backgrounds. The React front end connects to a Go and MySQL back end with JWT authentication and bcrypt.</p>
+              <p className="text-sm leading-6 text-muted">A discussion forum with a Go backend, MySQL storage and JWT authentication.</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {["Go", "MySQL", "JWT", "bcrypt"].map((skill) => <Badge key={skill} tone="sage">{skill}</Badge>)}
               </div>
-              <a href="#projects" className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-ink underline decoration-accent decoration-2 underline-offset-4 transition-colors hover:text-accent-ink focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                View project details <ArrowUpRight aria-hidden="true" className="size-4" />
+              <a href="#project-foroom" className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-ink underline decoration-accent decoration-2 underline-offset-4 transition-colors hover:text-accent-ink focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                Explore FoROOM <ArrowUpRight aria-hidden="true" className="size-4" />
               </a>
             </div>
           </div>
@@ -79,7 +79,6 @@ export default function OverviewView() {
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
-        <p className="text-sm text-muted">{profile.education.institution} · {profile.education.programme}</p>
         <a href="#about" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-ink underline decoration-line underline-offset-4 hover:decoration-accent focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
           A little more about me <span aria-hidden="true">&#8599;</span>
         </a>

@@ -22,24 +22,22 @@ const contacts = [
 
 export default function ContactView() {
   return (
-    <div className="space-y-7">
+    <div className="space-y-5">
       <SectionHeading
         eyebrow="Say hello"
         title="Contact"
-        description="I’d love to hear from you. Email is the best way to reach me."
       />
 
       <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-        <Panel className="flex flex-col justify-between">
+        <Panel className="flex flex-col justify-between !p-4 sm:!p-6">
           <div>
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-accent-ink">Email</p>
             <a className="mt-3 inline-flex min-h-11 items-center gap-2 break-all text-xl font-bold tracking-tight text-ink underline decoration-accent decoration-2 underline-offset-4 transition-colors hover:text-accent-ink sm:text-2xl focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" href={`mailto:${profile.email}`}>
               <Mail aria-hidden="true" className="size-5 shrink-0" />{profile.email}
             </a>
-            <p className="mt-3 max-w-md text-sm leading-6 text-muted">Use the link to start an email, or copy the address to your clipboard.</p>
           </div>
-          <div className="mt-5 flex flex-wrap items-start gap-x-5 gap-y-1">
-            <ActionLink href={`mailto:${profile.email}`}>Write an email</ActionLink>
+          <div className="mt-3 flex flex-wrap items-start gap-x-5 gap-y-1">
+            <ActionLink href={`mailto:${profile.email}`}>Email me</ActionLink>
             <CopyEmailButton />
           </div>
         </Panel>

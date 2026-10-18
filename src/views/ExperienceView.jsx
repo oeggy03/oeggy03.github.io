@@ -8,7 +8,7 @@ export default function ExperienceView() {
       <SectionHeading
         eyebrow="Work & teaching"
         title="Experience"
-        description="Roles across data engineering, machine learning, software development and teaching."
+        description="Engineering, data and teaching experience across industry and research."
       />
 
       <div className="grid gap-4 xl:grid-cols-2">
