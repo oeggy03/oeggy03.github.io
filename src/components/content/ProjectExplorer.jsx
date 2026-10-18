@@ -38,7 +38,7 @@ function ProjectDetails({ project }) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="mb-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">{project.category}</p>
-            <h3 id={`project-heading-${project.id}`} className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{project.title}</h3>
+            <h3 id={`project-heading-${project.id}`} tabIndex={-1} className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{project.title}</h3>
             <a href={sectionPathFor("projects")} className="mt-1 inline-flex min-h-11 items-center text-sm font-semibold text-muted underline decoration-line underline-offset-2 hover:text-ink hover:decoration-accent focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent lg:hidden">Browse projects</a>
           </div>
           <div className="flex flex-wrap items-center gap-2">
