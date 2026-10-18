@@ -4,7 +4,6 @@ import foroomImage from "../assets/proj_images/foroom_proj.png"
 import buddy4goodImage from "../assets/proj_images/buddy4good.png"
 import foodHeroImage from "../assets/proj_images/foodhero.png"
 import hdbLogo from "../assets/hdb.png"
-import careForWeLogo from "../assets/cfw.png"
 import nusLogo from "../assets/NUS.png"
 import eastspringLogo from "../assets/eastspring.png"
 import aStarLogo from "../assets/astar.png"
@@ -12,16 +11,27 @@ import resumeFile from "../assets/Resume_TranHaThu.pdf"
 
 export const profile = {
   name: "Tran Ha Thu",
-  role: "Backend / Software Engineer",
-  email: "tranhathu@u.nus.edu",
+  role: "Software Engineer",
+  email: "tranhathuwork@gmail.com",
   github: "https://github.com/oeggy03",
   linkedin: "https://www.linkedin.com/in/tran-ha-thu/",
   resume: resumeFile,
   education: {
     institution: "National University of Singapore",
     abbreviation: "NUS",
-    programme: "Computer Science",
+    programme: "Bachelor of Computing – Computer Science",
+    period: "Aug 2022 – May 2026",
+    gpa: "4.6/5.0",
     minors: ["Quantitative Finance", "Management"],
+    honors: [
+      "First Class Honours",
+      "Distinction in Software Engineering",
+      "Dean's List 2022",
+    ],
+    activities: [
+      "Invited to CVWO; teaching assistant for five programming modules",
+      "Organized 20+ university events as a residential assistant and CCA committee leader",
+    ],
     url: "https://nus.edu.sg/",
   },
   interests: ["Software engineering", "Quantitative finance and trading", "Artificial intelligence"],
@@ -163,57 +173,113 @@ export const projects = [
   },
 ]
 
+export const currentExperienceId = "tiktok-backend"
+
 export const experiences = [
   {
-    id: "hdb",
-    role: "Data Analysis / Machine Learning Intern",
-    company: "Housing Development Board (HDB)",
-    dates: "May 2024 - Present",
-    summary: "Applied machine learning and data analysis to support HDB business processes.",
-    logo: hdbLogo,
-    logoAlt: "Housing & Development Board (HDB)",
-    url: "https://www.hdb.gov.sg/cs/infoweb/homepage",
-    skills: ["Python", "Machine learning", "Data analysis", "Software engineering"],
+    id: currentExperienceId,
+    startedAt: "2026-07",
+    dates: "Jul 2026 – Present",
+    company: "TikTok",
+    role: "Backend Engineer",
+    highlights: [
+      "Developed internal products with TypeScript and Go to improve reliability and observability of internal services.",
+    ],
+    skills: ["TypeScript", "Go"],
   },
   {
-    id: "careforwe",
-    role: "Tech Lead",
-    company: "CareForWe (Healthtech startup)",
-    dates: "Dec 2023 - Present",
-    summary: "Led development of a video-hosting platform and company website.",
-    logo: careForWeLogo,
-    logoAlt: "CareForWe",
-    url: "https://www.care4we.com/",
-    skills: ["JavaScript", "React", "HTML", "CSS"],
+    id: "tiktok-intern",
+    startedAt: "2026-01",
+    endedAt: "2026-03",
+    company: "TikTok",
+    role: "Software Engineering Intern",
+    dates: "Jan 2026 – Mar 2026",
+    highlights: [
+      "Developed internal products with TypeScript and Go to improve reliability and observability of internal services.",
+    ],
+    skills: ["TypeScript", "Go"],
   },
   {
     id: "nus-ta",
+    startedAt: "2023-08",
+    endedAt: "2025-12",
     role: "Teaching Assistant",
     company: "National University of Singapore",
-    dates: "Aug 2023 - Present",
-    summary: "Graded programming assignments and taught programming methodology at NUS.",
+    dates: "Aug 2023 – Dec 2025",
+    highlights: [
+      "Taught programming concepts to over 1,000 students through self-prepared JavaScript, Java and Python tutorials.",
+      "Received feedback scores of 4.8/5 for CS1101S and 4.7/5 for CS2103T, against a department average of 4.3.",
+    ],
     logo: nusLogo,
     logoAlt: "National University of Singapore",
     url: "https://nus.edu.sg/",
-    skills: ["JavaScript"],
+    skills: ["JavaScript", "Java", "Python"],
+  },
+  {
+    id: "gic",
+    startedAt: "2025-06",
+    endedAt: "2025-09",
+    role: "Software Engineering Intern",
+    company: "GIC",
+    dates: "Jun 2025 – Sep 2025",
+    highlights: [
+      "Engineered products for public market investments with TypeScript, C#, Python and Microsoft SQL Server, optimizing workflows for over 300 staff.",
+    ],
+    skills: ["TypeScript", "C#", "Python", "Microsoft SQL Server"],
+  },
+  {
+    id: "uptale",
+    startedAt: "2025-01",
+    endedAt: "2025-06",
+    role: "Software Engineering & AI Intern",
+    company: "Uptale",
+    dates: "Jan 2025 – Jun 2025",
+    highlights: [
+      "Implemented a full retrieval-augmented generation (RAG) pipeline in TypeScript and C# for gamified educational experiences used by over 100 customers.",
+    ],
+    skills: ["TypeScript", "C#", "RAG"],
+  },
+  {
+    id: "hdb",
+    startedAt: "2024-05",
+    endedAt: "2024-08",
+    role: "Data Science Intern",
+    company: "Housing Development Board (HDB)",
+    dates: "May 2024 – Aug 2024",
+    highlights: [
+      "Built a Python commercial rent prediction model using Random Forest, XGBoost and k-nearest neighbors, achieving an average of 88% accuracy.",
+      "Automated financial reporting with Excel and VBA, improving efficiency by 80%.",
+    ],
+    logo: hdbLogo,
+    logoAlt: "Housing & Development Board (HDB)",
+    url: "https://www.hdb.gov.sg/cs/infoweb/homepage",
+    skills: ["Python", "Random Forest", "XGBoost", "K-Nearest Neighbors", "Excel", "VBA"],
   },
   {
     id: "eastspring",
+    startedAt: "2023-05",
+    endedAt: "2023-08",
     role: "Data Engineering Intern",
     company: "Eastspring Investments Singapore",
-    dates: "May 2023 - Aug 2023",
-    summary: "Used Python and Pandas to handle large datasets and wrote object-oriented code to support daily operations.",
+    dates: "May 2023 – Aug 2023",
+    highlights: [
+      "Maintained over 100 production and raw database tables with Python and SQL, and improved an AI chatbot with the OpenAI API.",
+    ],
     logo: eastspringLogo,
     logoAlt: "Eastspring Investments",
     url: "https://www.eastspring.com/sg",
-    skills: ["Git", "Python", "Pandas", "Object-oriented programming", "Microsoft SQL Server"],
+    skills: ["Python", "SQL", "OpenAI API"],
   },
   {
     id: "astar",
-    role: "Intern",
+    startedAt: "2019-12",
+    endedAt: "2020-01",
+    role: "Artificial Intelligence Intern",
     company: "A*STAR - Agency for Science, Technology and Research",
-    dates: "Dec 2019 - Jan 2020",
-    summary: "Trained a robotic arm for image recognition using Python and OpenCV.",
+    dates: "Dec 2019 – Jan 2020",
+    highlights: [
+      "Trained a robotic arm to sort 10 types of trash using Python and OpenCV.",
+    ],
     logo: aStarLogo,
     logoAlt: "Agency for Science, Technology and Research (A*STAR)",
     url: "https://www.a-star.edu.sg/",
