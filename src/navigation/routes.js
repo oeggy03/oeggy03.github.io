@@ -95,16 +95,18 @@ export function resolvePortfolioRoute(locationLike, validProjectIds = PROJECT_ID
   }
 
   const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`
-  const routePath = normalizedPath === '/' ? '/' : `${normalizedPath.replace(/\/+$/, '')}/`
+  const hasIndexHtml = normalizedPath.endsWith('/index.html')
+  const pathForRoute = hasIndexHtml ? normalizedPath.slice(0, -'index.html'.length) : normalizedPath
+  const routePath = pathForRoute === '/' ? '/' : `${pathForRoute.replace(/\/+$/, '')}/`
   if (routePath === '/') return routeForSection('overview', { legacy: normalizedPath !== '/' })
 
   for (const [sectionId, path] of Object.entries(SECTION_PATHS)) {
-    if (routePath === path) return routeForSection(sectionId, { legacy: normalizedPath !== routePath })
+    if (routePath === path) return routeForSection(sectionId, { legacy: hasIndexHtml || normalizedPath !== routePath })
   }
 
   const projectMatch = routePath.match(/^\/projects\/([^/]+)\/$/)
   if (projectMatch && validProjectIds.has(projectMatch[1])) {
-    return routeForProject(projectMatch[1], { legacy: normalizedPath !== routePath })
+    return routeForProject(projectMatch[1], { legacy: hasIndexHtml || normalizedPath !== routePath })
   }
 
   return routeForSection('overview', { legacy: true, isKnownPath: false })
