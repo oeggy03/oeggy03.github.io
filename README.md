@@ -73,9 +73,9 @@ Keep the six original projects, five experiences, core skills, full biography, r
 
 ## Hosting
 
-GitHub Pages publishes from the `gh-pages` branch at the repository root, with `https://www.tranhathu.com/` as the site URL. The `Verify and deploy portfolio` workflow runs lint, production build, SEO, browser, and accessibility checks on pull requests to `main`. After a change reaches `main`, it runs those checks again and publishes the verified build to `gh-pages`. Feature branch pushes do not deploy the site.
+GitHub Pages is published at `https://www.tranhathu.com/`. The `Verify and deploy portfolio` workflow runs lint, production build, SEO, browser, and accessibility checks on pull requests to `main`. After a change reaches `main`, it runs those checks again and deploys the verified artifact with GitHub Pages Actions. Feature branch pushes do not deploy the site. The one-time Pages source setting must be **GitHub Actions** for this workflow to publish.
 
-The workflow uses the repository's `GITHUB_TOKEN`; no separate deploy secret is needed. It transfers the exact `dist/` artifact that passed the checks, including `.nojekyll`. For an authorized manual publish, `npm run deploy` builds and publishes `dist/` to `gh-pages`. Keep the domain and `.nojekyll` files in `public/` so every build preserves them. Namecheap DNS records currently route `www` to `oeggy03.github.io` and the bare domain to GitHub Pages. Do not remove unrelated email or domain verification records when editing DNS.
+The workflow transfers the exact `dist/` artifact that passed the checks, including `.nojekyll`. To manually publish the latest `main` build, run **Verify and deploy portfolio** from the Actions tab with the `main` branch selected. Keep `public/CNAME` and `public/.nojekyll` so builds preserve the custom domain and static files. Namecheap DNS records currently route `www` to `oeggy03.github.io` and the bare domain to GitHub Pages. Do not remove unrelated email or domain verification records when editing DNS.
 
 See the [deployment and DNS guide](docs/deployment.md) for GitHub Pages settings, DNS records, Search Console steps, and troubleshooting.
 

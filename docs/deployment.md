@@ -2,26 +2,23 @@
 
 ## Current publishing configuration
 
-GitHub Pages uses branch publishing from `gh-pages` at the repository root, with `https://www.tranhathu.com/` as the site URL. The workflow at `.github/workflows/deploy-pages.yml` runs the quality checks for pull requests to `main`. When a commit reaches `main`, it runs lint, builds and prerenders the site, checks SEO and assets, runs the browser/accessibility suite, then publishes the same verified `dist/` artifact to `gh-pages`. The existing Pages branch setting serves that output; no Pages source change is needed. Feature branch pushes do not publish the site.
+The site URL is `https://www.tranhathu.com/`. GitHub Pages must use **GitHub Actions** as its publishing source for the workflow at `.github/workflows/deploy-pages.yml`. The workflow runs the quality checks on pull requests to `main`. When a commit reaches `main`, it runs lint, builds and prerenders the site, checks SEO and assets, runs the browser/accessibility suite, then deploys the same verified `dist/` artifact with `actions/deploy-pages`. Feature branch pushes do not publish the site.
 
-The workflow uses the built-in `GITHUB_TOKEN` with repository content write permission to update `gh-pages`; it requires no personal access token or other deploy secret. GitHub's Pages branch publisher then builds the updated site. Check both the **Verify and deploy portfolio** run and the **pages build and deployment** run in the Actions tab after a merge.
+### One-time activation
 
-For an authorized manual publish from a checked out branch, run:
+After this workflow is merged, set its publishing source in the repository **Settings > Pages > Build and deployment > Source** to **GitHub Actions**. If the first post-merge run started before the source change and the deploy job failed, rerun **Verify and deploy portfolio** from the Actions tab with `main` selected.
 
-```sh
-npm run deploy
-```
+The deploy job uses the built-in `GITHUB_TOKEN` with Pages write and OIDC token permissions; no personal access token or separate deploy secret is needed. It is limited to pushes or manual workflow runs from `main`.
 
-The `predeploy` script builds first. `gh-pages -d dist --dotfiles` then publishes the generated files to the `gh-pages` branch, including `.nojekyll`. Prefer the automated workflow for changes merged into `main`; it runs checks and only deploys after they pass. A successful push to `gh-pages` alone does not confirm that GitHub finished publishing the site.
+To manually publish, run **Verify and deploy portfolio** from the Actions tab and choose the `main` branch. The workflow builds, verifies, and deploys the resulting artifact.
 
 In the repository **Settings > Pages**, use:
 
-- Source: **Deploy from a branch**.
-- Branch: **gh-pages**, folder: **/ (root)**.
+- Source: **GitHub Actions**.
 - Custom domain: **www.tranhathu.com**.
 - Enable **Enforce HTTPS** after GitHub provisions the certificate.
 
-If GitHub Actions cannot write to `gh-pages`, confirm the workflow token has repository content write access under the repository's Actions settings. After any publish, check the Pages build and deployment run and the deployed site URL.
+After publishing, check the **Verify and deploy portfolio** workflow and the Pages deployment run in the repository Actions tab. Confirm the site is responding at the configured domain.
 
 ## Domain and DNS
 
