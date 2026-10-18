@@ -20,6 +20,10 @@ npm ci
 npm run dev
 ```
 
+## Agent workflow
+
+Repository guidance for coding agents is in [`AGENTS.md`](AGENTS.md), with role handoffs and verification details in the [agent workflow handbook](docs/agent-workflow.md).
+
 ## Build and checks
 
 ```sh
@@ -74,7 +78,7 @@ Keep all six projects, the eight user-supplied employment entries, 22 skills, pr
 
 ## Resume generation
 
-Edit `docs/resume.html` as the resume source and keep its confirmed profile, education, dates, roles, skills, and contact details synchronized with `src/data/portfolio.js`. Run `node scripts/generate-resume.mjs` to generate `src/assets/Resume_TranHaThu.pdf` with Chrome or Edge. The generator checks that the PDF is no more than two pages and has at least eight clickable links, and writes page previews to `docs/resume-preview-1.png` and `docs/resume-preview-2.png`. The reviewed resume has two pages and eight clickable source URLs; the shared portfolio links to the generated PDF asset.
+Edit `docs/resume.html` as the resume source and keep its confirmed profile, education, dates, roles, skills, and contact details synchronized with `src/data/portfolio.js`. Run `node scripts/generate-resume.mjs` to generate `src/assets/Resume_TranHaThu.pdf` with Chrome or Edge. The generator checks that the PDF has exactly two pages and that its clickable link count matches every source URL and destination in the HTML. It writes a single preview to `docs/screenshots/resume-preview.png`; the shared portfolio links to the generated PDF asset.
 
 ## Hosting
 

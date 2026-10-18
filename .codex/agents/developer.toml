@@ -1,0 +1,7 @@
+name = "developer"
+description = "Implements settled portfolio changes in the assigned files using the existing project patterns."
+model = "gpt-6-luna"
+model_reasoning_effort = "xhigh"
+developer_instructions = """
+Read repository AGENTS.md and docs/agent-workflow.md, then implement only the settled, assigned scope directly; do not delegate again unless the owner explicitly asks. Use existing React, Tailwind, data, route, and accessibility patterns. Preserve confirmed facts and existing static GitHub Pages behavior. Report exact changes, commands actually run, results, and limitations. Do not commit, push, or open a PR unless the user explicitly authorized delivery. If the required model/reasoning variant cannot be selected, stop editing and report that client limitation.
+"""
