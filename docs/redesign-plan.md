@@ -1,71 +1,52 @@
-# Portfolio redesign plan
+# Four-view portfolio plan
+
+## Current redesign scope
+
+- Keep the four focused views: Overview, Projects, Experience, and Skills.
+- Use clean, real-link navigation for `/`, `/projects/`, `/experience/`, `/skills/`, and all six `/projects/<id>/` detail routes. Recognized legacy hashes resolve to the matching route while Back/Forward preserves route and reading position.
+- Remove the Singapore location text from the sidebar and the “Built with care in Singapore” footer copy. Present the role as Software Engineer and keep Overview free of an expertise strip and project details.
+- Put Experience in reverse chronological order using the eight roles and exact dates supplied by the user. TikTok Backend Engineer (Jul 2026–Present) leads; completed roles follow in descending end-date order, with TikTok Intern (Jan–Mar 2026) next.
+- Show the confirmed NUS Bachelor of Computing in Computer Science (Aug 2022–May 2026), GPA 4.6/5, First Class Honours, and Distinction in Software Engineering. The education facts are confirmed; no extra grades or dates should be inferred.
+- Use the updated contact email `tranhathuwork@gmail.com` throughout the shared shell and metadata.
 
 ## Product direction
 
-Rebuild the portfolio as a compact, backend studio style interface. Use a charcoal identity rail, a warm paper canvas, orange accents, Manrope for reading, and IBM Plex Mono for labels and technical details. Keep the layout direct and calm so project work and experience are easy to scan.
+Present Tran Ha Thu as a backend/software engineer through a focused four-view portfolio: Overview, Projects, Experience, and Skills. The charcoal identity rail, warm canvas, restrained accent color, Manrope reading type, and IBM Plex Mono labels support a compact, direct presentation.
 
-## Views and content
+## View content
 
-- **Overview:** concise introduction, backend/software engineering focus, NUS context, and a visible project preview at 1440×900. Keep clear project and contact actions near the introduction. On mobile, both actions should be reachable without a long scroll.
-- **Projects:** all six original projects (FoROOM, Buddy4Good, Eggbot, TeleAI, FoodHero, and Portfolio Website), with Backend, AI & bots, and Frontend filters. Selecting a project should expose its summary, technical description, image, skills, architecture when available, and existing project/repository links.
-- **Experience:** all five original roles with dates, descriptions, company names, and existing company links/logos.
-- **Skills:** the complete original core skill inventory, grouped for scanning; retain the additional technical skills already represented in the content model.
-- **About:** preserve the original biography, education, interests, and aspiration, with existing external links.
-- **Contact:** real email, LinkedIn, GitHub, and resume links. Copy email should give visible success and failure feedback.
+- **Overview:** show the biography, interests, aspiration, confirmed NUS Computer Science education, and TikTok as the current employer. Keep all project names, project images, implementation details, and architecture out of this view.
+- **Projects:** retain FoROOM, Buddy4Good, Eggbot, TeleAI, FoodHero, and Portfolio Website, with their current images, implementation facts, architecture where available, skills, filters, and all existing links.
+- **Experience:** show the eight user-supplied employment entries in reverse chronological order, with their verified dates, descriptions, company identities, and links.
+- **Skills:** retain all 22 skills and their existing project links.
 
-Six direct views are navigated through a persistent identity rail or its mobile equivalent. Keep pointer, keyboard, browser back/forward, refresh, and hash navigation working. Preserve the legacy section anchors (`#aboutSection`, `#experiencesSec`, `#projectsSec`, and `#contactSec`) so old links continue to work. Do not require a long page scroll to reach core content.
+Keep the updated email, GitHub, LinkedIn, and resume actions available in the shared shell on desktop and mobile. Use clean section and project links with direct routes. The three contact/social actions remain reachable in the sticky mobile header while reading long content.
 
-## Visitor journeys
+## Navigation and compatibility
 
-1. **Recruiter:** scan the overview and one project proof point, open Experience to review recent roles, then use Contact or the resume link.
-2. **Technical reviewer:** open Projects, filter to backend or AI work, select FoROOM or another project, inspect the implementation summary and architecture, and follow its code or project links.
-3. **Direct contact:** follow the visible email, LinkedIn, GitHub, or resume link from Contact; copying the email gives immediate feedback.
+Support pointer and keyboard navigation, arrow movement, Home/End, direct route refresh, project deep links, and browser Back/Forward with reading-position restoration. The section routes are `/`, `/projects/`, `/experience/`, and `/skills/`; project routes are `/projects/<id>/`.
 
-## Component and content ownership
-
-Keep shared interface elements and view content reusable. Place portfolio facts in data modules rather than duplicating content in components. The current content module is `src/data/portfolio.js`; shared interface primitives live under `src/components/ui/`, and specialized content components live under `src/components/content/`. Keep each major view in its own component directory. Render useful content into static HTML before JavaScript loads, then enhance navigation and project selection after hydration. Use Tailwind utilities and the minimal generated CSS entry rather than restoring a bespoke stylesheet system.
+Map recognized legacy hashes, including `#about`, `#aboutSection`, `#contact`, `#contactSec`, `#experiencesSec`, `#projectsSec`, section hashes, and project hashes, to their corresponding clean routes after hydration. Keep prerendered alias anchors for JavaScript-disabled readers.
 
 ## Acceptance criteria
 
-- The page has six direct views and no server-side routes. The production output remains a static GitHub Pages site.
-- All six projects, five roles, fourteen core skills, full biography and education content, resume, and original outbound links remain available in the generated HTML.
-- Project category filters show the expected sets and selection reveals complete project details. Overview actions reach Projects and Contact.
-- Navigation supports keyboard arrows plus Home/End, hash refresh, browser back/forward, and the four legacy section hashes.
-- With JavaScript disabled, meaningful content and hash navigation remain available.
-- No viewport has horizontal overflow at 320, 390, 768, 1024, 1440, or 1920 CSS pixels. Check 200% desktop zoom by also testing a 720 CSS-pixel viewport.
-- Reduced motion is respected. Axe reports no WCAG 2.1 A/AA or WCAG 2.2 AA violations on desktop and mobile views.
-- Canonical/social metadata, JSON-LD, robots, sitemap, CNAME, `.nojekyll`, and local asset links remain valid.
+- Exactly four portfolio views appear in navigation and prerendered HTML; About and Contact are not separate views.
+- Overview presents the stated profile, interests, aspiration, NUS education, and current TikTok employer without project names, images, details, chooser, or architecture.
+- All six projects, eight supplied roles, 22 skills, all 16 project destinations, employer destinations, and the resume remain available.
+- Email, GitHub, LinkedIn, and Resume controls are visible on desktop and at 320px mobile width. Mobile social controls stay visible while reading a long project and provide at least 44px targets.
+- Section and project navigation uses real links with clean destination paths; no authored hash navigation remains.
+- No-JavaScript output serves all ten paths directly with their content and metadata, and retains retired-hash anchors on the homepage.
+- Legacy hash redirects, keyboard controls, filters, project selection/deep links, and browser-history scroll restoration continue to work.
+- No horizontal overflow occurs at 1440×900, 1366×768, 1024×600, 1440×600, 390×844, 390×600, 320×568, 720×450, 768×1024, 844×390, or 1920×1080. The 720px viewport covers the 200% desktop-width equivalent.
+- Reduced motion is respected. Axe reports no WCAG 2.1 A/AA or WCAG 2.2 AA violations on four views at desktop and mobile widths (eight scans).
+- Canonical/social metadata, JSON-LD, robots, sitemap, CNAME, `.nojekyll`, resume, and local asset links remain valid.
 
-## Delivery milestones
+## Verification and review
 
-1. **Foundation and navigation:** establish the visual tokens, shared shell, responsive rail, six-view navigation, history/hash behavior, and static rendering.
-2. **Content explorer:** map the existing portfolio facts into data modules and complete the six project, five experience, skills, about, and contact views.
-3. **QA, fixes, and screenshots:** run build, SEO, browser, accessibility, and lint checks; fix the findings; capture baseline and final view screenshots and refresh the social preview after visual review.
+Run `npm run build`, `npm run check:seo`, `npm run check:ui`, and `npm run lint` against a local production preview on port 4173. Browser checks cover direct route loads and refresh, legacy hash hydration, section and project history, no-JavaScript paths/content, keyboard focus, project filters and direct links, desktop rail access, social/resume actions, 320px mobile social visibility, all viewport widths above, reduced motion, runtime requests, and axe scans.
 
-No deployment is part of these milestones. The live GitHub Pages configuration was checked before the redesign: Pages uses legacy branch publishing from `gh-pages` at `/`, with `https://www.tranhathu.com/` as the site URL. A feature branch push does not publish this work. Preserve `public/CNAME`, `public/.nojekyll`, the canonical URL, robots policy, sitemap, metadata, and structured data; publish only when separately authorized.
+Capture viewport screenshots for all four desktop views, Overview and Experience on mobile, a selected and naturally scrolled Projects page, and the mobile social row while reading a project. Capture mobile Overview plus its full page and Experience with the timeline visible. Regenerate `public/social-preview.png` only after review, then rebuild so `dist/social-preview.png` contains the approved image.
 
-## Verification matrix
+## Publishing boundary
 
-Run the production build, SEO check, UI browser check, and lint after implementation. Browser checks should cover navigation and history, legacy hashes, filters/details, keyboard operation, contact actions, no-JavaScript content, reduced motion, asset requests, and horizontal overflow at each width above. Run the desktop check at 720 CSS pixels as the 200% zoom equivalent. Scan all six views on desktop and mobile for WCAG 2.1 A/AA and WCAG 2.2 AA. Keep baseline and final screenshots for review.
-
-## Navigation and editorial revision
-
-The initial review found a scroll mismatch between pointer and keyboard navigation. From the bottom of Skills, pressing End selected Contact but left the document at the previous reading offset. At 390×600, this put the email card entirely above the viewport. Project selection on mobile similarly scrolled the chosen detail beneath the sticky shell navigation and left the project chooser out of reach. Back from `#project-teleai` returned to `#projects` but retained TeleAI as the selected project. The desktop rail also occupied only one viewport of a taller document, so full-page captures ended the dark background before the content did.
-
-The revised contract is:
-
-- Use one document scroll surface. Desktop view navigation and the toolbar stay available while the selected view begins at document scroll position zero. Pointer activation, keyboard arrows, Home/End, and Enter on the active tab all reach the same settled position after rendering; keyboard focus remains on the selected navigation control. Browser Back/Forward restores the saved reading position for that history entry.
-- Keep the desktop dark rail and its backdrop full height alongside the document. When a short desktop viewport cannot fit all rail controls, the rail itself can scroll so every navigation and social link remains reachable. Keep the desktop toolbar sticky.
-- Keep the mobile section navigation in its three-column, two-row layout. Measure its actual height when placing project details and other fragment targets, with at least 16px clearance below it.
-- On desktop, changing a project while the explorer controls are visible preserves the explorer reading position. If the reader has scrolled past those controls, return to the explorer controls rather than opening a detail-only position. On mobile, selecting a project reveals its heading beneath the sticky navigation and keeps a “Browse projects” action near the heading so the chooser can be reopened.
-- Project filters preserve the reader’s scroll position when the document has room, preserve keyboard focus, and clamp only when the updated content makes the prior Y exceed the new document maximum. `#projects` means All projects with FoROOM selected; a project fragment opens the matching project. Back and Forward restore each history entry’s reading position and selected project. The category remains compatible with that selection and resets to All when needed.
-- Centralize in-site navigation so internal fragment links do not combine native anchor scrolling with application scrolling. Preserve ordinary links when opened in a new tab or with modifier keys, legacy fragments, prerendered content, and useful no-JavaScript navigation.
-- Edit the public copy for recruiters: lead with role and evidence, keep project descriptions concise and factual, make implementation details easy to scan, and make the email action self-explanatory. Avoid vague process instructions or undersold labels. Preserve the source facts and project, role, education, skill, resume, and outbound-link coverage.
-
-### Regression matrix for this revision
-
-Exercise section switching from the document bottom on desktop and mobile, including clicking the current tab, switching to another tab, using keyboard arrows and Home/End, and pressing Enter on the current tab. Section activation starts at scroll Y=0 after four animation frames and a short settling delay, the view heading is visible below sticky controls, and keyboard focus remains on the selected tab. Browser Back/Forward restores each history entry's saved reading offset instead of applying the section-activation scroll rule. At 390×600, Contact’s heading, email address, and complete primary email action must fit in the viewport after keyboard navigation.
-
-Exercise project selection from the desktop explorer and after scrolling the detail, mobile selection and “Browse projects,” repeated selection, each filter, direct project hashes, and Back/Forward from a nonzero reading offset. Include a deliberate non-anchor reading position such as Projects Y=237px; verify Back restores it after the browser hash events settle, while section activation still opens at Y=0. Check selection and filter coherence as well as the visible scroll result. Verify the desktop rail backdrop continues past the first viewport and its controls remain reachable at short heights.
-
-Run viewport checks at 1440×900, 1366×768, 1024×600, 1440×600, 390×844, 390×600, 320×568, 720×450, 768×1024, 844×390, and 1920×1080. Confirm the desktop toolbar stays sticky, the dark backdrop spans the full document, and all rail links are reachable through internal rail scrolling on short desktop screens. Keep the existing no-JavaScript, SEO, accessibility, reduced-motion, resume, clipboard, local-asset, all 16 project destinations, five employer links, and all 22 skill checks. Do not pin UI tests to editorial sentences; assert preserved facts and meaningful actions instead.
+No deployment is part of this redesign. A feature-branch push does not publish the site; the repository pipeline runs checks and deploys only after the change reaches `main`. Preserve the custom domain and static files. Publish only the verified `dist/` artifact through the existing GitHub Pages workflow.

@@ -2,43 +2,19 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import PropTypes from 'prop-types'
 import { projects } from '../data/portfolio.js'
 import PortfolioNavigationContext from './navigation-context.js'
+import { resolvePortfolioRoute } from './routes.js'
 
 const SCROLL_STATE_KEY = '__portfolioScrollY'
 const ENTRY_STATE_KEY = '__portfolioEntryId'
 const ENTRY_URL_KEY = '__portfolioEntryUrl'
 const useIsomorphicLayoutEffect = typeof document === 'undefined' ? useEffect : useLayoutEffect
 
-const legacyFragments = {
-  homepage: 'overview',
-  aboutSection: 'about',
-  experiencesSec: 'experience',
-  projectsSec: 'projects',
-  contactSec: 'contact',
-}
-
-function resolveFragment(rawFragment, sectionIds, projectIds) {
-  const raw = String(rawFragment || '').replace(/^#/, '')
-  const canonical = legacyFragments[raw] || raw
-  if (sectionIds.has(canonical)) {
-    return { fragment: canonical, sectionId: canonical, projectId: null, legacy: canonical !== raw }
-  }
-  if (canonical.startsWith('project-') && projectIds.has(canonical.slice('project-'.length))) {
-    return { fragment: canonical, sectionId: 'projects', projectId: canonical.slice('project-'.length), legacy: false }
-  }
-  return {
-    fragment: 'overview',
-    sectionId: 'overview',
-    projectId: null,
-    legacy: Boolean(raw),
-  }
-}
-
-function fragmentUrl(fragment) {
-  return `${window.location.pathname}${window.location.search}${fragment ? `#${fragment}` : ''}`
-}
-
 function currentUrl() {
   return `${window.location.pathname}${window.location.search}${window.location.hash}`
+}
+
+function routeUrl(route) {
+  return `${route.path}${window.location.search}`
 }
 
 function focusWithoutScroll(element) {
@@ -53,16 +29,14 @@ function isMobileViewport() {
   return window.matchMedia('(max-width: 1023px)').matches
 }
 
-export function PortfolioNavigationProvider({ sections, children }) {
-  const sectionIds = useMemo(() => new Set(sections.map(({ id }) => id)), [sections])
+export function PortfolioNavigationProvider({ initialRoute, children }) {
   const projectIds = useMemo(() => new Set(projects.map(({ id }) => id)), [])
-  const [fragment, setFragment] = useState('overview')
-  const fragmentRef = useRef('overview')
+  const [fragment, setFragment] = useState(initialRoute.fragment)
+  const fragmentRef = useRef(initialRoute.fragment)
   const pendingTransitionRef = useRef(null)
   const scrollFrameRef = useRef(0)
   const sameFragmentFrameRef = useRef(0)
   const deferredFrameRef = useRef(0)
-  const hashSuppressionTimerRef = useRef(0)
   const entrySequenceRef = useRef(0)
   const entryScrollCacheRef = useRef(new Map())
   const activeEntryIdRef = useRef(null)
@@ -108,8 +82,7 @@ export function PortfolioNavigationProvider({ sections, children }) {
         if (projectTarget) {
           const stickyNavigation = document.querySelector('[data-portfolio-mobile-navigation]')
           const stickyHeight = stickyNavigation?.getBoundingClientRect().height || 0
-          const offset = stickyHeight + 16
-          const targetY = window.scrollY + projectTarget.getBoundingClientRect().top - offset
+          const targetY = window.scrollY + projectTarget.getBoundingClientRect().top - stickyHeight - 16
           window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' })
           destination = projectHeading || projectTarget
         } else if (projectHeading) {
@@ -215,21 +188,20 @@ export function PortfolioNavigationProvider({ sections, children }) {
   }, [writeCurrentEntryOffset])
 
   const navigate = useCallback((target, options = {}) => {
-    const rawTarget = String(target || '').replace(/^#/, '')
-    const route = resolveFragment(rawTarget, sectionIds, projectIds)
+    const route = resolvePortfolioRoute(target, projectIds)
     const nextOptions = {
       replace: options.replace === true,
       scroll: options.scroll || (route.projectId ? 'project' : 'top'),
       focus: options.focus || 'heading',
     }
-    const previousSectionId = resolveFragment(fragmentRef.current, sectionIds, projectIds).sectionId
+    const previousRoute = resolvePortfolioRoute(fragmentRef.current, projectIds)
+    const previousSectionId = previousRoute.sectionId
     const sameFragment = route.fragment === fragmentRef.current
-    const currentHash = window.location.hash.slice(1)
-    const nextUrl = fragmentUrl(route.fragment)
+    const nextUrl = routeUrl(route)
 
     if (nextOptions.replace) {
       writeCurrentEntryOffset(window.scrollY, nextUrl)
-    } else if (!sameFragment || currentHash !== route.fragment) {
+    } else if (currentUrl() !== nextUrl) {
       saveCurrentOffset()
       const entryId = createEntryId()
       window.history.pushState({
@@ -244,7 +216,7 @@ export function PortfolioNavigationProvider({ sections, children }) {
     fragmentRef.current = route.fragment
     queueTransition({ route, options: nextOptions, previousSectionId, mode: 'navigate', sameFragment })
     setFragment(route.fragment)
-  }, [createEntryId, projectIds, queueTransition, saveCurrentOffset, sectionIds, writeCurrentEntryOffset])
+  }, [createEntryId, projectIds, queueTransition, saveCurrentOffset, writeCurrentEntryOffset])
 
   useIsomorphicLayoutEffect(() => {
     if (pendingTransitionRef.current
@@ -259,10 +231,11 @@ export function PortfolioNavigationProvider({ sections, children }) {
     window.history.scrollRestoration = 'manual'
     writeCurrentEntryOffset(window.scrollY, currentUrl())
 
-    const replaceCanonicalUrl = (route, { forceNewEntry = false, offset = window.scrollY } = {}) => {
-      const currentHash = window.location.hash.slice(1)
-      if (currentHash !== route.fragment && (currentHash || route.fragment !== 'overview')) {
-        writeCurrentEntryOffset(offset, fragmentUrl(route.fragment), forceNewEntry)
+    const replaceCanonicalUrl = (route, offset = window.scrollY, forceNewEntry = false) => {
+      const preserveUnknownHash = window.location.hash && !route.legacyHash
+      const url = `${routeUrl(route)}${preserveUnknownHash ? window.location.hash : ''}`
+      if (window.location.pathname !== route.path || (route.legacyHash && window.location.hash)) {
+        writeCurrentEntryOffset(offset, url, forceNewEntry)
         return true
       }
       return false
@@ -278,8 +251,8 @@ export function PortfolioNavigationProvider({ sections, children }) {
         && (entryScrollCacheRef.current.has(entryId) || Number.isFinite(state[SCROLL_STATE_KEY]))
     }
 
-    const updateFromLocation = (mode, rawFragment, deferUntilPaint = false) => {
-      const route = resolveFragment(rawFragment, sectionIds, projectIds)
+    const updateFromLocation = (mode, deferUntilPaint = false) => {
+      const route = resolvePortfolioRoute(window.location, projectIds)
       const currentState = window.history.state && typeof window.history.state === 'object'
         ? window.history.state
         : {}
@@ -287,11 +260,12 @@ export function PortfolioNavigationProvider({ sections, children }) {
       const restoreOffset = currentEntryId && entryScrollCacheRef.current.has(currentEntryId)
         ? entryScrollCacheRef.current.get(currentEntryId)
         : currentState[SCROLL_STATE_KEY]
-      const wasCanonicalized = replaceCanonicalUrl(route, {
-        forceNewEntry: mode === 'navigate',
-        offset: mode === 'restore' && Number.isFinite(restoreOffset) ? restoreOffset : 0,
-      })
-      const previousSectionId = resolveFragment(fragmentRef.current, sectionIds, projectIds).sectionId
+      const wasCanonicalized = replaceCanonicalUrl(
+        route,
+        mode === 'restore' && Number.isFinite(restoreOffset) ? restoreOffset : 0,
+        mode === 'navigate',
+      )
+      const previousSectionId = resolvePortfolioRoute(fragmentRef.current, projectIds).sectionId
       const sameFragment = route.fragment === fragmentRef.current
       fragmentRef.current = route.fragment
       if (mode === 'restore') {
@@ -316,7 +290,9 @@ export function PortfolioNavigationProvider({ sections, children }) {
         queueTransition({
           route,
           options: {
-            scroll: route.projectId ? 'project' : 'top',
+            scroll: window.location.hash && !route.legacyHash
+              ? 'preserve'
+              : route.projectId ? 'project' : 'top',
             focus: 'heading',
           },
           previousSectionId,
@@ -328,13 +304,16 @@ export function PortfolioNavigationProvider({ sections, children }) {
       setFragment(route.fragment)
     }
 
-    const initialRoute = resolveFragment(window.location.hash.slice(1), sectionIds, projectIds)
+    const initialRoute = resolvePortfolioRoute(window.location, projectIds)
     replaceCanonicalUrl(initialRoute)
-    const initialPreviousSection = resolveFragment(fragmentRef.current, sectionIds, projectIds).sectionId
+    const initialPreviousSection = resolvePortfolioRoute(fragmentRef.current, projectIds).sectionId
     fragmentRef.current = initialRoute.fragment
     queueTransition({
       route: initialRoute,
-      options: { scroll: initialRoute.projectId ? 'project' : 'top', focus: 'preserve' },
+      options: {
+        scroll: initialRoute.legacyHash && initialRoute.projectId ? 'project' : 'preserve',
+        focus: 'preserve',
+      },
       previousSectionId: initialPreviousSection,
       mode: 'navigate',
       sameFragment: initialRoute.fragment === 'overview',
@@ -357,8 +336,9 @@ export function PortfolioNavigationProvider({ sections, children }) {
       })
     }
     const handlePopState = () => {
+      const route = resolvePortfolioRoute(window.location, projectIds)
+      if (window.location.hash && !route.legacyHash && route.fragment === fragmentRef.current) return
       const isManagedEntry = isManagedHistoryEntry()
-      const rawFragment = window.location.hash.slice(1)
       if (isManagedEntry && activeEntryIdRef.current) {
         entryScrollCacheRef.current.set(activeEntryIdRef.current, window.scrollY)
       }
@@ -366,16 +346,12 @@ export function PortfolioNavigationProvider({ sections, children }) {
         cancelAnimationFrame(scrollFrameRef.current)
         scrollFrameRef.current = 0
       }
-      window.clearTimeout(hashSuppressionTimerRef.current)
-      hashSuppressionTimerRef.current = window.setTimeout(() => {
-        hashSuppressionTimerRef.current = 0
-      }, 0)
-      updateFromLocation(isManagedEntry ? 'restore' : 'navigate', rawFragment, true)
+      updateFromLocation(isManagedEntry ? 'restore' : 'navigate', true)
     }
     const handleHashChange = () => {
-      if (hashSuppressionTimerRef.current) return
-      const rawFragment = window.location.hash.slice(1)
-      updateFromLocation('navigate', rawFragment, true)
+      const route = resolvePortfolioRoute(window.location, projectIds)
+      if (!route.legacyHash) return
+      updateFromLocation('navigate', true)
     }
     const handlePageHide = () => writeCurrentEntryOffset(window.scrollY, currentUrl())
 
@@ -390,19 +366,23 @@ export function PortfolioNavigationProvider({ sections, children }) {
       window.removeEventListener('popstate', handlePopState)
       window.removeEventListener('hashchange', handleHashChange)
       window.removeEventListener('pagehide', handlePageHide)
-      window.clearTimeout(hashSuppressionTimerRef.current)
       if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current)
       if (sameFragmentFrameRef.current) cancelAnimationFrame(sameFragmentFrameRef.current)
       if (deferredFrameRef.current) cancelAnimationFrame(deferredFrameRef.current)
     }
-  }, [projectIds, queueTransition, sectionIds, writeCurrentEntryOffset])
+  }, [projectIds, queueTransition, writeCurrentEntryOffset])
 
   const value = useMemo(() => ({ fragment, navigate }), [fragment, navigate])
   return <PortfolioNavigationContext.Provider value={value}>{children}</PortfolioNavigationContext.Provider>
 }
 
 PortfolioNavigationProvider.propTypes = {
-  sections: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired })).isRequired,
+  initialRoute: PropTypes.shape({
+    fragment: PropTypes.string.isRequired,
+    sectionId: PropTypes.string.isRequired,
+    path: PropTypes.string.isRequired,
+    projectId: PropTypes.string,
+    legacyHash: PropTypes.bool,
+  }).isRequired,
   children: PropTypes.node.isRequired,
 }
-

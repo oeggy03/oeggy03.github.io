@@ -1,6 +1,6 @@
 # Tran Ha Thu | Portfolio
 
-Personal portfolio for software engineering, full stack development, AI projects, experience, skills, and contact details.
+Personal portfolio for backend and software engineering, projects, experience, skills, education, and contact details.
 
 **Website:** <https://www.tranhathu.com/>
 
@@ -9,7 +9,7 @@ Personal portfolio for software engineering, full stack development, AI projects
 ## Stack
 
 - React 18 and Vite 4, with Tailwind CSS 3 utilities.
-- Static HTML prerendering for GitHub Pages; the site does not require server routes.
+- Static HTML prerendering for GitHub Pages, including direct files for each section and project route.
 - Manrope and IBM Plex Mono fonts served from local package assets.
 - Node.js and npm. Use `package-lock.json` with `npm ci` for a reproducible install.
 
@@ -28,9 +28,9 @@ npm run check:seo
 npm run lint
 ```
 
-`npm run build` creates browser assets in `dist/`, then renders the React views into `dist/index.html`. Content remains available before JavaScript runs; hydration adds six-view navigation, hash/history support with per-entry reading-position restoration, project filters and selection, and contact copy feedback. The browser build and server render use the same view components.
+`npm run build` creates browser assets in `dist/`, then renders the React views into ten static pages: the homepage, Projects, Experience, Skills, and all six project details. Content remains available before JavaScript runs. Hydration adds clean-route navigation, history restoration, and project filters and selection. The browser build and server render use the same view components.
 
-In-site navigation is coordinated by `src/navigation/`. It handles section and project fragments, keyboard movement, and Back/Forward restoration while keeping the document as the main scroll surface. Desktop navigation and the toolbar stay available while reading; the desktop identity rail scrolls internally only when a short viewport cannot fit its contents.
+In-site navigation is coordinated by `src/navigation/`. Section links use `/`, `/projects/`, `/experience/`, and `/skills/`; each project has a direct `/projects/<id>/` route. Recognized legacy hashes canonicalize to those routes. Back/Forward restores the saved route and reading position while keeping the document as the main scroll surface. Desktop navigation and the toolbar stay available while reading; the desktop identity rail scrolls internally only when a short viewport cannot fit its contents.
 
 The CSS entry at `src/tailwind.css` contains Tailwind's three build directives. The production stylesheet is generated from class utilities and the theme in `tailwind.config.js`; the site does not maintain a separate bespoke stylesheet system.
 
@@ -43,7 +43,7 @@ npm run preview -- --host 127.0.0.1 --port 4173 --strictPort
 npm run check:ui
 ```
 
-The browser executable defaults to an installed Chrome or Edge on Windows. Set `BROWSER_EXECUTABLE_PATH` to use another installed browser, and `PORTFOLIO_BASE_URL` if the preview runs at another address. The checks cover navigation and history offsets, legacy hashes, project filters and deep links, keyboard controls, short-screen rail scrolling, mobile target clearance, clipboard success and failure, no-JavaScript content, responsive widths, reduced motion, local asset requests, and WCAG 2.1 A/AA and WCAG 2.2 AA rules on desktop and mobile.
+The browser executable defaults to an installed Chrome or Edge on Windows. Set `BROWSER_EXECUTABLE_PATH` to use another installed browser, and `PORTFOLIO_BASE_URL` if the preview runs at another address. The checks cover direct loading and refreshing all ten routes, legacy-hash hydration, Back/Forward reading-position restoration, project filters and links, keyboard focus, the 11 viewport matrix, mobile social and navigation targets, no-JavaScript content, local asset requests, and WCAG 2.1 A/AA and WCAG 2.2 AA rules across eight desktop and mobile view scans.
 
 Capture the review screenshots with:
 
@@ -51,7 +51,7 @@ Capture the review screenshots with:
 node scripts/capture-screenshots.mjs
 ```
 
-The full command refreshes both the viewport screenshots and `public/social-preview.png`. Use `node scripts/capture-screenshots.mjs --screenshots-only` to refresh the review screenshots without rewriting the social image, or `node scripts/capture-screenshots.mjs --social-only` to update only the social image. Screenshots use actual tab clicks, project selection, and keyboard navigation in the configured viewport. The capture script does not reset the page position after navigation; it waits for fonts and images, and retains the 390×600 Contact keyboard proof and the scrolled Projects view. The original and revised navigation screenshots are under `docs/screenshots/`.
+The full command refreshes desktop captures for all four views, mobile Overview and Experience captures, selected and naturally scrolled Projects captures, and `public/social-preview.png`. Use `node scripts/capture-screenshots.mjs --review-only` to stage Overview and Experience desktop/mobile captures under the ignored review cache before updating the social image. Use `node scripts/capture-screenshots.mjs --screenshots-only` to refresh final review screenshots without rewriting the social image, or `node scripts/capture-screenshots.mjs --social-only` to update only the social image. Captures wait for fonts and images and preserve the natural scroll position. The mobile set records that the contact/social actions remain visible while reading a long project. Current screenshots are under `docs/screenshots/`.
 
 The temporary React server-render bundle is kept under ignored `node_modules/.cache/portfolio-prerender/`. Publish only the generated `dist/` directory.
 
@@ -59,17 +59,22 @@ The temporary React server-render bundle is kept under ignored `node_modules/.ca
 
 | Content | Location |
 | --- | --- |
-| Shared shell and six hash-linked views | `src/App.jsx`, `src/components/layout/PortfolioShell.jsx`, `src/views/` |
-| Section, project, and browser-history navigation | `src/navigation/` |
+| Shared shell and four route-based views | `src/App.jsx`, `src/components/layout/PortfolioShell.jsx`, `src/views/` |
+| Clean route, project, and browser-history navigation | `src/navigation/` |
 | Portfolio data (profile, projects, roles, skills) | `src/data/portfolio.js` |
 | Reusable interface elements | `src/components/ui/` |
-| Project explorer, architecture, and contact actions | `src/components/content/` |
-| Static SEO and social metadata | `index.html`, `public/robots.txt`, `public/sitemap.xml` |
+| Project explorer, project implementation details, and profile actions | `src/components/content/`, `src/components/layout/PortfolioShell.jsx` |
+| Static SEO and social metadata | `index.html`, `public/robots.txt`, `public/social-preview.png` |
+| Generated sitemap | `scripts/build.mjs` creates `dist/sitemap.xml` from all portfolio routes |
 | GitHub Pages domain files | `public/CNAME`, `public/.nojekyll` |
 | Resume | `src/assets/Resume_TranHaThu.pdf` |
 | QA scripts and review notes | `scripts/`, `docs/` |
 
-Keep the six original projects, five experiences, core skills, full biography, resume, and their existing links in `src/data/portfolio.js`. When a domain changes, update the canonical and social URLs, JSON-LD identifiers, robots policy, sitemap, `public/CNAME`, package homepage, SEO check, and this README together.
+Keep all six projects, the eight user-supplied employment entries, 22 skills, profile interests and aspiration, confirmed NUS education facts, resume, and existing links in `src/data/portfolio.js`. The four views are Overview, Projects, Experience, and Skills. Overview contains profile, education, and the current TikTok employer, with no project names, images, implementation details, or architecture. Email, GitHub, LinkedIn, and Resume remain available from the shared shell. Clean paths are generated for every view and project. Recognized legacy hashes resolve to those paths; prerendered alias anchors remain for JavaScript-disabled visitors. When a domain changes, update canonical and social URLs, JSON-LD identifiers, robots policy, sitemap, `public/CNAME`, package homepage, SEO check, and this README together.
+
+## Resume generation
+
+Edit `docs/resume.html` as the resume source and keep its confirmed profile, education, dates, roles, skills, and contact details synchronized with `src/data/portfolio.js`. Run `node scripts/generate-resume.mjs` to generate `src/assets/Resume_TranHaThu.pdf` with Chrome or Edge. The generator checks that the PDF is no more than two pages and has at least eight clickable links, and writes page previews to `docs/resume-preview-1.png` and `docs/resume-preview-2.png`. The reviewed resume has two pages and eight clickable source URLs; the shared portfolio links to the generated PDF asset.
 
 ## Hosting
 
@@ -81,4 +86,4 @@ See the [deployment and DNS guide](docs/deployment.md) for GitHub Pages settings
 
 ## Search visibility
 
-The generated homepage preserves the descriptive title and description, canonical URL, ProfilePage/Person JSON-LD, Open Graph and Twitter metadata, `robots.txt`, and a sitemap containing the homepage. Section hashes are parts of the same page. Metadata supports crawler understanding but does not guarantee indexing or rankings.
+Every generated route has a route-specific title, description, canonical URL, ProfilePage/Person JSON-LD, Open Graph and Twitter metadata. The checked-in `public/robots.txt` provides the crawl policy. The build generates `dist/sitemap.xml` from the ten canonical routes. Metadata supports crawler understanding but does not guarantee indexing or rankings.

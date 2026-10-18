@@ -1,5 +1,6 @@
 import { Panel, SectionHeading } from "../components/ui"
 import { projects, skillGroups, skills } from "../data/portfolio"
+import { projectPathFor } from "../navigation/routes"
 
 export default function SkillsView() {
   return (
@@ -24,7 +25,7 @@ export default function SkillsView() {
                     <li key={skill.id} className="flex min-h-11 items-center justify-between gap-2 border-t border-line first:border-0">
                       <span className="min-w-0 break-words text-sm font-semibold text-ink">{skill.name}</span>
                       {example && (
-                        <a className="inline-flex min-h-11 shrink-0 items-center text-xs font-semibold text-muted underline decoration-line underline-offset-2 hover:text-ink hover:decoration-accent focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" href={`#project-${example.id}`}>{example.title}</a>
+                        <a className="inline-flex min-h-11 shrink-0 items-center text-xs font-semibold text-muted underline decoration-line underline-offset-2 hover:text-ink hover:decoration-accent focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" href={projectPathFor(example.id)}>{example.title}</a>
                       )}
                     </li>
                   )
