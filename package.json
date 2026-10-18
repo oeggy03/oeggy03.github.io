@@ -10,26 +10,32 @@
     "dev": "vite",
     "build": "node scripts/build.mjs",
     "check:seo": "node scripts/check-seo.mjs",
+    "check:ui": "node scripts/check-ui.mjs",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource-variable/manrope": "^5.2.6",
+    "@fontsource/ibm-plex-mono": "^5.2.6",
+    "lucide-react": "^0.468.0",
+    "prop-types": "^15.8.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scroll": "^1.8.9",
-    "react-simple-typewriter": "^5.0.1",
-    "typed.js": "^2.0.16",
-    "yarn": "^1.22.19"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@playwright/test": "^1.50.1",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.0.3",
+    "autoprefixer": "^10.4.20",
     "eslint": "^8.45.0",
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
     "gh-pages": "^6.0.0",
+    "postcss": "^8.5.1",
+    "tailwindcss": "3.4.17",
     "vite": "^4.4.5"
   }
 }
