@@ -18,6 +18,38 @@ const crawlableText = main
   .replace(/&quot;/g, '"')
   .replace(/\s+/g, ' ')
 
+const viewIds = [...main.matchAll(/<section\b[^>]*\bid="(overview|projects|experience|skills)"/g)].map((match) => match[1])
+assert.deepEqual(viewIds, ['overview', 'projects', 'experience', 'skills'], 'Prerendered output must expose exactly the four portfolio views in order.')
+assert.doesNotMatch(main, /<section\b[^>]*\bid="(?:about|contact)"/, 'About and Contact must not remain as portfolio views.')
+
+const overviewStart = main.search(/<section\b[^>]*\bid="overview"/)
+const projectsStart = main.search(/<section\b[^>]*\bid="projects"/)
+assert.ok(overviewStart >= 0 && projectsStart > overviewStart, 'The prerendered Overview should precede Projects.')
+const overviewMarkup = main.slice(overviewStart, projectsStart)
+const overviewText = overviewMarkup
+  .replace(/<[^>]+>/g, ' ')
+  .replace(/&amp;/g, '&')
+  .replace(/&#39;|&#x27;/gi, "'")
+  .replace(/&quot;/g, '"')
+  .replace(/\s+/g, ' ')
+  .toLowerCase()
+for (const fact of [
+  'backend / software engineer',
+  'software engineering',
+  'quantitative finance and trading',
+  'artificial intelligence',
+  'useful software',
+  'national university of singapore',
+  'computer science',
+  'quantitative finance',
+  'management',
+  'data analysis / machine learning intern',
+  'housing development board (hdb)',
+  'may 2024 - present',
+]) {
+  assert.ok(overviewText.includes(fact), `Overview is missing profile fact: ${fact}`)
+}
+
 const projects = ['FoROOM', 'Buddy4Good', 'Eggbot', 'TeleAI', 'FoodHero', 'Portfolio Website']
 const experiences = [
   'Housing Development Board (HDB)',
@@ -42,12 +74,27 @@ for (const item of [
   'Computer Science',
   'Quantitative Finance',
   'Management',
-  'tranhathu@u.nus.edu',
-  'linkedin.com/in/tran-ha-thu/',
-  'github.com/oeggy03',
 ]) {
-  assert.ok(crawlableText.includes(item), `Missing crawlable profile/contact content: ${item}`)
+  assert.ok(overviewText.includes(item.toLowerCase()), `Missing Overview profile content: ${item}`)
 }
+
+for (const project of projects) {
+  assert.ok(!overviewText.includes(project.toLowerCase()), `Overview must not include the project name ${project}`)
+}
+assert.doesNotMatch(overviewMarkup, /href="#project-|id="project-|aria-label="Choose a project"|Filter projects/i, 'Overview must not contain project detail or chooser UI.')
+
+for (const [href, accessibleLabel] of [
+  ['mailto:tranhathu@u.nus.edu', 'Email Tran Ha Thu'],
+  ['https://github.com/oeggy03', 'Tran Ha Thu on GitHub'],
+  ['https://www.linkedin.com/in/tran-ha-thu/', 'Tran Ha Thu on LinkedIn'],
+]) {
+  assert.ok(main.includes(`href="${href}"`), `Missing profile action destination: ${href}`)
+  assert.ok(main.includes(`aria-label="${accessibleLabel}"`), `Missing accessible profile action label: ${accessibleLabel}`)
+}
+const resumeLink = main.match(/<a\b[^>]*href="([^"]+\.pdf)"[^>]*>([\s\S]*?)<\/a>/i)
+assert.ok(resumeLink, 'The shared shell should expose a local PDF resume action.')
+const resumeLabel = resumeLink[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+assert.match(resumeLabel, /\bResume\b/i, 'The resume action should have a visible Resume label.')
 
 assert.equal((html.match(/rel="canonical"/g) || []).length, 1)
 assert.ok(html.includes(`rel="canonical" href="${canonical}"`))
@@ -70,6 +117,9 @@ assert.ok(schema.mainEntity.sameAs.includes('https://www.linkedin.com/in/tran-ha
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1])
 assert.equal(new Set(ids).size, ids.length, 'Prerendered markup must not contain duplicate IDs.')
 const idSet = new Set(ids)
+for (const alias of ['about', 'aboutSection', 'contact', 'contactSec']) {
+  assert.ok(idSet.has(alias), `The retired ${alias} fragment should retain a prerendered alias target.`)
+}
 for (const [, target] of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
   if (target.startsWith('#')) {
     assert.ok(idSet.has(target.slice(1)), `Section link has no prerendered target: ${target}`)

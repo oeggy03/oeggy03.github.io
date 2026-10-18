@@ -16,12 +16,14 @@ if (configuredBrowserPath && !existsSync(configuredBrowserPath)) {
 }
 const browserPath = configuredBrowserPath || browserCandidates.find((path) => existsSync(path))
 
-const views = ['Overview', 'Projects', 'Experience', 'Skills', 'About', 'Contact']
+const views = ['Overview', 'Projects', 'Experience', 'Skills']
 const legacyHashes = {
-  aboutSection: 'About',
+  about: 'Overview',
+  aboutSection: 'Overview',
   experiencesSec: 'Experience',
   projectsSec: 'Projects',
-  contactSec: 'Contact',
+  contact: 'Overview',
+  contactSec: 'Overview',
 }
 const projectNames = ['FoROOM', 'Buddy4Good', 'Eggbot', 'TeleAI', 'FoodHero', 'Portfolio Website']
 const experienceNames = [
@@ -267,7 +269,7 @@ async function assertMobileNavigationAndTarget(page, target) {
   const navBounds = await nav.boundingBox()
   await assert.ok(navBounds && navBounds.y >= 0 && navBounds.y + navBounds.height <= page.viewportSize().height, 'Mobile navigation should remain in the viewport after scrolling')
   const tabs = await nav.getByRole('tab').all()
-  await assert.equal(tabs.length, 6, 'All six mobile navigation selectors should remain available after scrolling')
+  await assert.equal(tabs.length, 4, 'All four mobile navigation selectors should remain available after scrolling')
   for (const tab of tabs) {
     const bounds = await tab.boundingBox()
     await assert.ok(bounds && bounds.y >= navBounds.y && bounds.y + bounds.height <= navBounds.y + navBounds.height, 'Every mobile navigation selector should remain in view')
@@ -276,16 +278,51 @@ async function assertMobileNavigationAndTarget(page, target) {
   await assert.ok(targetBounds && targetBounds.y >= navBounds.y + navBounds.height + 16, 'The selected heading or detail should clear the sticky navigation by at least 16px')
 }
 
+async function assertSocialActionsVisible(page, viewportLabel) {
+  const group = page.getByRole('group', { name: 'Contact and social links' })
+  await assert.equal(await group.count(), 1, `${viewportLabel} should expose one contact and social links group`)
+  await assert.ok(await group.isVisible(), `${viewportLabel} contact and social links group should be visible`)
+  for (const [name, href] of [
+    ['Email Tran Ha Thu', 'mailto:tranhathu@u.nus.edu'],
+    ['Tran Ha Thu on GitHub', 'https://github.com/oeggy03'],
+    ['Tran Ha Thu on LinkedIn', 'https://www.linkedin.com/in/tran-ha-thu/'],
+  ]) {
+    const link = group.getByRole('link', { name, exact: true })
+    await assert.equal(await link.getAttribute('href'), href, `${viewportLabel} ${name} should retain its destination`)
+    const bounds = await link.boundingBox()
+    await assert.ok(bounds && bounds.y >= 0 && bounds.y + bounds.height <= page.viewportSize().height, `${viewportLabel} ${name} should fit in the viewport`)
+    await assert.ok(bounds && bounds.width >= 44 && bounds.height >= 44, `${viewportLabel} ${name} should provide a 44px touch target`)
+  }
+}
+
+async function assertSelectedTabHasHighlightWithoutDot(page, viewportLabel) {
+  const selected = page.locator('[role="tab"][aria-selected="true"]:visible').last()
+  const decoration = await selected.evaluate((element) => ({
+    children: [...element.children].map((child) => child.tagName.toLowerCase()),
+    before: getComputedStyle(element, '::before').content,
+    after: getComputedStyle(element, '::after').content,
+    background: getComputedStyle(element).backgroundColor,
+  }))
+  await assert.deepEqual(decoration.children, ['svg', 'span'], `${viewportLabel} selected tab should contain only its section icon and label; the active dot must be absent`)
+  await assert.equal(decoration.before, 'none', `${viewportLabel} selected tab should not draw a dot with ::before`)
+  await assert.equal(decoration.after, 'none', `${viewportLabel} selected tab should not draw a dot with ::after`)
+  await assert.notEqual(decoration.background, 'rgba(0, 0, 0, 0)', `${viewportLabel} selected tab should retain its background highlight`)
+}
+
 async function run() {
   const browser = await chromium.launch({ headless: true, ...(browserPath ? { executablePath: browserPath } : {}) })
   try {
     const { context, page } = await openPage(browser, { viewport: { width: 1440, height: 900 } })
     await page.goto(baseUrl, { waitUntil: 'domcontentloaded' })
 
-    await check('six-view navigation and refresh/history behavior', async () => {
+    await check('four-view navigation, retired hashes, and refresh/history behavior', async () => {
       const tabs = page.getByRole('tab')
-      await assert.equal(await tabs.count(), 6, 'The visible navigation should contain six tabs')
+      await assert.equal(await tabs.count(), 4, 'The visible navigation should contain four tabs')
       await assertActiveView(page, 'Overview')
+      await assertSelectedTabHasHighlightWithoutDot(page, 'Desktop')
+      for (const removedLabel of ['About', 'Contact']) {
+        await assert.equal(await page.getByRole('tab', { name: removedLabel, exact: true }).count(), 0, `${removedLabel} should not remain a navigation view`)
+      }
 
       for (const label of views) {
         await chooseView(page, label)
@@ -307,9 +344,10 @@ async function run() {
       await assert.ok(Math.abs(forwardY - Math.min(readingY, forwardMaximum)) <= 2, `Forward should restore the Projects reading position (${readingY}px), got ${forwardY}px`)
 
       await page.goto(`${baseUrl}#about`, { waitUntil: 'domcontentloaded' })
-      await assertViewAtDocumentTop(page, 'About')
+      await assertViewAtDocumentTop(page, 'Overview')
+      await assert.equal(new URL(page.url()).hash, '#overview', '#about should resolve to the canonical Overview hash')
       await page.reload({ waitUntil: 'domcontentloaded' })
-      await assertViewAtDocumentTop(page, 'About')
+      await assertViewAtDocumentTop(page, 'Overview')
 
       for (const [fragment, label] of Object.entries(legacyHashes)) {
         await page.goto(`${baseUrl}#${fragment}`, { waitUntil: 'domcontentloaded' })
@@ -331,7 +369,7 @@ async function run() {
       await modifierContext.close()
     })
 
-    await check('keyboard navigation across the six views', async () => {
+    await check('keyboard navigation across the four views', async () => {
       await page.goto(`${baseUrl}#overview`, { waitUntil: 'domcontentloaded' })
       let tab = page.getByRole('tab', { name: 'Overview', exact: true })
       await tab.focus()
@@ -342,7 +380,7 @@ async function run() {
       await page.getByRole('tab', { name: 'Experience', exact: true }).press('Home')
       await assertViewAtDocumentTop(page, 'Overview', { expectFocus: true })
       await page.getByRole('tab', { name: 'Overview', exact: true }).press('End')
-      await assertViewAtDocumentTop(page, 'Contact', { expectFocus: true })
+      await assertViewAtDocumentTop(page, 'Skills', { expectFocus: true })
     })
 
     await check('click and keyboard navigation from the bottom starts each view at the top', async () => {
@@ -363,34 +401,15 @@ async function run() {
 
       for (const viewport of responsiveViewports) {
         await navigationPage.setViewportSize(viewport)
-        await navigationPage.goto(`${baseUrl}#skills`, { waitUntil: 'domcontentloaded' })
-        await assertActiveView(navigationPage, 'Skills')
+        await navigationPage.goto(`${baseUrl}#project-teleai`, { waitUntil: 'domcontentloaded' })
+        await assertActiveView(navigationPage, 'Projects')
         await scrollNaturallyToBottom(navigationPage)
 
-        await navigationPage.getByRole('tab', { name: 'Skills', exact: true }).press('End')
-        await assertViewAtDocumentTop(navigationPage, 'Contact', { expectFocus: true })
-        if (viewport.width === 390 && viewport.height === 600) {
-          const contactPanel = navigationPage.getByRole('tabpanel')
-          for (const target of [
-            contactPanel.getByRole('heading', { name: 'Contact', exact: true }),
-            contactPanel.locator('a[href="mailto:tranhathu@u.nus.edu"]').filter({ hasText: 'tranhathu@u.nus.edu' }),
-            contactPanel.getByRole('link', { name: 'Email me', exact: true }),
-          ]) {
-            const bounds = await target.boundingBox()
-            await assert.ok(bounds && bounds.y >= 0 && bounds.y + bounds.height <= viewport.height, 'Contact heading, email address, and primary email action should fit fully in the 390×600 viewport after End')
-          }
-        }
+        await navigationPage.getByRole('tab', { name: 'Projects', exact: true }).press('End')
+        await assertViewAtDocumentTop(navigationPage, 'Skills', { expectFocus: true })
 
         await scrollNaturallyToBottom(navigationPage)
-        await navigationPage.getByRole('tab', { name: 'Contact', exact: true }).click()
-        await assertViewAtDocumentTop(navigationPage, 'Contact')
-
-        await scrollNaturallyToBottom(navigationPage)
-        await navigationPage.getByRole('tab', { name: 'Projects', exact: true }).click()
-        await assertViewAtDocumentTop(navigationPage, 'Projects')
-
-        await scrollNaturallyToBottom(navigationPage)
-        await navigationPage.getByRole('tab', { name: 'Contact', exact: true }).press('Home')
+        await navigationPage.getByRole('tab', { name: 'Skills', exact: true }).press('Home')
         await assertViewAtDocumentTop(navigationPage, 'Overview', { expectFocus: true })
 
         await scrollNaturallyToBottom(navigationPage)
@@ -470,24 +489,57 @@ async function run() {
       await historyPage.close()
     })
 
-    await check('overview project proof point and mobile-sized calls to action', async () => {
+    await check('Overview profile, education, current role, and project-free composition', async () => {
       await page.setViewportSize({ width: 1440, height: 900 })
       await page.goto(`${baseUrl}#overview`, { waitUntil: 'domcontentloaded' })
       const overviewPanel = page.getByRole('tabpanel')
-      const featuredImage = overviewPanel.locator('img').first()
-      const desktopBounds = await featuredImage.boundingBox()
-      await assert.ok(desktopBounds && desktopBounds.y < 900 && desktopBounds.y + desktopBounds.height > 0, 'A project image should be visible in the 1440×900 overview')
       const overviewFacts = (await overviewPanel.innerText()).toLowerCase()
-      for (const fact of ['react', 'go', 'mysql']) await assert.ok(overviewFacts.includes(fact), `Overview should show the ${fact} project fact`)
+      for (const fact of [
+        'backend / software engineer',
+        'tran ha thu',
+        'software engineering',
+        'quantitative finance and trading',
+        'artificial intelligence',
+        'useful software',
+        'national university of singapore',
+        'computer science',
+        'quantitative finance',
+        'management',
+        'data analysis / machine learning intern',
+        'housing development board (hdb)',
+        'may 2024 - present',
+      ]) await assert.ok(overviewFacts.includes(fact), `Overview should preserve the profile fact: ${fact}`)
+
+      for (const project of projectNames) {
+        await assert.ok(!overviewFacts.includes(project.toLowerCase()), `Overview should not contain the project name ${project}`)
+      }
+      await assert.equal(await overviewPanel.locator('a[href^="#project-"]').count(), 0, 'Overview should not link directly to project detail fragments')
+      await assert.equal(await overviewPanel.getByRole('navigation', { name: 'Choose a project' }).count(), 0, 'Overview should not contain the project chooser')
+      await assert.equal(await overviewPanel.getByRole('group', { name: 'Filter projects' }).count(), 0, 'Overview should not contain project filters')
+      const [projectImageSources, overviewImageSources] = await Promise.all([
+        page.locator('[id^="project-"] img').evaluateAll((images) => images.map((image) => image.currentSrc || image.src)),
+        overviewPanel.locator('img').evaluateAll((images) => images.map((image) => image.currentSrc || image.src)),
+      ])
+      for (const source of overviewImageSources) {
+        await assert.ok(!projectImageSources.includes(source), `Overview should not reuse a project image: ${source}`)
+      }
 
       await page.setViewportSize({ width: 390, height: 844 })
       await page.goto(`${baseUrl}#overview`, { waitUntil: 'domcontentloaded' })
-      for (const target of ['projects', 'contact']) {
-        const action = page.locator(`a[href="#${target}"]:visible`).first()
-        await assert.ok(await action.isVisible(), `Overview action to #${target} should be visible on mobile`)
-        const bounds = await action.boundingBox()
-        await assert.ok(bounds && bounds.y <= 844 * 1.5, `Overview action to #${target} should be reachable without a long mobile scroll`)
+      await assertViewAtDocumentTop(page, 'Overview')
+      const mobileOverview = page.getByRole('tabpanel')
+      const currentRole = mobileOverview.getByRole('heading', { name: 'Data Analysis / Machine Learning Intern', exact: true })
+      const currentCompany = mobileOverview.getByRole('link', { name: 'Housing Development Board (HDB)', exact: true })
+      const currentDates = mobileOverview.getByText('May 2024 - Present', { exact: true })
+      for (const [label, target] of [['HDB role heading', currentRole], ['HDB company', currentCompany], ['HDB dates', currentDates]]) {
+        const bounds = await target.boundingBox()
+        await assert.ok(bounds && bounds.y >= 0 && bounds.y + bounds.height <= 844, `${label} should be visible in the native 390×844 Overview viewport`)
       }
+      const mobileOverviewText = (await mobileOverview.innerText()).toLowerCase()
+      const hdbPosition = mobileOverviewText.indexOf('current role')
+      const educationPosition = mobileOverviewText.indexOf('education')
+      const interestsPosition = mobileOverviewText.indexOf('interests')
+      await assert.ok(hdbPosition >= 0 && hdbPosition < educationPosition && educationPosition < interestsPosition, 'Mobile Overview DOM order should be current HDB role, NUS education, then interests')
     })
 
     await check('project filters, selection, content and repository links', async () => {
@@ -630,10 +682,10 @@ async function run() {
       const linkedin = rail.getByRole('link', { name: /on LinkedIn/i })
       const linkedinBounds = await linkedin.boundingBox()
       await assert.ok(linkedinBounds && linkedinBounds.y >= 0 && linkedinBounds.y + linkedinBounds.height <= 450, 'The short rail should make its final profile links reachable')
-      const contactTab = rail.getByRole('tab', { name: 'Contact', exact: true })
-      await contactTab.focus()
-      const contactBounds = await contactTab.boundingBox()
-      await assert.ok(contactBounds && contactBounds.y >= 0 && contactBounds.y + contactBounds.height <= 450, 'Keyboard focus should reveal section navigation within the short rail')
+      const skillsTab = rail.getByRole('tab', { name: 'Skills', exact: true })
+      await skillsTab.focus()
+      const skillsBounds = await skillsTab.boundingBox()
+      await assert.ok(skillsBounds && skillsBounds.y >= 0 && skillsBounds.y + skillsBounds.height <= 450, 'Keyboard focus should reveal section navigation within the short rail')
       await assert.equal(await shortPage.evaluate(() => window.scrollY), documentY, 'Focusing a rail navigation control should not scroll the document')
       await shortPage.close()
     })
@@ -682,47 +734,33 @@ async function run() {
       await assert.ok(exampleFontSize >= 12, 'Project examples should use at least 12px text')
     })
 
-    await check('contact email, clipboard success/failure, resume, and profile links', async () => {
-      const contact = await openPage(browser, { viewport: { width: 1280, height: 900 } })
-      await contact.page.addInitScript(() => {
-        window.__qaClipboardWrites = []
-        window.__qaClipboardShouldFail = false
-        Object.defineProperty(navigator, 'clipboard', {
-          configurable: true,
-          value: {
-            writeText: async (value) => {
-              if (window.__qaClipboardShouldFail) throw new Error('Simulated clipboard denial')
-              window.__qaClipboardWrites.push(value)
-            },
-          },
-        })
-      })
-      await contact.page.goto(`${baseUrl}#contact`, { waitUntil: 'domcontentloaded' })
-      await assertActiveView(contact.page, 'Contact')
-      await assert.equal(await contact.page.getByRole('link', { name: /tranhathu@u\.nus\.edu/i }).getAttribute('href'), 'mailto:tranhathu@u.nus.edu')
-
-      const copyButton = contact.page.getByRole('button', { name: /Copy email/i })
-      await copyButton.click()
-      const copyStatus = contact.page.getByRole('tabpanel').locator('p[aria-live="polite"]')
-      await assert.ok(await copyStatus.isVisible())
-      const successMessage = await copyStatus.innerText()
-      await assert.ok(successMessage.trim().length > 0 && /cop/i.test(successMessage), 'Copy success should provide meaningful feedback')
-      await assert.equal(await contact.page.evaluate(() => window.__qaClipboardWrites[0]), 'tranhathu@u.nus.edu')
-      await contact.page.evaluate(() => { window.__qaClipboardShouldFail = true })
-      await copyButton.click()
-      await assert.ok(await copyStatus.isVisible())
-      await assert.ok((await copyStatus.innerText()).trim().length > 0, 'Copy failure should provide meaningful feedback')
-
-      const resume = contact.page.locator('a[href$=".pdf"]').first()
+    await check('desktop and mobile contact/social actions and resume', async () => {
+      const desktop = await openPage(browser, { viewport: { width: 1440, height: 900 } })
+      await desktop.page.goto(`${baseUrl}#overview`, { waitUntil: 'domcontentloaded' })
+      await assertSocialActionsVisible(desktop.page, 'Desktop')
+      const resume = desktop.page.locator('[data-portfolio-toolbar]').getByRole('link', { name: 'Resume', exact: true })
+      await assert.ok(await resume.isVisible(), 'The desktop toolbar should expose Resume')
       const resumeUrl = new URL(await resume.getAttribute('href'), baseUrl)
-      const resumeResponse = await contact.context.request.get(resumeUrl.href)
+      const resumeResponse = await desktop.context.request.get(resumeUrl.href)
       await assert.equal(resumeResponse.status(), 200, 'Resume link should resolve to a built PDF')
       await assert.match(resumeResponse.headers()['content-type'] || '', /application\/pdf/i)
-      for (const href of ['https://www.linkedin.com/in/tran-ha-thu/', 'https://github.com/oeggy03']) {
-        const link = contact.page.locator(`a[href="${href}"]:visible`).first()
-        await assert.ok(await link.isVisible(), `Contact should expose ${href}`)
+      await desktop.page.goto(`${baseUrl}#project-teleai`, { waitUntil: 'domcontentloaded' })
+      await scrollNaturallyToBottom(desktop.page)
+      await assertSocialActionsVisible(desktop.page, 'Scrolled desktop')
+      await desktop.context.close()
+
+      for (const width of [320, 390]) {
+        const mobile = await openPage(browser, { viewport: { width, height: 568 }, isMobile: true, hasTouch: true })
+        await mobile.page.goto(`${baseUrl}#overview`, { waitUntil: 'domcontentloaded' })
+        await assertSocialActionsVisible(mobile.page, `${width}px mobile top`)
+        const mobileResume = mobile.page.locator('[data-portfolio-toolbar]').getByRole('link', { name: 'Resume', exact: true })
+        await assert.ok(await mobileResume.isVisible(), `${width}px mobile toolbar should expose Resume`)
+
+        await mobile.page.goto(`${baseUrl}#project-teleai`, { waitUntil: 'domcontentloaded' })
+        await scrollNaturallyToBottom(mobile.page)
+        await assertSocialActionsVisible(mobile.page, `${width}px mobile scrolled Projects`)
+        await mobile.context.close()
       }
-      await contact.context.close()
     })
 
     await check('JavaScript-disabled content and local navigation', async () => {
@@ -730,6 +768,18 @@ async function run() {
       const staticPage = await staticContext.newPage()
       trackPage(staticPage)
       await staticPage.goto(baseUrl, { waitUntil: 'domcontentloaded' })
+      const staticSections = await staticPage.locator('main section[id]').evaluateAll((sections) => sections.map((section) => section.id))
+      await assert.deepEqual(staticSections, ['overview', 'projects', 'experience', 'skills'], 'No-JavaScript output should retain exactly the four portfolio views')
+      for (const alias of ['about', 'aboutSection', 'contact', 'contactSec']) {
+        await assert.equal(await staticPage.locator(`[id="${alias}"]`).count(), 1, `No-JavaScript output should preserve the retired ${alias} anchor`)
+      }
+      const [staticProjectImages, staticOverviewImages] = await Promise.all([
+        staticPage.locator('[id^="project-"] img').evaluateAll((images) => images.map((image) => image.currentSrc || image.src)),
+        staticPage.locator('#overview img').evaluateAll((images) => images.map((image) => image.currentSrc || image.src)),
+      ])
+      for (const source of staticOverviewImages) {
+        await assert.ok(!staticProjectImages.includes(source), `No-JavaScript Overview should not reuse a project image: ${source}`)
+      }
       for (const name of [...projectNames, ...experienceNames, ...allSkills]) {
         const item = staticPage.getByText(name, { exact: true }).first()
         await assert.ok(await item.isVisible(), `No-JavaScript page should expose ${name}`)
@@ -793,13 +843,14 @@ async function run() {
       const mobileNav = layoutPage.getByRole('navigation', { name: 'Portfolio sections' }).last()
       const navGrid = mobileNav.locator('[role="tablist"]')
       const columns = await navGrid.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length)
-      await assert.equal(columns, 3, 'Mobile section navigation should use three columns')
+      await assert.equal(columns, 4, 'Mobile section navigation should use four columns')
       const tabs = await mobileNav.getByRole('tab').all()
-      await assert.equal(tabs.length, 6, 'All six section selectors should be available in the mobile navigation')
+      await assert.equal(tabs.length, 4, 'All four section selectors should be available in the mobile navigation')
+      await assertSelectedTabHasHighlightWithoutDot(layoutPage, 'Mobile')
       for (const tab of tabs) {
         const bounds = await tab.boundingBox()
         await assert.ok(bounds && bounds.width >= 44 && bounds.height >= 44, 'Mobile navigation controls should be at least 44px square')
-        await assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= 844, 'All six mobile selectors should be visible without scrolling')
+        await assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= 844, 'All four mobile selectors should be visible without scrolling')
       }
       const name = layoutPage.getByRole('heading', { name: 'Tran Ha Thu', exact: true })
       const nameIsClipped = await name.evaluate((element) => element.scrollWidth > element.clientWidth)
@@ -896,5 +947,5 @@ if (failures.length) {
   console.error(`\n${failures.length} UI QA check(s) failed.`)
   process.exitCode = 1
 } else {
-  console.log('\nUI checks passed: navigation, content, keyboard, filters, deep links, contact actions, layout, motion, axe, and runtime requests.')
+  console.log('\nUI checks passed: four-view navigation, content, keyboard, filters, deep links, social/resume actions, layout, motion, axe, and runtime requests.')
 }

@@ -2,42 +2,41 @@
 
 ## Result
 
-The browser and SEO checks pass against the production build served locally on port 4173. The production build and lint passed after the browser-fragment settling fix in commit `31f8768`; lint also passed after the QA script updates. No deployment was performed.
+The four-view portfolio passed the production build, lint, SEO, browser, and accessibility checks on source commit `ed70ab0` (including Overview consolidation `a193a8d`). The approved Overview was captured before the social image was regenerated. The build was then repeated so `dist/social-preview.png` contains the reviewed card. No deployment was run.
 
 ## Commands and results
 
-- `npm run build` — passed on the reviewed source; the captured `dist/` was generated from commit `31f8768`.
-- `npm run lint` — passed.
-- `npm run check:seo` — passed. The check covers prerendered portfolio content, canonical metadata, structured data, local links and assets, sitemap, `CNAME`, and `.nojekyll`.
-- `npm run check:ui` — passed. The final run reported no browser console errors, uncaught page errors, or failed local asset requests. No external request failures were observed.
-- `node scripts/capture-screenshots.mjs --screenshots-only` — passed against that same build. Captures are real viewport screenshots after fonts/images settle and the pointer moves away from controls; they are not full-page screenshots.
+- `npm.cmd run build` — passed on the final source and social preview.
+- `npm.cmd run lint` — passed with no warnings.
+- `npm.cmd run check:seo` — passed for prerendered content, view IDs, Overview facts, accessible social/resume links, canonical metadata, structured data, local links/assets, sitemap, CNAME, and `.nojekyll`.
+- `npm.cmd run check:ui` — passed all navigation, content, history, responsive, project, social/resume, no-JavaScript, runtime, and axe checks. The run reported no console errors, uncaught page errors, failed local requests, or external request failures.
+- `node scripts/capture-screenshots.mjs --social-only` — produced the approved 1200×630 social preview.
+- `node scripts/capture-screenshots.mjs --screenshots-only` — captured the final review set from the production preview without rewriting the social image.
 - `git diff --check` — passed.
 
-The social preview is 1200×630. `public/social-preview.png` and `dist/social-preview.png` have matching SHA-256 `49374eefc1333df57514d8622619d2790a10ffe1a7ee6cdb0db478d3c6bf9089`.
+`public/social-preview.png` and `dist/social-preview.png` have matching SHA-256 `a3c96e8af08a56fc0baa9c353b953beb2d04f403d4520e902049c18c686f5dac`.
 
-## Navigation and history evidence
+## Navigation, history, and content
 
-- The six section views, refresh, canonical hashes, legacy hashes, modifier-click links, and project fragments passed. The same-document sequence includes `#aboutSection`, `#experiencesSec`, `#projectsSec`, and `#contactSec`; each settles on the correct view and canonical hash. Direct `#project-teleai` opens TeleAI.
-- On the browser timing probe, a native fragment step briefly placed `#experiencesSec` at Y=100 and `#projectsSec`/`#project-teleai` at Y=98 before the app's deferred navigation policy. After one animation frame, and again at 2/4/8 frames and 120ms, each was at Y=0 with the expected selection. The test keeps the settled Y=0 assertion strict.
-- From a natural wheel position of Y=237 in Projects at 1024×600 (document max Y=457), clicking Skills reached Y=0. Back restored `#projects`, Projects, and Y=237 after the corresponding `popstate` and `hashchange`; Forward returned to Skills at Y=0.
-- Clicking section tabs from the document bottom, using arrows, Home, End, and Enter on the active tab all starts the selected view at Y=0 and keeps keyboard focus on the selected tab. At 390×600, Contact's heading, email address, and complete Email me action fit in the viewport after keyboard navigation.
-- A category change shortened the Projects document from 1048px (max Y=148) to 998px (max Y=98). The filter retained the prior Y=148 as far as the shorter document allowed and clamped to Y=98. The filter controls remained keyboard-focused; the measured control top moved from 94.5px to 144.5px as the selected project changed. When the filtered document has enough room, the check requires the exact saved Y.
+- Navigation exposes exactly Overview, Projects, Experience, and Skills. About and Contact are not views. Arrow navigation, Home/End, activation from the document bottom, refresh, modifier-click links, and Back/Forward passed. End selects Skills and keeps keyboard focus on the selected tab. The selected tab retains its background highlight with no separate dot.
+- Retired `#about`, `#aboutSection`, `#contact`, and `#contactSec` hashes resolve to Overview. `#experiencesSec` and `#projectsSec` still resolve to Experience and Projects. The corresponding static anchor IDs remain in the prerendered HTML.
+- Back/Forward restored the saved nonzero reading position and selected project. Project chooser/filter transitions, all six project selections, direct project hashes, filter coherence, project details, and the existing 16 project destination links passed.
+- Overview contains the biography, interests, aspiration, NUS degree/minors, and existing HDB role/date. It contains no project name or project image in the hydrated or JavaScript-disabled document. At 390×844 the HDB role heading, company, and dates fit at native document Y=0; the DOM order is HDB role, NUS education, then interests.
+- All five roles and dates, all 22 skills, and five employer links remain in the JavaScript-disabled output. The resume returns HTTP 200 with `application/pdf` content type.
+- Email, GitHub, and LinkedIn actions were visible on desktop, at 320px and 390px mobile, and after naturally scrolling the mobile Projects view. Link destinations and 44px minimum touch targets passed.
 
-## Content, accessibility, and responsive coverage
+## Responsive and accessibility coverage
 
-- All six original projects, five experience entries and dates, 22 skills, all 16 project destinations, and all five employer links remain in the JavaScript-disabled prerendered page. The date check normalizes casing, whitespace, and dash variants in rendered text.
-- All six projects can be selected. Backend, AI & bots, and Frontend filters return their expected sets; project facts and repository links remain available. Skills links open the intended Eggbot and TeleAI projects. Filters preserve focus and reading position subject to document-bound clamping.
-- Contact email, clipboard success and simulated failure feedback, the resume PDF (HTTP 200, `application/pdf`), LinkedIn, and GitHub links passed.
-- axe passed WCAG 2.1 A/AA and WCAG 2.2 AA tagged rules on all six views at desktop and mobile widths.
-- Every view was checked for horizontal overflow at 1440×900, 1366×768, 1024×600, 1440×600, 390×844, 390×600, 320×568, 720×450, 768×1024, 844×390, and 1920×1080. The check also covers the sticky desktop toolbar, short-screen rail reachability, full-height dark backdrop, mobile navigation and target clearance, 44px section/filter/project controls, and reduced-motion behavior.
-- The browser suite uses installed Chrome with responsive viewport emulation. It does not replace a device-farm run or manual screen-reader testing; external destination pages were not opened or verified.
+The no-horizontal-overflow matrix covers 1440×900, 1366×768, 1024×600, 1440×600, 390×844, 390×600, 320×568, 720×450, 768×1024, 844×390, and 1920×1080. Checks also cover the sticky desktop toolbar, full-height rail backdrop, short-screen rail reachability, four mobile tabs, 44px section/project/filter/social controls, mobile project target clearance, and reduced motion.
 
-## Layout measurements and review artifacts
+axe passed WCAG 2.1 A/AA and WCAG 2.2 AA tagged rules on all four views at 1440×900 and 390×844 (eight scans).
 
-Document heights from the original baseline probe were 1251px for Projects and 1161px for Skills at 1440×900, and 1882px/2484px at 390×844. On the redesigned build, the viewport captures measured Projects at 998px and Skills at 900px on desktop; the mobile captures measured selected TeleAI Projects at 1648px and Skills at 1791px. These totals include the shell and active view; the project measurements also reflect the selected project state.
+## Review artifacts
 
-The original baseline captures remain at `docs/screenshots/baseline-desktop.png` and `docs/screenshots/baseline-mobile.png`. Before/after Contact keyboard captures are `before-contact-keyboard-mobile.png`, `after-contact-keyboard-mobile.png`, `before-contact-keyboard-desktop.png`, and `after-contact-keyboard-desktop.png`. The final viewport set includes Overview, Projects, Experience, Skills, About, and Contact at desktop size, Overview on mobile, a selected TeleAI mobile detail, and a naturally scrolled Projects view.
+Current screenshots in `docs/screenshots/` include all four views at 1440×900, Overview at 390×844 and full-page document height, selected TeleAI at 390×844, a naturally scrolled desktop Projects view, and the visible contact/social row at 320×568 while reading a long Projects detail. The Overview mobile document is 1400px tall. The 320px social proof is at natural scroll Y=1167; selected TeleAI on 390px mobile is at Y=617.
 
-## Publishing boundary
+The historical baseline images remain unchanged. Former About and Contact captures were retained with `historical-` filenames so they cannot be mistaken for current views. The new capture script does not generate Contact keyboard or clipboard screenshots.
 
-The live GitHub Pages configuration was verified as legacy branch publishing from `gh-pages` at `/`, with `https://www.tranhathu.com/` as the site URL. This work was not deployed; the build was checked locally and no publication action was run.
+## Limits and publishing
+
+Playwright used installed Chrome with responsive viewport emulation. This run did not include physical-device/browser testing or manual screen-reader testing. External destination pages were not opened; only their stored links were checked. No deployment or publishing action was performed.

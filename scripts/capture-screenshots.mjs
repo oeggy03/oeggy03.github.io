@@ -6,9 +6,11 @@ import { chromium } from '@playwright/test'
 
 const baseUrl = process.env.PORTFOLIO_BASE_URL || 'http://127.0.0.1:4173/'
 const screenshotDirectory = resolve('docs/screenshots')
+const reviewDirectory = resolve('node_modules/.cache/four-view-qa-review')
 const socialPreviewPath = resolve('public/social-preview.png')
 const socialOnly = process.argv.includes('--social-only')
 const screenshotsOnly = process.argv.includes('--screenshots-only')
+const overviewReview = process.argv.includes('--overview-review')
 const configuredBrowserPath = process.env.BROWSER_EXECUTABLE_PATH
 const browserCandidates = process.platform === 'win32'
   ? [
@@ -22,6 +24,7 @@ if (configuredBrowserPath && !existsSync(configuredBrowserPath)) {
 const browserPath = configuredBrowserPath || browserCandidates.find((path) => existsSync(path))
 
 await mkdir(screenshotDirectory, { recursive: true })
+if (overviewReview) await mkdir(reviewDirectory, { recursive: true })
 const browser = await chromium.launch({
   headless: true,
   ...(browserPath ? { executablePath: browserPath } : {}),
@@ -29,7 +32,7 @@ const browser = await chromium.launch({
 
 async function settle(page) {
   await page.evaluate(async () => {
-    await document.fonts.ready
+    await document.fonts?.ready
     const images = [...document.images]
     for (const image of images) image.loading = 'eager'
     await Promise.all(images.map((image) => image.decode().catch(() => undefined)))
@@ -50,14 +53,67 @@ async function activateView(page, label) {
   assert.ok(bounds && bounds.y >= 0 && bounds.y < page.viewportSize().height, `${label} heading should be visible in the viewport`)
 }
 
-async function saveViewport(page, filename) {
+async function saveViewport(page, filename, directory = screenshotDirectory) {
   await settle(page)
-  await page.screenshot({ path: resolve(screenshotDirectory, filename), fullPage: false })
+  await page.screenshot({ path: resolve(directory, filename), fullPage: false })
   const layout = await page.evaluate(() => ({
     y: window.scrollY,
     height: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
   }))
   console.log(`Captured ${filename} at ${page.viewportSize().width}×${page.viewportSize().height}; document height=${layout.height}px, Y=${layout.y}.`)
+  return layout
+}
+
+async function scrollNaturallyToBottom(page) {
+  const viewport = page.viewportSize()
+  await page.mouse.move(Math.max(1, viewport.width - 24), Math.max(1, viewport.height - 24))
+  for (let step = 0; step < 40; step += 1) {
+    const { y, max } = await page.evaluate(() => ({
+      y: document.scrollingElement.scrollTop,
+      max: document.scrollingElement.scrollHeight - document.scrollingElement.clientHeight,
+    }))
+    if (y >= max - 2) break
+    await page.mouse.wheel(0, 650)
+    await page.waitForTimeout(35)
+  }
+  await page.waitForTimeout(100)
+  return page.evaluate(() => document.scrollingElement.scrollTop)
+}
+
+async function captureOverviewReview() {
+  const captures = [
+    { name: 'overview-desktop.png', viewport: { width: 1440, height: 900 } },
+    { name: 'overview-mobile.png', viewport: { width: 390, height: 844 }, fullPageName: 'overview-mobile-document.png' },
+  ]
+  for (const capture of captures) {
+    const page = await browser.newPage({ viewport: capture.viewport, deviceScaleFactor: 1, ...(capture.fullPageName ? { isMobile: true, hasTouch: true } : {}) })
+    await page.goto(`${baseUrl}#overview`, { waitUntil: 'domcontentloaded' })
+    await settle(page)
+    const y = await page.evaluate(() => window.scrollY)
+    assert.ok(y <= 2, 'Overview review capture should begin at natural document Y=0')
+    await saveViewport(page, capture.name, reviewDirectory)
+    if (capture.fullPageName) {
+      await page.screenshot({ path: resolve(reviewDirectory, capture.fullPageName), fullPage: true })
+      const facts = await page.evaluate(() => {
+        const overview = document.querySelector('#overview')
+        const rectFor = (element) => {
+          if (!element) return null
+          const rect = element.getBoundingClientRect()
+          return { top: Math.round(rect.top + window.scrollY), bottom: Math.round(rect.bottom + window.scrollY) }
+        }
+        const exactText = (selector, value) => [...overview.querySelectorAll(selector)].find((element) => element.textContent.trim() === value)
+        return {
+          documentHeight: document.documentElement.scrollHeight,
+          overviewHeight: Math.round(overview.getBoundingClientRect().height),
+          interests: rectFor(exactText('p', 'Interests')?.parentElement),
+          education: rectFor(overview.querySelector('a[href="https://nus.edu.sg/"]')),
+          currentRole: rectFor(overview.querySelector('a[href="https://www.hdb.gov.sg/cs/infoweb/homepage"]')),
+        }
+      })
+      console.log(`Mobile Overview layout metrics (${capture.viewport.width}×${capture.viewport.height}): ${JSON.stringify(facts)}`)
+    }
+    await page.close()
+  }
 }
 
 async function captureDesktopViews() {
@@ -70,14 +126,13 @@ async function captureDesktopViews() {
     ['Projects', 'projects-desktop.png'],
     ['Experience', 'experience-desktop.png'],
     ['Skills', 'skills-desktop.png'],
-    ['About', 'about-desktop.png'],
-    ['Contact', 'contact-desktop.png'],
   ]) {
     await activateView(page, label)
     if (label === 'Projects') {
-      await page.getByRole('navigation', { name: 'Choose a project' }).getByRole('button', { name: /FoROOM/i }).click()
+      const chooser = page.getByRole('navigation', { name: 'Choose a project' })
+      await chooser.getByRole('button', { name: /FoROOM/i }).click()
       await settle(page)
-      assert.equal(await page.getByRole('button', { name: /FoROOM/i }).getAttribute('aria-pressed'), 'true')
+      assert.equal(await chooser.getByRole('button', { name: /FoROOM/i }).getAttribute('aria-pressed'), 'true')
       assert.ok(await page.getByRole('link', { name: /View code/i }).isVisible(), 'FoROOM should show its primary code action')
     }
     await saveViewport(page, filename)
@@ -85,12 +140,8 @@ async function captureDesktopViews() {
 
   await activateView(page, 'Projects')
   await page.mouse.move(1400, 880)
-  for (let step = 0; step < 40; step += 1) {
-    const { y, max } = await page.evaluate(() => ({ y: window.scrollY, max: document.documentElement.scrollHeight - innerHeight }))
-    if (y >= max - 2) break
-    await page.mouse.wheel(0, 650)
-    await page.waitForTimeout(35)
-  }
+  const scrolledY = await scrollNaturallyToBottom(page)
+  assert.ok(scrolledY > 0, 'The scrolled Projects screenshot should retain a real reading offset')
   await saveViewport(page, 'projects-desktop-scrolled.png')
   await page.close()
 }
@@ -99,7 +150,10 @@ async function captureMobileViews() {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true })
   await page.goto(`${baseUrl}#overview`, { waitUntil: 'domcontentloaded' })
   await settle(page)
-  await saveViewport(page, 'overview-mobile.png')
+  const overviewLayout = await saveViewport(page, 'overview-mobile.png')
+  await page.screenshot({ path: resolve(screenshotDirectory, 'overview-mobile-document.png'), fullPage: true })
+  console.log(`Captured overview-mobile-document.png at natural document height ${overviewLayout.height}px.`)
+
   await activateView(page, 'Projects')
   const chooser = page.getByRole('navigation', { name: 'Choose a project' })
   await chooser.getByRole('button', { name: /TeleAI/i }).click()
@@ -108,37 +162,31 @@ async function captureMobileViews() {
   const nav = page.getByRole('navigation', { name: 'Portfolio sections' }).last()
   const [headingBounds, navBounds] = await Promise.all([heading.boundingBox(), nav.boundingBox()])
   assert.ok(headingBounds && navBounds && headingBounds.y >= navBounds.y + navBounds.height + 16, 'Selected project heading should clear the sticky mobile navigation')
-  await assert.equal(new URL(page.url()).hash, '#project-teleai')
+  assert.equal(new URL(page.url()).hash, '#project-teleai')
   await saveViewport(page, 'projects-mobile.png')
-  await activateView(page, 'Skills')
-  const skillsHeight = await page.evaluate(() => Math.max(document.documentElement.scrollHeight, document.body.scrollHeight))
-  console.log(`Layout Skills mobile 390×844: document height=${skillsHeight}px.`)
   await page.close()
-}
 
-async function captureKeyboardContact(viewport, filename) {
-  const page = await browser.newPage({ viewport, deviceScaleFactor: 1 })
-  await page.goto(`${baseUrl}#skills`, { waitUntil: 'domcontentloaded' })
-  await settle(page)
-  const skills = page.getByRole('navigation', { name: 'Portfolio sections' }).last().getByRole('tab', { name: 'Skills', exact: true })
-  await skills.focus()
-  await page.mouse.move(viewport.width - 24, viewport.height - 24)
-  for (let step = 0; step < 40; step += 1) {
-    const { y, max } = await page.evaluate(() => ({ y: window.scrollY, max: document.documentElement.scrollHeight - innerHeight }))
-    if (y >= max - 2) break
-    await page.mouse.wheel(0, 650)
-    await page.waitForTimeout(35)
+  const proofPage = await browser.newPage({ viewport: { width: 320, height: 568 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true })
+  await proofPage.goto(`${baseUrl}#project-teleai`, { waitUntil: 'domcontentloaded' })
+  await proofPage.waitForFunction(() => document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.includes('Projects'))
+  await settle(proofPage)
+  assert.equal(await proofPage.getByRole('button', { name: /TeleAI/i }).getAttribute('aria-pressed'), 'true')
+  const scrolledY = await scrollNaturallyToBottom(proofPage)
+  assert.ok(scrolledY > 0, `The narrow mobile social proof should capture a naturally scrolled project, got Y=${scrolledY}`)
+  const group = proofPage.getByRole('group', { name: 'Contact and social links' })
+  assert.ok(await group.isVisible(), 'The mobile contact/social row should remain visible while reading the project')
+  for (const [name, href] of [
+    ['Email Tran Ha Thu', 'mailto:tranhathu@u.nus.edu'],
+    ['Tran Ha Thu on GitHub', 'https://github.com/oeggy03'],
+    ['Tran Ha Thu on LinkedIn', 'https://www.linkedin.com/in/tran-ha-thu/'],
+  ]) {
+    const link = group.getByRole('link', { name, exact: true })
+    assert.equal(await link.getAttribute('href'), href, `${name} destination should be preserved`)
+    const bounds = await link.boundingBox()
+    assert.ok(bounds && bounds.y >= 0 && bounds.y + bounds.height <= 568 && bounds.width >= 44 && bounds.height >= 44, `${name} should remain a visible 44px target after scrolling`)
   }
-  await skills.press('End')
-  await page.waitForFunction(() => document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.includes('Contact'))
-  await settle(page)
-  assert.ok((await page.evaluate(() => window.scrollY)) <= 2, 'End should navigate to Contact at document Y=0')
-  const panel = page.getByRole('tabpanel')
-  const emailAction = panel.getByRole('link', { name: 'Email me', exact: true })
-  const emailBounds = await emailAction.boundingBox()
-  assert.ok(emailBounds && emailBounds.y >= 0 && emailBounds.y + emailBounds.height <= viewport.height, 'The full primary email action should fit in the viewport after keyboard navigation')
-  await saveViewport(page, filename)
-  await page.close()
+  await saveViewport(proofPage, 'mobile-social-links-scrolled.png')
+  await proofPage.close()
 }
 
 async function captureSocialPreview() {
@@ -163,12 +211,14 @@ async function captureSocialPreview() {
 }
 
 try {
-  if (!screenshotsOnly) await captureSocialPreview()
-  if (!socialOnly) {
-    await captureDesktopViews()
-    await captureMobileViews()
-    await captureKeyboardContact({ width: 390, height: 600 }, 'after-contact-keyboard-mobile.png')
-    await captureKeyboardContact({ width: 1024, height: 600 }, 'after-contact-keyboard-desktop.png')
+  if (overviewReview) {
+    await captureOverviewReview()
+  } else {
+    if (!screenshotsOnly) await captureSocialPreview()
+    if (!socialOnly) {
+      await captureDesktopViews()
+      await captureMobileViews()
+    }
   }
 } finally {
   await browser.close()
