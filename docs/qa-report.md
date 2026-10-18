@@ -2,41 +2,32 @@
 
 ## Result
 
-The four-view portfolio passed the production build, lint, SEO, browser, and accessibility checks on source commit `ed70ab0` (including Overview consolidation `a193a8d`). The approved Overview was captured before the social image was regenerated. The build was then repeated so `dist/social-preview.png` contains the reviewed card. No deployment was run.
+Final local verification passed on branch `redesign/focused-four-section-portfolio` with source through commit `e8370b1`. The production build contains ten static portfolio routes and the reviewed social card. No deployment was run.
 
 ## Commands and results
 
-- `npm.cmd run build` — passed on the final source and social preview.
+- `npm.cmd run build` — passed; prerendered the homepage, three section routes, and six project routes.
 - `npm.cmd run lint` — passed with no warnings.
-- `npm.cmd run check:seo` — passed for prerendered content, view IDs, Overview facts, accessible social/resume links, canonical metadata, structured data, local links/assets, sitemap, CNAME, and `.nojekyll`.
-- `npm.cmd run check:ui` — passed all navigation, content, history, responsive, project, social/resume, no-JavaScript, runtime, and axe checks. The run reported no console errors, uncaught page errors, failed local requests, or external request failures.
-- `node scripts/capture-screenshots.mjs --social-only` — produced the approved 1200×630 social preview.
-- `node scripts/capture-screenshots.mjs --screenshots-only` — captured the final review set from the production preview without rewriting the social image.
+- `npm.cmd run check:seo` — passed for all ten routes, exact experience dates and machine-readable month bounds, profile facts, metadata, structured data, local links and assets, sitemap, CNAME, and `.nojekyll`.
+- `PORTFOLIO_BASE_URL=http://127.0.0.1:4180/ npm.cmd run check:ui` — passed all 13 browser check groups against the production `dist/` folder served by Python's static HTTP server. This covered route refreshes, terminal `index.html` aliases, legacy hashes, history, project filters and focus, the no-JavaScript output, the 11-viewport matrix, and eight axe scans. The run reported no console errors, uncaught page errors, failed local requests, or external request failures.
+- Python static HTTP check — all ten canonical paths returned HTTP 200 with route-specific canonical metadata; an unknown path returned HTTP 404 rather than an SPA fallback.
+- `node scripts/generate-resume.mjs` — generated a two-page PDF with eight clickable source URLs.
+- `node scripts/capture-screenshots.mjs --social-only` — produced the reviewed 1200×630 PNG. The subsequent production build copied it into `dist/`.
+- `node scripts/capture-screenshots.mjs --screenshots-only` — refreshed the review captures from the final production build without changing the social image.
 - `git diff --check` — passed.
 
-`public/social-preview.png` and `dist/social-preview.png` have matching SHA-256 `a3c96e8af08a56fc0baa9c353b953beb2d04f403d4520e902049c18c686f5dac`.
+`public/social-preview.png` and `dist/social-preview.png` have matching SHA-256 `af4bfe2e6befd18870a219b0415097e10712849b67fcd5b358b5116e1484b32e`.
 
-## Navigation, history, and content
+## Coverage and review artifacts
 
-- Navigation exposes exactly Overview, Projects, Experience, and Skills. About and Contact are not views. Arrow navigation, Home/End, activation from the document bottom, refresh, modifier-click links, and Back/Forward passed. End selects Skills and keeps keyboard focus on the selected tab. The selected tab retains its background highlight with no separate dot.
-- Retired `#about`, `#aboutSection`, `#contact`, and `#contactSec` hashes resolve to Overview. `#experiencesSec` and `#projectsSec` still resolve to Experience and Projects. The corresponding static anchor IDs remain in the prerendered HTML.
-- Back/Forward restored the saved nonzero reading position and selected project. Project chooser/filter transitions, all six project selections, direct project hashes, filter coherence, project details, and the existing 16 project destination links passed.
-- Overview contains the biography, interests, aspiration, NUS degree/minors, and existing HDB role/date. It contains no project name or project image in the hydrated or JavaScript-disabled document. At 390×844 the HDB role heading, company, and dates fit at native document Y=0; the DOM order is HDB role, NUS education, then interests.
-- All five roles and dates, all 22 skills, and five employer links remain in the JavaScript-disabled output. The resume returns HTTP 200 with `application/pdf` content type.
-- Email, GitHub, and LinkedIn actions were visible on desktop, at 320px and 390px mobile, and after naturally scrolling the mobile Projects view. Link destinations and 44px minimum touch targets passed.
+- Navigation exposes exactly Overview, Projects, Experience, and Skills. The four clean section routes and six project routes load and refresh directly. All ten terminal `index.html` aliases hydrate to their canonical routes; JavaScript-disabled visitors see the matching prerendered view and canonical metadata.
+- Retired `#about`, `#aboutSection`, `#contact`, and `#contactSec` hashes resolve to Overview. `#experiencesSec` and `#projectsSec` still resolve to Experience and Projects. Back/Forward restores the saved route, reading position, and selected project.
+- All eight supplied experience entries appear in order with the exact dates and corresponding `<time datetime>` month values. The current TikTok Backend Engineer role leads; completed roles are ordered by end date descending. Overview retains the confirmed biography, interests, aspiration, NUS education, and current employer without project names or imagery.
+- All six projects, 22 skills, four employer destinations, and 16 project destination links remain available. The resume returns HTTP 200 as a PDF. Email, GitHub, LinkedIn, and Resume controls have the expected destinations and visible 44px touch targets.
+- Responsive checks cover 1440×900, 1366×768, 1024×600, 1440×600, 390×844, 390×600, 320×568, 720×450, 768×1024, 844×390, and 1920×1080. axe passed WCAG 2.1 A/AA and WCAG 2.2 AA tagged rules on all four views at desktop and mobile sizes (eight scans).
+- Current captures in `docs/screenshots/` include all four desktop views at 1440×900; Overview and Experience at 390×844; full-page Overview (1487px) and Experience (2889px); selected TeleAI at 390×844; a naturally scrolled Projects view at desktop Y=98; and the visible mobile social row at 320×568 while reading a project (Y=1152). `resume-preview.png` shows the reviewed PDF.
+- The date-wrap review image for Experience shows the current and completed date ranges cleanly across two lines on desktop and on one line on mobile. Historical About and Contact captures retain `historical-` filenames.
 
-## Responsive and accessibility coverage
+## Limits
 
-The no-horizontal-overflow matrix covers 1440×900, 1366×768, 1024×600, 1440×600, 390×844, 390×600, 320×568, 720×450, 768×1024, 844×390, and 1920×1080. Checks also cover the sticky desktop toolbar, full-height rail backdrop, short-screen rail reachability, four mobile tabs, 44px section/project/filter/social controls, mobile project target clearance, and reduced motion.
-
-axe passed WCAG 2.1 A/AA and WCAG 2.2 AA tagged rules on all four views at 1440×900 and 390×844 (eight scans).
-
-## Review artifacts
-
-Current screenshots in `docs/screenshots/` include all four views at 1440×900, Overview at 390×844 and full-page document height, selected TeleAI at 390×844, a naturally scrolled desktop Projects view, and the visible contact/social row at 320×568 while reading a long Projects detail. The Overview mobile document is 1400px tall. The 320px social proof is at natural scroll Y=1167; selected TeleAI on 390px mobile is at Y=617.
-
-The historical baseline images remain unchanged. Former About and Contact captures were retained with `historical-` filenames so they cannot be mistaken for current views. The new capture script does not generate Contact keyboard or clipboard screenshots.
-
-## Limits and publishing
-
-Playwright used installed Chrome with responsive viewport emulation. This run did not include physical-device/browser testing or manual screen-reader testing. External destination pages were not opened; only their stored links were checked. No deployment or publishing action was performed.
+Playwright used installed Chrome with viewport emulation. Physical-device testing and manual screen-reader testing were not performed. External destination pages were not opened; their stored URLs and visible controls were checked. No publishing or deployment action was performed.

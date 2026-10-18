@@ -6,11 +6,12 @@ import { chromium } from '@playwright/test'
 
 const baseUrl = process.env.PORTFOLIO_BASE_URL || 'http://127.0.0.1:4173/'
 const screenshotDirectory = resolve('docs/screenshots')
-const reviewDirectory = resolve('node_modules/.cache/four-view-qa-review')
+const reviewDirectory = resolve('node_modules/.cache/clean-route-qa-review')
 const socialPreviewPath = resolve('public/social-preview.png')
-const socialOnly = process.argv.includes('--social-only')
-const screenshotsOnly = process.argv.includes('--screenshots-only')
-const overviewReview = process.argv.includes('--overview-review')
+const args = new Set(process.argv.slice(2))
+const socialOnly = args.has('--social-only')
+const screenshotsOnly = args.has('--screenshots-only')
+const reviewOnly = args.has('--review-only') || args.has('--overview-review')
 const configuredBrowserPath = process.env.BROWSER_EXECUTABLE_PATH
 const browserCandidates = process.platform === 'win32'
   ? [
@@ -24,11 +25,15 @@ if (configuredBrowserPath && !existsSync(configuredBrowserPath)) {
 const browserPath = configuredBrowserPath || browserCandidates.find((path) => existsSync(path))
 
 await mkdir(screenshotDirectory, { recursive: true })
-if (overviewReview) await mkdir(reviewDirectory, { recursive: true })
+if (reviewOnly) await mkdir(reviewDirectory, { recursive: true })
 const browser = await chromium.launch({
   headless: true,
   ...(browserPath ? { executablePath: browserPath } : {}),
 })
+
+function urlFor(path) {
+  return new URL(path, baseUrl).href
+}
 
 async function settle(page) {
   await page.evaluate(async () => {
@@ -42,26 +47,37 @@ async function settle(page) {
   await page.mouse.move(-10, -10)
 }
 
-async function activateView(page, label) {
-  await page.getByRole('tab', { name: label, exact: true }).click()
-  await page.waitForFunction((expected) => document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.includes(expected), label)
+async function openRoute(page, path) {
+  await page.goto(urlFor(path), { waitUntil: 'domcontentloaded' })
+  await settle(page)
+  await assert.equal(new URL(page.url()).pathname, path, `${path} should be loaded as a clean route.`)
+  await assert.equal(new URL(page.url()).hash, '', `${path} should not retain an authored hash.`)
+}
+
+async function activateSection(page, path) {
+  const link = page.locator(`nav[aria-label="Portfolio sections"]:visible a[href="${path}"]`)
+  await assert.equal(await link.count(), 1, `Section route ${path} should have one visible real link.`)
+  await link.click()
+  await page.waitForFunction((expected) => window.location.pathname === expected && window.location.hash === '', path)
   await settle(page)
   const y = await page.evaluate(() => window.scrollY)
-  assert.ok(y <= 2, `${label} should open at document Y=0 before screenshot capture, got ${y}`)
-  const heading = page.getByRole('tabpanel').getByRole('heading').first()
-  const bounds = await heading.boundingBox()
-  assert.ok(bounds && bounds.y >= 0 && bounds.y < page.viewportSize().height, `${label} heading should be visible in the viewport`)
+  await assert.ok(y <= 2, `${path} should open at document Y=0 for capture, got ${y}.`)
+  const current = page.locator(`nav[aria-label="Portfolio sections"]:visible a[href="${path}"]`)
+  await assert.equal(await current.getAttribute('aria-current'), 'page')
 }
 
 async function saveViewport(page, filename, directory = screenshotDirectory) {
   await settle(page)
-  await page.screenshot({ path: resolve(directory, filename), fullPage: false })
-  const layout = await page.evaluate(() => ({
+  const path = resolve(directory, filename)
+  await page.screenshot({ path, fullPage: false })
+  const metrics = await page.evaluate(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
     y: window.scrollY,
-    height: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
+    documentHeight: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
   }))
-  console.log(`Captured ${filename} at ${page.viewportSize().width}×${page.viewportSize().height}; document height=${layout.height}px, Y=${layout.y}.`)
-  return layout
+  console.log(`Captured ${filename} at ${metrics.width}×${metrics.height}; document height=${metrics.documentHeight}px, Y=${metrics.y}.`)
+  return metrics
 }
 
 async function scrollNaturallyToBottom(page) {
@@ -80,110 +96,97 @@ async function scrollNaturallyToBottom(page) {
   return page.evaluate(() => document.scrollingElement.scrollTop)
 }
 
-async function captureOverviewReview() {
-  const captures = [
-    { name: 'overview-desktop.png', viewport: { width: 1440, height: 900 } },
-    { name: 'overview-mobile.png', viewport: { width: 390, height: 844 }, fullPageName: 'overview-mobile-document.png' },
-  ]
-  for (const capture of captures) {
-    const page = await browser.newPage({ viewport: capture.viewport, deviceScaleFactor: 1, ...(capture.fullPageName ? { isMobile: true, hasTouch: true } : {}) })
-    await page.goto(`${baseUrl}#overview`, { waitUntil: 'domcontentloaded' })
-    await settle(page)
-    const y = await page.evaluate(() => window.scrollY)
-    assert.ok(y <= 2, 'Overview review capture should begin at natural document Y=0')
-    await saveViewport(page, capture.name, reviewDirectory)
-    if (capture.fullPageName) {
-      await page.screenshot({ path: resolve(reviewDirectory, capture.fullPageName), fullPage: true })
-      const facts = await page.evaluate(() => {
-        const overview = document.querySelector('#overview')
-        const rectFor = (element) => {
-          if (!element) return null
-          const rect = element.getBoundingClientRect()
-          return { top: Math.round(rect.top + window.scrollY), bottom: Math.round(rect.bottom + window.scrollY) }
-        }
-        const exactText = (selector, value) => [...overview.querySelectorAll(selector)].find((element) => element.textContent.trim() === value)
-        return {
-          documentHeight: document.documentElement.scrollHeight,
-          overviewHeight: Math.round(overview.getBoundingClientRect().height),
-          interests: rectFor(exactText('p', 'Interests')?.parentElement),
-          education: rectFor(overview.querySelector('a[href="https://nus.edu.sg/"]')),
-          currentRole: rectFor(overview.querySelector('a[href="https://www.hdb.gov.sg/cs/infoweb/homepage"]')),
-        }
+async function captureReviewSet() {
+  for (const viewport of [
+    { label: 'desktop', width: 1440, height: 900, mobile: false },
+    { label: 'mobile', width: 390, height: 844, mobile: true },
+  ]) {
+    for (const [routeName, routePath] of [['overview', '/'], ['experience', '/experience/']]) {
+      const page = await browser.newPage({
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+        ...(viewport.mobile ? { isMobile: true, hasTouch: true } : {}),
       })
-      console.log(`Mobile Overview layout metrics (${capture.viewport.width}×${capture.viewport.height}): ${JSON.stringify(facts)}`)
+      await openRoute(page, routePath)
+      const basename = `${routeName}-${viewport.label}`
+      const metrics = await saveViewport(page, `${basename}.png`, reviewDirectory)
+      if (viewport.mobile) {
+        await page.screenshot({ path: resolve(reviewDirectory, `${basename}-document.png`), fullPage: true })
+        console.log(`Captured ${basename}-document.png at full document height ${metrics.documentHeight}px.`)
+      }
+      await page.close()
     }
-    await page.close()
   }
 }
 
 async function captureDesktopViews() {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 })
-  await page.goto(`${baseUrl}#overview`, { waitUntil: 'domcontentloaded' })
-  await settle(page)
+  await openRoute(page, '/')
   await saveViewport(page, 'overview-desktop.png')
 
-  for (const [label, filename] of [
-    ['Projects', 'projects-desktop.png'],
-    ['Experience', 'experience-desktop.png'],
-    ['Skills', 'skills-desktop.png'],
-  ]) {
-    await activateView(page, label)
-    if (label === 'Projects') {
-      const chooser = page.getByRole('navigation', { name: 'Choose a project' })
-      await chooser.getByRole('button', { name: /FoROOM/i }).click()
-      await settle(page)
-      assert.equal(await chooser.getByRole('button', { name: /FoROOM/i }).getAttribute('aria-pressed'), 'true')
-      assert.ok(await page.getByRole('link', { name: /View code/i }).isVisible(), 'FoROOM should show its primary code action')
-    }
-    await saveViewport(page, filename)
-  }
+  await activateSection(page, '/projects/')
+  const projectChooser = page.getByRole('navigation', { name: 'Choose a project' })
+  const foroom = projectChooser.getByRole('link', { name: /FoROOM/i })
+  await assert.equal(await foroom.getAttribute('href'), '/projects/foroom/')
+  await assert.ok(await page.getByRole('link', { name: /View code/i }).isVisible(), 'FoROOM should show its primary source action.')
+  await saveViewport(page, 'projects-desktop.png')
 
-  await activateView(page, 'Projects')
-  await page.mouse.move(1400, 880)
+  await activateSection(page, '/experience/')
+  await assert.equal(await page.locator('#experience ol > li').count(), 8, 'The timeline capture should include all eight supplied roles.')
+  await saveViewport(page, 'experience-desktop.png')
+
+  await activateSection(page, '/skills/')
+  await saveViewport(page, 'skills-desktop.png')
+
+  await activateSection(page, '/projects/')
   const scrolledY = await scrollNaturallyToBottom(page)
-  assert.ok(scrolledY > 0, 'The scrolled Projects screenshot should retain a real reading offset')
+  await assert.ok(scrolledY > 0, 'The Projects capture should retain a real reading offset.')
   await saveViewport(page, 'projects-desktop-scrolled.png')
   await page.close()
 }
 
 async function captureMobileViews() {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true })
-  await page.goto(`${baseUrl}#overview`, { waitUntil: 'domcontentloaded' })
-  await settle(page)
-  const overviewLayout = await saveViewport(page, 'overview-mobile.png')
+  await openRoute(page, '/')
+  const overviewMetrics = await saveViewport(page, 'overview-mobile.png')
   await page.screenshot({ path: resolve(screenshotDirectory, 'overview-mobile-document.png'), fullPage: true })
-  console.log(`Captured overview-mobile-document.png at natural document height ${overviewLayout.height}px.`)
+  console.log(`Captured overview-mobile-document.png at natural document height ${overviewMetrics.documentHeight}px.`)
 
-  await activateView(page, 'Projects')
+  await openRoute(page, '/experience/')
+  const experienceMetrics = await saveViewport(page, 'experience-mobile.png')
+  await assert.equal(await page.locator('#experience ol > li').count(), 8)
+  await page.screenshot({ path: resolve(screenshotDirectory, 'experience-mobile-document.png'), fullPage: true })
+  console.log(`Captured experience-mobile-document.png at natural document height ${experienceMetrics.documentHeight}px.`)
+
+  await openRoute(page, '/projects/teleai/')
   const chooser = page.getByRole('navigation', { name: 'Choose a project' })
-  await chooser.getByRole('button', { name: /TeleAI/i }).click()
-  await settle(page)
-  const heading = page.locator('#project-teleai h2, #project-teleai h3').first()
-  const nav = page.getByRole('navigation', { name: 'Portfolio sections' }).last()
-  const [headingBounds, navBounds] = await Promise.all([heading.boundingBox(), nav.boundingBox()])
-  assert.ok(headingBounds && navBounds && headingBounds.y >= navBounds.y + navBounds.height + 16, 'Selected project heading should clear the sticky mobile navigation')
-  assert.equal(new URL(page.url()).hash, '#project-teleai')
+  const teleAi = chooser.getByRole('link', { name: /TeleAI/i })
+  await assert.equal(await teleAi.getAttribute('href'), '/projects/teleai/')
+  await assert.equal(await page.locator('#project-heading-teleai').isVisible(), true)
+  const nav = page.locator('[data-portfolio-mobile-navigation]')
+  const [headingBounds, navBounds] = await Promise.all([
+    page.locator('#project-heading-teleai').boundingBox(),
+    nav.boundingBox(),
+  ])
+  await assert.ok(headingBounds && navBounds && headingBounds.y >= navBounds.y + navBounds.height + 16, 'The selected project heading should clear mobile sticky navigation.')
   await saveViewport(page, 'projects-mobile.png')
   await page.close()
 
   const proofPage = await browser.newPage({ viewport: { width: 320, height: 568 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true })
-  await proofPage.goto(`${baseUrl}#project-teleai`, { waitUntil: 'domcontentloaded' })
-  await proofPage.waitForFunction(() => document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.includes('Projects'))
-  await settle(proofPage)
-  assert.equal(await proofPage.getByRole('button', { name: /TeleAI/i }).getAttribute('aria-pressed'), 'true')
+  await openRoute(proofPage, '/projects/teleai/')
   const scrolledY = await scrollNaturallyToBottom(proofPage)
-  assert.ok(scrolledY > 0, `The narrow mobile social proof should capture a naturally scrolled project, got Y=${scrolledY}`)
+  await assert.ok(scrolledY > 0, `The narrow mobile social proof should capture a naturally scrolled project, got Y=${scrolledY}.`)
   const group = proofPage.getByRole('group', { name: 'Contact and social links' })
-  assert.ok(await group.isVisible(), 'The mobile contact/social row should remain visible while reading the project')
+  await assert.ok(await group.isVisible(), 'The mobile contact/social row should remain visible while reading the project.')
   for (const [name, href] of [
-    ['Email Tran Ha Thu', 'mailto:tranhathu@u.nus.edu'],
+    ['Email Tran Ha Thu', 'mailto:tranhathuwork@gmail.com'],
     ['Tran Ha Thu on GitHub', 'https://github.com/oeggy03'],
     ['Tran Ha Thu on LinkedIn', 'https://www.linkedin.com/in/tran-ha-thu/'],
   ]) {
     const link = group.getByRole('link', { name, exact: true })
-    assert.equal(await link.getAttribute('href'), href, `${name} destination should be preserved`)
+    await assert.equal(await link.getAttribute('href'), href, `${name} destination should be preserved.`)
     const bounds = await link.boundingBox()
-    assert.ok(bounds && bounds.y >= 0 && bounds.y + bounds.height <= 568 && bounds.width >= 44 && bounds.height >= 44, `${name} should remain a visible 44px target after scrolling`)
+    await assert.ok(bounds && bounds.y >= 0 && bounds.y + bounds.height <= 568 && bounds.width >= 44 && bounds.height >= 44, `${name} should remain a visible 44px target after scrolling.`)
   }
   await saveViewport(proofPage, 'mobile-social-links-scrolled.png')
   await proofPage.close()
@@ -191,9 +194,8 @@ async function captureMobileViews() {
 
 async function captureSocialPreview() {
   const page = await browser.newPage({ viewport: { width: 1440, height: 756 }, deviceScaleFactor: 1 })
-  await page.goto(`${baseUrl}#overview`, { waitUntil: 'domcontentloaded' })
-  await settle(page)
-  assert.ok((await page.evaluate(() => window.scrollY)) <= 2, 'Overview social preview should begin at document Y=0')
+  await openRoute(page, '/')
+  await assert.ok((await page.evaluate(() => window.scrollY)) <= 2, 'Overview social preview should begin at document Y=0.')
   const viewportImage = await page.screenshot({ fullPage: false })
   const resizedImage = await page.evaluate(async (base64) => {
     const image = new Image()
@@ -211,8 +213,8 @@ async function captureSocialPreview() {
 }
 
 try {
-  if (overviewReview) {
-    await captureOverviewReview()
+  if (reviewOnly) {
+    await captureReviewSet()
   } else {
     if (!screenshotsOnly) await captureSocialPreview()
     if (!socialOnly) {

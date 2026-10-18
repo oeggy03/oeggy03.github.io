@@ -38,7 +38,7 @@ Use Automatic or 30-minute TTL. Remove conflicting parking and URL redirect reco
 
 ## Search visibility
 
-The generated homepage includes a descriptive title and description, HTTPS canonical URL, ProfilePage/Person JSON-LD, Open Graph and Twitter card metadata using `public/social-preview.png`, crawl permissions in `public/robots.txt`, and a sitemap containing the homepage. Section hashes are parts of the same page, not separate URLs. Metadata helps crawlers understand the site but does not guarantee indexing or rankings.
+Each generated route includes a descriptive title and description, HTTPS canonical URL, ProfilePage/Person JSON-LD, and Open Graph and Twitter card metadata using `public/social-preview.png`. The checked-in `public/robots.txt` provides the static crawl policy. The build generates `dist/sitemap.xml` from all ten canonical routes. Section hashes are parts of the same page, not separate URLs. Metadata helps crawlers understand the site but does not guarantee indexing or rankings.
 
 ### Ask Google to discover the site
 
