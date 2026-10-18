@@ -2,23 +2,16 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import PropTypes from 'prop-types'
 import { projects } from '../data/portfolio.js'
 import PortfolioNavigationContext from './navigation-context.js'
+import LEGACY_FRAGMENT_ALIASES from './fragment-aliases.js'
 
 const SCROLL_STATE_KEY = '__portfolioScrollY'
 const ENTRY_STATE_KEY = '__portfolioEntryId'
 const ENTRY_URL_KEY = '__portfolioEntryUrl'
 const useIsomorphicLayoutEffect = typeof document === 'undefined' ? useEffect : useLayoutEffect
 
-const legacyFragments = {
-  homepage: 'overview',
-  aboutSection: 'about',
-  experiencesSec: 'experience',
-  projectsSec: 'projects',
-  contactSec: 'contact',
-}
-
 function resolveFragment(rawFragment, sectionIds, projectIds) {
   const raw = String(rawFragment || '').replace(/^#/, '')
-  const canonical = legacyFragments[raw] || raw
+  const canonical = LEGACY_FRAGMENT_ALIASES[raw] || raw
   if (sectionIds.has(canonical)) {
     return { fragment: canonical, sectionId: canonical, projectId: null, legacy: canonical !== raw }
   }

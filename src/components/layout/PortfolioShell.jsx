@@ -8,10 +8,10 @@ import {
   Linkedin,
   Mail,
   PanelsTopLeft,
-  UserRound,
 } from 'lucide-react'
 import { ActionLink } from '../ui/index.jsx'
 import { PortfolioNavigationProvider } from '../../navigation/NavigationProvider.jsx'
+import LEGACY_FRAGMENT_ALIASES from '../../navigation/fragment-aliases.js'
 import { usePortfolioNavigation } from '../../navigation/NavigationContext.jsx'
 
 const sectionIcons = {
@@ -19,16 +19,18 @@ const sectionIcons = {
   projects: PanelsTopLeft,
   experience: BriefcaseBusiness,
   skills: Code2,
-  about: UserRound,
-  contact: Mail,
 }
 
 const legacyAnchorIds = {
-  overview: 'homepage',
-  about: 'aboutSection',
-  experience: 'experiencesSec',
-  projects: 'projectsSec',
-  contact: 'contactSec',
+  overview: Object.entries(LEGACY_FRAGMENT_ALIASES)
+    .filter(([, sectionId]) => sectionId === 'overview')
+    .map(([anchorId]) => anchorId),
+  experience: Object.entries(LEGACY_FRAGMENT_ALIASES)
+    .filter(([, sectionId]) => sectionId === 'experience')
+    .map(([anchorId]) => anchorId),
+  projects: Object.entries(LEGACY_FRAGMENT_ALIASES)
+    .filter(([, sectionId]) => sectionId === 'projects')
+    .map(([anchorId]) => anchorId),
 }
 
 const portfolioSectionPropType = PropTypes.arrayOf(PropTypes.shape({
@@ -52,22 +54,22 @@ const portfolioProfilePropType = PropTypes.shape({
 
 function SocialLinks({ profile, mobile = false }) {
   const linkClassName = mobile
-    ? 'inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-white/20 text-paper transition-colors hover:border-white/50 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper'
+    ? 'inline-flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-xl border border-line bg-paper/65 px-1 text-[10px] font-medium text-ink transition-colors hover:border-ink/25 hover:bg-paper focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:gap-1.5 sm:px-2 sm:text-xs'
     : 'inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm text-paper/75 transition-colors hover:bg-white/10 hover:text-paper focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper'
 
   return (
-    <div className={mobile ? 'flex items-center gap-1' : 'flex flex-wrap items-center gap-1'} role="group" aria-label="Contact and social links">
+    <div className={mobile ? 'grid w-full grid-cols-3 gap-2' : 'flex flex-wrap items-center gap-1'} role="group" aria-label="Contact and social links">
       <a className={linkClassName} href={`mailto:${profile.email}`} aria-label={`Email ${profile.name}`}>
         <Mail aria-hidden="true" className="size-4" />
-        {!mobile ? <span>Email</span> : null}
+        <span>Email</span>
       </a>
-      <a className={`${linkClassName} ${mobile ? 'hidden sm:inline-flex' : ''}`} href={profile.github} target="_blank" rel="noopener noreferrer" aria-label={`${profile.name} on GitHub`}>
+      <a className={linkClassName} href={profile.github} target="_blank" rel="noopener noreferrer" aria-label={`${profile.name} on GitHub`}>
         <Github aria-hidden="true" className="size-4" />
-        {!mobile ? <span>GitHub</span> : null}
+        <span>GitHub</span>
       </a>
-      <a className={`${linkClassName} ${mobile ? 'hidden sm:inline-flex' : ''}`} href={profile.linkedin} target="_blank" rel="noopener noreferrer" aria-label={`${profile.name} on LinkedIn`}>
+      <a className={linkClassName} href={profile.linkedin} target="_blank" rel="noopener noreferrer" aria-label={`${profile.name} on LinkedIn`}>
         <Linkedin aria-hidden="true" className="size-4" />
-        {!mobile ? <span>LinkedIn</span> : null}
+        <span>LinkedIn</span>
       </a>
     </div>
   )
@@ -112,7 +114,6 @@ function PortfolioNavigation({ sections, activeId, enhanced, onTabClick, onTabKe
       >
         <Icon aria-hidden="true" className={`size-[17px] shrink-0 ${active && !mobile ? 'text-sage' : ''}`} />
         <span className={mobile ? 'text-[10px] font-semibold leading-none sm:text-[11px]' : 'flex-1'}>{label}</span>
-        {!mobile ? <span aria-hidden="true" className={`ml-auto size-1.5 rounded-full ${active ? 'bg-accent' : 'bg-transparent'}`} /> : null}
       </a>
     )
   })
@@ -120,7 +121,7 @@ function PortfolioNavigation({ sections, activeId, enhanced, onTabClick, onTabKe
   return (
     <nav aria-label="Portfolio sections">
       <div
-        className={mobile ? 'grid grid-cols-3 gap-2 sm:grid-cols-6' : 'flex flex-col gap-1'}
+        className={mobile ? 'grid grid-cols-4 gap-1 sm:gap-2' : 'flex flex-col gap-1'}
         role={enhanced ? 'tablist' : undefined}
         aria-orientation={enhanced && !mobile ? 'vertical' : undefined}
         aria-label={enhanced ? 'Portfolio sections' : undefined}
@@ -231,20 +232,16 @@ function PortfolioShellLayout({ sections, profile }) {
 
   return (
     <div className="grid min-h-screen bg-ink text-ink lg:grid-cols-[260px_minmax(0,1fr)]" onClick={handleInternalAnchorClick}>
-      <aside data-portfolio-sidebar className="flex items-center justify-between gap-4 border-b border-white/10 bg-ink px-4 py-3 text-paper sm:px-6 lg:sticky lg:top-0 lg:row-span-1 lg:self-start lg:h-dvh lg:max-h-dvh lg:overflow-y-auto lg:flex-col lg:items-stretch lg:justify-between lg:border-b-0 lg:border-r lg:px-5 lg:py-4">
+      <aside data-portfolio-sidebar className="flex flex-col items-stretch gap-3 border-b border-white/10 bg-ink px-4 py-3 text-paper sm:px-6 lg:sticky lg:top-0 lg:row-span-1 lg:self-start lg:h-dvh lg:max-h-dvh lg:overflow-y-auto lg:justify-between lg:gap-6 lg:border-b-0 lg:border-r lg:px-5 lg:py-4">
         <div className="flex min-w-0 items-center gap-3 lg:block">
           <div aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/5 font-mono text-sm font-medium tracking-[-0.06em] text-sage lg:size-10">TH</div>
           <div className="min-w-0 lg:mt-3">
             <p className="mb-1 hidden font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-sage lg:block">Backend / Software Engineer</p>
-            <h1 className="truncate text-lg font-semibold tracking-[-0.04em] text-paper sm:text-xl lg:whitespace-normal lg:text-[27px] lg:leading-tight">{profile.name}</h1>
-            <p className="mt-0.5 truncate text-[11px] text-paper/60 sm:text-xs lg:hidden">Backend / Software Engineer</p>
+            <h1 className="text-base font-semibold tracking-[-0.04em] text-paper sm:text-xl lg:text-[27px] lg:leading-tight">{profile.name}</h1>
+            <p className="mt-0.5 text-[11px] leading-4 text-paper/60 sm:text-xs lg:hidden">Backend / Software Engineer</p>
             <p className="mt-1 hidden max-w-[205px] text-xs leading-5 text-paper/60 lg:block">Computer Science<br />National University of Singapore</p>
             <p className="mt-1 hidden font-mono text-[9px] uppercase tracking-[0.14em] text-paper/70 lg:block">Singapore</p>
           </div>
-        </div>
-
-        <div className="lg:hidden">
-          <SocialLinks profile={profile} mobile />
         </div>
 
         <div className="hidden lg:block">
@@ -276,6 +273,9 @@ function PortfolioShellLayout({ sections, profile }) {
             instanceId="mobile"
             mobile
           />
+          <div className="mt-2 border-t border-line pt-2">
+            <SocialLinks profile={profile} mobile />
+          </div>
         </div>
 
         <header data-portfolio-toolbar className="flex min-h-[68px] items-center justify-between gap-4 border-b border-line bg-canvas px-5 py-3 sm:px-8 lg:sticky lg:top-0 lg:z-30 lg:px-8 2xl:px-10">
@@ -300,7 +300,9 @@ function PortfolioShellLayout({ sections, profile }) {
               tabIndex={enhanced ? 0 : undefined}
               hidden={enhanced && activeId !== id}
             >
-              {legacyAnchorIds[id] ? <span id={legacyAnchorIds[id]} aria-hidden="true" className="sr-only" /> : null}
+              {legacyAnchorIds[id]?.map((anchorId) => (
+                <span key={anchorId} id={anchorId} aria-hidden="true" className="sr-only" />
+              ))}
               {content}
             </section>
           ))}
