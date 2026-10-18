@@ -29,8 +29,13 @@ const experiences = [
 const coreSkills = [
   'Git', 'Object-oriented programming', 'HTML', 'CSS', 'JavaScript', 'React', 'Go',
   'Express.js', 'MySQL', 'PostgreSQL', 'Microsoft SQL Server', 'Java', 'Python', 'C++',
+  'JWT', 'bcrypt', 'SQLite', 'Pandas', 'OpenCV', 'TensorFlow', 'Keras', 'JavaFX',
 ]
-for (const item of [...projects, ...experiences, ...coreSkills]) {
+const experienceDates = [
+  'May 2024 - Present', 'Dec 2023 - Present', 'Aug 2023 - Present',
+  'May 2023 - Aug 2023', 'Dec 2019 - Jan 2020',
+]
+for (const item of [...projects, ...experiences, ...coreSkills, ...experienceDates]) {
   assert.ok(crawlableText.includes(item), `Missing prerendered portfolio content: ${item}`)
 }
 for (const item of [
