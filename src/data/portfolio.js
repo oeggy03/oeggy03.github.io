@@ -7,11 +7,18 @@ import hdbLogo from "../assets/hdb.png"
 import nusLogo from "../assets/NUS.png"
 import eastspringLogo from "../assets/eastspring.png"
 import aStarLogo from "../assets/astar.png"
+import tikTokLogo from "../assets/company-logos/tiktok.png"
+import gicLogo from "../assets/company-logos/gic.png"
+import uptaleLogo from "../assets/company-logos/uptale.png"
 import resumeFile from "../assets/Resume_TranHaThu.pdf"
+import { featuredProjects } from "./featured-projects.js"
 
 export const profile = {
   name: "Tran Ha Thu",
   role: "Software Engineer",
+  introEyebrow: "As a Backend engineer at TikTok...",
+  introHeadline: "I build useful and scalable software.",
+  introduction: "Hey, I’m Ha Thu, a backend engineer and graduate of the National University of Singapore. I’m committed to building practical, useful software with the future in mind, and I enjoy experimenting with new technologies along the way.",
   email: "tranhathuwork@gmail.com",
   github: "https://github.com/oeggy03",
   linkedin: "https://www.linkedin.com/in/tran-ha-thu/",
@@ -38,7 +45,7 @@ export const profile = {
   aspiration: "I want to build useful software and help others learn to program.",
 }
 
-export const projects = [
+const existingProjects = [
   {
     id: "foroom",
     title: "FoROOM",
@@ -173,6 +180,8 @@ export const projects = [
   },
 ]
 
+export const projects = [...existingProjects, ...featuredProjects]
+
 export const currentExperienceId = "tiktok-backend"
 
 export const experiences = [
@@ -182,6 +191,9 @@ export const experiences = [
     dates: "Jul 2026 – Present",
     company: "TikTok",
     role: "Backend Engineer",
+    logo: tikTokLogo,
+    logoAlt: "TikTok",
+    url: "https://www.tiktok.com/",
     highlights: [
       "Developed internal products with TypeScript and Go to improve reliability and observability of internal services.",
     ],
@@ -193,6 +205,9 @@ export const experiences = [
     endedAt: "2026-03",
     company: "TikTok",
     role: "Software Engineering Intern",
+    logo: tikTokLogo,
+    logoAlt: "TikTok",
+    url: "https://www.tiktok.com/",
     dates: "Jan 2026 – Mar 2026",
     highlights: [
       "Developed internal products with TypeScript and Go to improve reliability and observability of internal services.",
@@ -222,6 +237,9 @@ export const experiences = [
     role: "Software Engineering Intern",
     company: "GIC",
     dates: "Jun 2025 – Sep 2025",
+    logo: gicLogo,
+    logoAlt: "GIC",
+    url: "https://www.gic.com.sg/",
     highlights: [
       "Engineered products for public market investments with TypeScript, C#, Python and Microsoft SQL Server, optimizing workflows for over 300 staff.",
     ],
@@ -234,6 +252,9 @@ export const experiences = [
     role: "Software Engineering & AI Intern",
     company: "Uptale",
     dates: "Jan 2025 – Jun 2025",
+    logo: uptaleLogo,
+    logoAlt: "Uptale",
+    url: "https://www.uptale.io/en/",
     highlights: [
       "Implemented a full retrieval-augmented generation (RAG) pipeline in TypeScript and C# for gamified educational experiences used by over 100 customers.",
     ],

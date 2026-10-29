@@ -3,10 +3,10 @@
 ## Product and content
 
 - This is a public recruiter portfolio for backend and software engineering.
-- The current default has four views: Overview, Projects, Experience, and Skills. Contact actions live in the shared shell; there is no About or Contact view. The user can explicitly request a different view structure.
-- Overview contains the profile, current employer, education, and interests. Keep all project names, cards, implementation details, and architecture off Overview.
-- Projects lists all six current projects with their detailed project routes. Preserve all currently supplied projects, roles, skills, and links; these counts describe today's content, not a cap on user-authorized additions. Experience lists the current role first, then completed roles sorted by end date descending, with the supplied detail. Skills contains the supplied skills.
-- Do not add an active red status dot or country taglines. Do not add an expertise strip to Overview.
+- The current default has three views: Experience, Projects, and Skills. Contact actions live in the shared shell; there is no About or Contact view. The user can explicitly request a different view structure.
+- Experience contains the profile, current employer, a latest-first work history with earlier roles in a native disclosure, education, and interests. Only the two user-authorized featured projects appear on Experience; keep all other projects and their details in Projects.
+- Projects lists all eight current projects with dedicated routes. Preserve all currently supplied projects, roles, skills, and links; these counts describe today's content, not a cap on user-authorized additions. The work history starts with the current role, then completed roles sorted by end date descending, with the supplied detail. Skills contains the supplied skills.
+- Do not add an active red status dot, country taglines, or an expertise strip to Experience.
 - Use concise recruiter-facing copy; avoid internal process notes or awkward availability caveats on the website.
 - Treat user-provided facts as authoritative. Do not invent achievements, skills, dates, metrics, employers, education, links, or project claims. Ask only when a needed fact cannot be inferred from the repository or request.
 - When requested, keep `src/data/portfolio.js`, `docs/resume.html`, and the generated PDF synchronized. The HTML is the resume source; generate the PDF with `node scripts/generate-resume.mjs`.

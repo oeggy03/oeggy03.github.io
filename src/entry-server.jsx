@@ -2,7 +2,12 @@ import React from 'react'
 import { renderToString } from 'react-dom/server'
 import App from './App.jsx'
 import { projects } from './data/portfolio.js'
-import { getPortfolioPageMetadata, portfolioRoutePaths, resolvePortfolioRoute } from './navigation/routes.js'
+import {
+  getPortfolioPageMetadata,
+  portfolioCompatibilityRoutePaths,
+  portfolioRoutePaths,
+  resolvePortfolioRoute,
+} from './navigation/routes.js'
 
 export function render(route = resolvePortfolioRoute('/')) {
   return renderToString(<React.StrictMode><App route={route} /></React.StrictMode>)
@@ -15,5 +20,14 @@ export const prerenderPages = portfolioRoutePaths.map((path) => {
     route,
     project,
     metadata: getPortfolioPageMetadata(route, project),
+  }
+})
+
+export const compatibilityPages = portfolioCompatibilityRoutePaths.map((outputPath) => {
+  const route = resolvePortfolioRoute(outputPath)
+  return {
+    route: { ...route, outputPath },
+    project: null,
+    metadata: getPortfolioPageMetadata(route, null),
   }
 })
