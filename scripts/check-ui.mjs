@@ -1220,17 +1220,24 @@ async function run() {
         return { currentY: window.scrollY, destinationY: targetY - marginTop }
       })
       await assert.ok(Math.abs(secondAnchorMotion.currentY - secondAnchorMotion.destinationY) > 2, 'The replacement anchor should still be moving when the previous scroll completion is delivered.')
-      await changingPage.evaluate(() => window.dispatchEvent(new Event('scrollend')))
-      await assert.ok(Math.abs(await changingPage.evaluate(() => window.scrollY) - secondAnchorMotion.currentY) <= 1, 'An obsolete scrollend event should not move the replacement anchor.')
+      const obsoleteEventMovement = await changingPage.evaluate(() => {
+        const beforeY = window.scrollY
+        window.dispatchEvent(new Event('scrollend'))
+        return { beforeY, afterY: window.scrollY }
+      })
+      await assert.ok(Math.abs(obsoleteEventMovement.afterY - obsoleteEventMovement.beforeY) <= 1, 'An obsolete scrollend event should not move the replacement anchor.')
       await changingPage.emulateMedia({ reducedMotion: 'reduce' })
       await waitForStableScroll(changingPage)
       await assert.deepEqual(await changingPage.evaluate(() => window.__scrollIntoViewRequests.at(-1)), { id: 'work-history', behavior: 'auto' }, 'Enabling reduced motion during a rapid anchor change should finish the latest anchor at its destination without smooth motion.')
       const featureBounds = await changingPage.locator('#work-history').boundingBox()
       const headerBounds = await changingPage.locator('[data-portfolio-toolbar]').boundingBox()
       await assert.ok(featureBounds && headerBounds && featureBounds.y >= headerBounds.y + headerBounds.height, 'Reduced-motion preference changes should complete the latest anchor target.')
-      const completedWorkHistoryY = await changingPage.evaluate(() => window.scrollY)
-      await changingPage.evaluate(() => window.dispatchEvent(new Event('scrollend')))
-      await assert.ok(Math.abs(await changingPage.evaluate(() => window.scrollY) - completedWorkHistoryY) <= 1, 'A delayed old scrollend event should not disturb the completed replacement target.')
+      const delayedEventMovement = await changingPage.evaluate(() => {
+        const beforeY = window.scrollY
+        window.dispatchEvent(new Event('scrollend'))
+        return { beforeY, afterY: window.scrollY }
+      })
+      await assert.ok(Math.abs(delayedEventMovement.afterY - delayedEventMovement.beforeY) <= 1, 'A delayed old scrollend event should not disturb the completed replacement target.')
 
       await changingPage.emulateMedia({ reducedMotion: 'no-preference' })
       await changingPage.locator('nav[aria-label="Portfolio sections"] a[href="/skills/"]').click()
