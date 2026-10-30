@@ -41,6 +41,9 @@ async function settle(page) {
     const images = [...document.images]
     for (const image of images) image.loading = 'eager'
     await Promise.all(images.map((image) => image.decode().catch(() => undefined)))
+    const content = document.getElementById('portfolio-content')
+    const activeAnimations = content?.getAnimations().filter((animation) => animation.playState === 'running') || []
+    await Promise.all(activeAnimations.map((animation) => animation.finished.catch(() => undefined)))
     for (let frame = 0; frame < 4; frame += 1) await new Promise(requestAnimationFrame)
     await new Promise((resolve) => setTimeout(resolve, 120))
   })
@@ -80,6 +83,27 @@ async function saveViewport(page, filename, directory = screenshotDirectory) {
   return metrics
 }
 
+async function scrollToExperience(page, viewportLabel) {
+  const experience = page.locator('#work-history')
+  await assert.equal(await experience.count(), 1, 'The Experience landing should contain its work-history section.')
+  const details = experience.locator('details')
+  if (!await details.evaluate((element) => element.open)) await details.locator('summary').click()
+  await assert.equal(await details.evaluate((element) => element.open), true, `${viewportLabel} expanded experience capture should open earlier roles.`)
+  await assert.equal(await experience.locator('[data-experience-id]').count(), 8, `${viewportLabel} expanded experience capture should include all roles.`)
+  await experience.evaluate((element) => element.scrollIntoView({ block: 'start', behavior: 'instant' }))
+  await settle(page)
+  const bounds = await page.evaluate(() => ({
+    section: document.querySelector('#work-history').getBoundingClientRect(),
+    header: document.querySelector('[data-portfolio-toolbar]').getBoundingClientRect(),
+    scrollY: window.scrollY,
+  }))
+  await assert.equal(new URL(page.url()).pathname, '/', 'The work-history captures should stay on the Experience landing.')
+  await assert.equal(new URL(page.url()).hash, '', 'The experience captures should not introduce a route hash.')
+  await assert.ok(bounds.scrollY > 0, `${viewportLabel} should scroll naturally to the experience timeline.`)
+  await assert.ok(bounds.section.top >= bounds.header.bottom, `${viewportLabel} experience heading should clear the complete sticky header.`)
+  return experience
+}
+
 async function scrollNaturallyToBottom(page) {
   const viewport = page.viewportSize()
   await page.mouse.move(Math.max(1, viewport.width - 24), Math.max(1, viewport.height - 24))
@@ -101,7 +125,7 @@ async function captureReviewSet() {
     { label: 'desktop', width: 1440, height: 900, mobile: false },
     { label: 'mobile', width: 390, height: 844, mobile: true },
   ]) {
-    for (const [routeName, routePath] of [['overview', '/'], ['experience', '/experience/']]) {
+    for (const [routeName, routePath] of [['overview', '/'], ['projects', '/projects/'], ['skills', '/skills/']]) {
       const page = await browser.newPage({
         viewport: { width: viewport.width, height: viewport.height },
         deviceScaleFactor: 1,
@@ -110,7 +134,7 @@ async function captureReviewSet() {
       await openRoute(page, routePath)
       const basename = `${routeName}-${viewport.label}`
       const metrics = await saveViewport(page, `${basename}.png`, reviewDirectory)
-      if (viewport.mobile) {
+      if (viewport.mobile || routeName === 'overview') {
         await page.screenshot({ path: resolve(reviewDirectory, `${basename}-document.png`), fullPage: true })
         console.log(`Captured ${basename}-document.png at full document height ${metrics.documentHeight}px.`)
       }
@@ -123,17 +147,24 @@ async function captureDesktopViews() {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 })
   await openRoute(page, '/')
   await saveViewport(page, 'overview-desktop.png')
+  const overviewDesktopHeight = await page.evaluate(() => document.documentElement.scrollHeight)
+  await page.screenshot({ path: resolve(screenshotDirectory, 'overview-desktop-document.png'), fullPage: true })
+  console.log(`Captured overview-desktop-document.png at full document height ${overviewDesktopHeight}px.`)
+
+  await scrollToExperience(page, 'Desktop')
+  await saveViewport(page, 'experience-desktop.png')
+
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await openRoute(page, '/')
+  await saveViewport(page, 'overview-dark-desktop.png')
+  await page.emulateMedia({ colorScheme: 'light' })
+  await openRoute(page, '/')
 
   await activateSection(page, '/projects/')
-  const projectChooser = page.getByRole('navigation', { name: 'Choose a project' })
-  const foroom = projectChooser.getByRole('link', { name: /FoROOM/i })
-  await assert.equal(await foroom.getAttribute('href'), '/projects/foroom/')
-  await assert.ok(await page.getByRole('link', { name: /View code/i }).isVisible(), 'FoROOM should show its primary source action.')
+  const projectIndex = page.locator('#projects [data-project-index]')
+  await assert.equal(await projectIndex.locator('a[href^="/projects/"]').count(), 8, 'Projects index should show all eight project cards.')
+  await assert.equal(await page.getByRole('group', { name: 'Filter projects' }).getByRole('button').count(), 4)
   await saveViewport(page, 'projects-desktop.png')
-
-  await activateSection(page, '/experience/')
-  await assert.equal(await page.locator('#experience ol > li').count(), 8, 'The timeline capture should include all eight supplied roles.')
-  await saveViewport(page, 'experience-desktop.png')
 
   await activateSection(page, '/skills/')
   await saveViewport(page, 'skills-desktop.png')
@@ -143,6 +174,16 @@ async function captureDesktopViews() {
   await assert.ok(scrolledY > 0, 'The Projects capture should retain a real reading offset.')
   await saveViewport(page, 'projects-desktop-scrolled.png')
   await page.close()
+
+  const casePage = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 })
+  for (const [project, basename] of [['openclaw', 'openclaw'], ['chinese-learning', 'chinese-learning']]) {
+    await openRoute(casePage, `/projects/${project}/`)
+    await assert.equal(await casePage.locator(`#project-heading-${project}`).isVisible(), true)
+    await saveViewport(casePage, `${basename}-desktop.png`)
+    await casePage.screenshot({ path: resolve(screenshotDirectory, `${basename}-desktop-document.png`), fullPage: true })
+    console.log(`Captured ${basename}-desktop-document.png at full project-story height.`)
+  }
+  await casePage.close()
 }
 
 async function captureMobileViews() {
@@ -152,11 +193,18 @@ async function captureMobileViews() {
   await page.screenshot({ path: resolve(screenshotDirectory, 'overview-mobile-document.png'), fullPage: true })
   console.log(`Captured overview-mobile-document.png at natural document height ${overviewMetrics.documentHeight}px.`)
 
-  await openRoute(page, '/experience/')
-  const experienceMetrics = await saveViewport(page, 'experience-mobile.png')
-  await assert.equal(await page.locator('#experience ol > li').count(), 8)
-  await page.screenshot({ path: resolve(screenshotDirectory, 'experience-mobile-document.png'), fullPage: true })
-  console.log(`Captured experience-mobile-document.png at natural document height ${experienceMetrics.documentHeight}px.`)
+  const experience = await scrollToExperience(page, 'Mobile')
+  await saveViewport(page, 'experience-mobile.png')
+  await experience.screenshot({ path: resolve(screenshotDirectory, 'experience-mobile-document.png') })
+  console.log('Captured experience-mobile-document.png from the expanded work-history section.')
+
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await openRoute(page, '/')
+  await saveViewport(page, 'overview-dark-mobile.png')
+  await page.emulateMedia({ colorScheme: 'light' })
+
+  await openRoute(page, '/skills/')
+  await saveViewport(page, 'skills-mobile.png')
 
   await openRoute(page, '/projects/teleai/')
   const chooser = page.getByRole('navigation', { name: 'Choose a project' })
@@ -170,6 +218,10 @@ async function captureMobileViews() {
   ])
   await assert.ok(headingBounds && navBounds && headingBounds.y >= navBounds.y + navBounds.height + 16, 'The selected project heading should clear mobile sticky navigation.')
   await saveViewport(page, 'projects-mobile.png')
+  await openRoute(page, '/projects/openclaw/')
+  await saveViewport(page, 'openclaw-mobile.png')
+  await openRoute(page, '/projects/chinese-learning/')
+  await saveViewport(page, 'chinese-learning-mobile.png')
   await page.close()
 
   const proofPage = await browser.newPage({ viewport: { width: 320, height: 568 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true })
@@ -195,7 +247,7 @@ async function captureMobileViews() {
 async function captureSocialPreview() {
   const page = await browser.newPage({ viewport: { width: 1440, height: 756 }, deviceScaleFactor: 1 })
   await openRoute(page, '/')
-  await assert.ok((await page.evaluate(() => window.scrollY)) <= 2, 'Overview social preview should begin at document Y=0.')
+  await assert.ok((await page.evaluate(() => window.scrollY)) <= 2, 'Experience social preview should begin at document Y=0.')
   const viewportImage = await page.screenshot({ fullPage: false })
   const resizedImage = await page.evaluate(async (base64) => {
     const image = new Image()

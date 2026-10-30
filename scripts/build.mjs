@@ -19,7 +19,7 @@ await build({
 })
 
 const serverBundle = await import(pathToFileURL(resolve(root, 'node_modules/.cache/portfolio-prerender/entry-server.mjs')).href)
-const { prerenderPages, render } = serverBundle
+const { compatibilityPages, prerenderPages, render } = serverBundle
 const dist = resolve(root, 'dist')
 const htmlTemplate = await readFile(resolve(dist, 'index.html'), 'utf8')
 const rootPlaceholder = '<main id="root"></main>'
@@ -59,14 +59,15 @@ function applyMetadata(html, { title, description, canonicalUrl }) {
   return html
 }
 
-for (const { route, project, metadata } of prerenderPages) {
+for (const { route, project, metadata } of [...prerenderPages, ...compatibilityPages]) {
   const rendered = htmlTemplate.replace(rootPlaceholder, () => `<main id="root">${render(route)}</main>`)
   const pageHtml = applyMetadata(rendered, metadata)
-  const relativeFile = route.path === '/' ? 'index.html' : `${route.path.slice(1)}index.html`
+  const outputPath = route.outputPath || route.path
+  const relativeFile = outputPath === '/' ? 'index.html' : `${outputPath.slice(1)}index.html`
   const pagePath = resolve(dist, relativeFile)
   await mkdir(dirname(pagePath), { recursive: true })
   await writeFile(pagePath, pageHtml)
-  console.log(`Prerendered ${route.path}${project ? ` (${project.title})` : ''}`)
+  console.log(`Prerendered ${outputPath}${project ? ` (${project.title})` : ''}${route.outputPath ? ' (legacy alias)' : ''}`)
 }
 
 const sitemap = [

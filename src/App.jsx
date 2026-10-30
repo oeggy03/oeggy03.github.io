@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types'
 import {
   ExperienceView,
-  OverviewView,
   ProjectsView,
   SkillsView,
 } from './views/index.js'
@@ -10,9 +9,8 @@ import { profile } from './data/portfolio.js'
 import { resolvePortfolioRoute } from './navigation/routes.js'
 
 const sections = [
-  { id: 'overview', label: 'Overview', content: <OverviewView /> },
-  { id: 'projects', label: 'Projects', content: <ProjectsView /> },
   { id: 'experience', label: 'Experience', content: <ExperienceView /> },
+  { id: 'projects', label: 'Projects', content: <ProjectsView /> },
   { id: 'skills', label: 'Skills', content: <SkillsView /> },
 ]
 

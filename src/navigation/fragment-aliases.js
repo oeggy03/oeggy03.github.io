@@ -1,9 +1,11 @@
 const LEGACY_FRAGMENT_ALIASES = {
-  homepage: 'overview',
-  about: 'overview',
-  aboutSection: 'overview',
-  contact: 'overview',
-  contactSec: 'overview',
+  homepage: 'experience',
+  overview: 'experience',
+  about: 'experience',
+  aboutSection: 'experience',
+  contact: 'experience',
+  contactSec: 'experience',
+  experience: 'experience',
   experiencesSec: 'experience',
   projectsSec: 'projects',
 }

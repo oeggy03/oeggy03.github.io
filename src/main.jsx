@@ -2,8 +2,6 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import { resolvePortfolioRoute } from './navigation/routes.js'
-import '@fontsource-variable/manrope'
-import '@fontsource/ibm-plex-mono/400.css'
 import './tailwind.css'
 
 const root = document.getElementById('root')

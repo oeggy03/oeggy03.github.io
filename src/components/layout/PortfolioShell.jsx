@@ -1,38 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
-import {
-  BriefcaseBusiness,
-  Code2,
-  Github,
-  House,
-  Linkedin,
-  Mail,
-  PanelsTopLeft,
-} from 'lucide-react'
+import { Github, Linkedin, Mail } from 'lucide-react'
 import { ActionLink } from '../ui/index.jsx'
 import { PortfolioNavigationProvider } from '../../navigation/NavigationProvider.jsx'
 import LEGACY_FRAGMENT_ALIASES from '../../navigation/fragment-aliases.js'
 import { usePortfolioNavigation } from '../../navigation/NavigationContext.jsx'
 import { resolvePortfolioRoute, sectionPathFor } from '../../navigation/routes.js'
 
-const sectionIcons = {
-  overview: House,
-  projects: PanelsTopLeft,
-  experience: BriefcaseBusiness,
-  skills: Code2,
-}
-
-const legacyAnchorIds = {
-  overview: Object.entries(LEGACY_FRAGMENT_ALIASES)
-    .filter(([, sectionId]) => sectionId === 'overview')
-    .map(([anchorId]) => anchorId),
-  experience: Object.entries(LEGACY_FRAGMENT_ALIASES)
-    .filter(([, sectionId]) => sectionId === 'experience')
-    .map(([anchorId]) => anchorId),
-  projects: Object.entries(LEGACY_FRAGMENT_ALIASES)
-    .filter(([, sectionId]) => sectionId === 'projects')
-    .map(([anchorId]) => anchorId),
-}
+const useIsomorphicLayoutEffect = typeof document === 'undefined' ? useEffect : useLayoutEffect
 
 const portfolioSectionPropType = PropTypes.arrayOf(PropTypes.shape({
   id: PropTypes.string.isRequired,
@@ -49,25 +24,29 @@ const portfolioProfilePropType = PropTypes.shape({
   resume: PropTypes.string.isRequired,
 })
 
-function SocialLinks({ profile, mobile = false }) {
-  const linkClassName = mobile
-    ? 'inline-flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-xl border border-line bg-paper/65 px-1 text-[10px] font-medium text-ink transition-colors hover:border-ink/25 hover:bg-paper focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:gap-1.5 sm:px-2 sm:text-xs'
-    : 'inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm text-paper/75 transition-colors hover:bg-white/10 hover:text-paper focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper'
+const legacyAnchorIds = {
+  experience: Object.entries(LEGACY_FRAGMENT_ALIASES)
+    .filter(([anchorId, sectionId]) => sectionId === 'experience' && anchorId !== 'experience')
+    .map(([anchorId]) => anchorId),
+  projects: Object.entries(LEGACY_FRAGMENT_ALIASES)
+    .filter(([, sectionId]) => sectionId === 'projects')
+    .map(([anchorId]) => anchorId),
+}
+
+function SocialLinks({ profile }) {
+  const links = [
+    { icon: Mail, label: `Email ${profile.name}`, href: `mailto:${profile.email}` },
+    { icon: Github, label: `${profile.name} on GitHub`, href: profile.github },
+    { icon: Linkedin, label: `${profile.name} on LinkedIn`, href: profile.linkedin },
+  ]
 
   return (
-    <div className={mobile ? 'grid w-full grid-cols-3 gap-2' : 'flex flex-wrap items-center gap-1'} role="group" aria-label="Contact and social links">
-      <a className={linkClassName} href={`mailto:${profile.email}`} aria-label={`Email ${profile.name}`}>
-        <Mail aria-hidden="true" className="size-4" />
-        <span>Email</span>
-      </a>
-      <a className={linkClassName} href={profile.github} target="_blank" rel="noopener noreferrer" aria-label={`${profile.name} on GitHub`}>
-        <Github aria-hidden="true" className="size-4" />
-        <span>GitHub</span>
-      </a>
-      <a className={linkClassName} href={profile.linkedin} target="_blank" rel="noopener noreferrer" aria-label={`${profile.name} on LinkedIn`}>
-        <Linkedin aria-hidden="true" className="size-4" />
-        <span>LinkedIn</span>
-      </a>
+    <div className="flex flex-wrap items-center justify-end gap-1" role="group" aria-label="Contact and social links">
+      {links.map(({ icon: Icon, label, href }) => (
+        <a key={label} className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition-colors duration-150 hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none" href={href} aria-label={label} target={href.startsWith('http') ? '_blank' : undefined} rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}>
+          <Icon aria-hidden="true" className="size-5" />
+        </a>
+      ))}
     </div>
   )
 }
@@ -79,54 +58,23 @@ SocialLinks.propTypes = {
     github: PropTypes.string.isRequired,
     linkedin: PropTypes.string.isRequired,
   }).isRequired,
-  mobile: PropTypes.bool,
 }
 
-function PortfolioNavigation({ sections, activeId, enhanced, onTabClick, onTabKeyDown, instanceId, mobile = false }) {
-  const navItems = sections.map(({ id, label }) => {
-    const Icon = sectionIcons[id] || PanelsTopLeft
-    const active = activeId === id
-    const tabId = `${instanceId}-tab-${id}`
-    const tabProps = enhanced
-      ? {
-          role: 'tab',
-          id: tabId,
-          'aria-controls': id,
-          'aria-selected': active,
-          tabIndex: active ? 0 : -1,
-        }
-      : {}
-
-    const itemClassName = mobile
-      ? `flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl border px-1 py-2 text-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none ${active ? 'border-accent/40 bg-paper text-ink shadow-sm' : 'border-line bg-paper/65 text-muted hover:border-ink/25 hover:text-ink'}`
-      : `group flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper motion-reduce:transition-none ${active ? 'bg-white/10 text-paper' : 'text-paper/60 hover:bg-white/5 hover:text-paper'}`
-
-    return (
-      <a
-        key={id}
-        href={sectionPathFor(id)}
-        className={itemClassName}
-        aria-current={active ? 'page' : undefined}
-        {...tabProps}
-        onClick={(event) => onTabClick(event, id)}
-      >
-        <Icon aria-hidden="true" className={`size-[17px] shrink-0 ${active && !mobile ? 'text-sage' : ''}`} />
-        <span className={mobile ? 'text-[10px] font-semibold leading-none sm:text-[11px]' : 'flex-1'}>{label}</span>
-      </a>
-    )
-  })
-
+function PortfolioNavigation({ sections, activeId, onClick }) {
   return (
-    <nav aria-label="Portfolio sections">
-      <div
-        className={mobile ? 'grid grid-cols-4 gap-1 sm:gap-2' : 'flex flex-col gap-1'}
-        role={enhanced ? 'tablist' : undefined}
-        aria-orientation={enhanced && !mobile ? 'vertical' : undefined}
-        aria-label={enhanced ? 'Portfolio sections' : undefined}
-        onKeyDown={(event) => onTabKeyDown(event, instanceId)}
-      >
-        {navItems}
-      </div>
+    <nav aria-label="Portfolio sections" className="min-w-0 flex-[1_1_72%] md:flex-[1_0_auto]">
+      <ul className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 md:justify-start md:gap-5">
+        {sections.map(({ id, label }) => {
+          const active = activeId === id
+          return (
+            <li key={id} className="min-w-0 flex-[1_0_auto] md:flex-none">
+              <a href={sectionPathFor(id)} className={`inline-flex min-h-11 min-w-11 whitespace-nowrap items-center justify-center rounded-full px-2 text-xs font-medium leading-tight transition-colors duration-150 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none sm:text-sm md:px-3 ${active ? 'font-semibold text-ink underline decoration-accent decoration-2 underline-offset-[9px]' : 'text-muted'}`} aria-current={active ? 'page' : undefined} onClick={(event) => onClick(event, id)}>
+                {label}
+              </a>
+            </li>
+          )
+        })}
+      </ul>
     </nav>
   )
 }
@@ -137,70 +85,44 @@ PortfolioNavigation.propTypes = {
     label: PropTypes.string.isRequired,
   })).isRequired,
   activeId: PropTypes.string.isRequired,
-  enhanced: PropTypes.bool.isRequired,
-  onTabClick: PropTypes.func.isRequired,
-  onTabKeyDown: PropTypes.func.isRequired,
-  instanceId: PropTypes.string.isRequired,
-  mobile: PropTypes.bool,
+  onClick: PropTypes.func.isRequired,
 }
 
 function PortfolioShellLayout({ sections, profile }) {
-  const { fragment, navigate } = usePortfolioNavigation()
+  const { fragment, navigate, navigateToAnchor } = usePortfolioNavigation()
+  const toolbarRef = useRef(null)
+  const [toolbarIsSticky, setToolbarIsSticky] = useState(false)
+  const [toolbarStickinessMeasured, setToolbarStickinessMeasured] = useState(false)
   const activeId = fragment.startsWith('project-') ? 'projects' : fragment
-  const [enhanced, setEnhanced] = useState(false)
-  const [desktopNavigation, setDesktopNavigation] = useState(true)
 
-  useEffect(() => {
-    const desktopQuery = window.matchMedia('(min-width: 1024px)')
-    const updateNavigationMode = () => setDesktopNavigation(desktopQuery.matches)
+  useIsomorphicLayoutEffect(() => {
+    const toolbar = toolbarRef.current
+    if (!toolbar) return undefined
 
-    updateNavigationMode()
-    desktopQuery.addEventListener('change', updateNavigationMode)
-    window.addEventListener('resize', updateNavigationMode)
+    const measureToolbar = () => {
+      const toolbarHeight = toolbar.getBoundingClientRect().height
+      const availableHeight = window.visualViewport?.height || window.innerHeight
+      setToolbarIsSticky(toolbarHeight > 0 && toolbarHeight <= availableHeight * 0.4)
+      setToolbarStickinessMeasured(true)
+    }
+
+    measureToolbar()
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measureToolbar)
+    observer?.observe(toolbar)
+    window.addEventListener('resize', measureToolbar)
+    window.visualViewport?.addEventListener('resize', measureToolbar)
+
     return () => {
-      desktopQuery.removeEventListener('change', updateNavigationMode)
-      window.removeEventListener('resize', updateNavigationMode)
+      observer?.disconnect()
+      window.removeEventListener('resize', measureToolbar)
+      window.visualViewport?.removeEventListener('resize', measureToolbar)
     }
   }, [])
 
-  useEffect(() => setEnhanced(true), [])
-
-  const handleTabClick = (event, id) => {
+  const handleNavigationClick = (event, id) => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.currentTarget.target || event.currentTarget.hasAttribute('download')) return
     event.preventDefault()
     navigate(id, { focus: 'preserve' })
-    event.currentTarget.focus({ preventScroll: true })
-  }
-
-  const handleTabKeyDown = (event, instanceId) => {
-    if (!enhanced) return
-
-    const keys = ['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft', 'Home', 'End']
-    if (!keys.includes(event.key)) return
-
-    const currentIndex = sections.findIndex(({ id }) => id === activeId)
-    let nextIndex = currentIndex
-    if (event.key === 'Home') nextIndex = 0
-    else if (event.key === 'End') nextIndex = sections.length - 1
-    else if (event.key === 'ArrowDown' || event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % sections.length
-    else nextIndex = (currentIndex - 1 + sections.length) % sections.length
-
-    event.preventDefault()
-    const nextId = sections[nextIndex].id
-    navigate(nextId, { focus: 'preserve' })
-    const tab = document.getElementById(`${instanceId}-tab-${nextId}`)
-    tab?.focus({ preventScroll: true })
-
-    if (instanceId === 'desktop' && tab) {
-      const rail = document.querySelector('[data-portfolio-sidebar]')
-      const railRect = rail?.getBoundingClientRect()
-      const tabRect = tab.getBoundingClientRect()
-      if (rail && railRect && tabRect.bottom > railRect.bottom) {
-        rail.scrollTop += tabRect.bottom - railRect.bottom
-      } else if (rail && railRect && tabRect.top < railRect.top) {
-        rail.scrollTop -= railRect.top - tabRect.top
-      }
-    }
   }
 
   const handleInternalAnchorClick = (event) => {
@@ -209,7 +131,20 @@ function PortfolioShellLayout({ sections, profile }) {
     if (!anchor || (anchor.target && anchor.target !== '_self') || anchor.hasAttribute('download')) return
 
     const url = new URL(anchor.href, window.location.href)
-    if (url.origin !== window.location.origin || url.search !== window.location.search || url.hash) return
+    if (url.origin !== window.location.origin || url.search !== window.location.search) return
+    if (url.hash) {
+      if (url.pathname !== window.location.pathname) return
+      let anchorId
+      try {
+        anchorId = decodeURIComponent(url.hash.slice(1))
+      } catch {
+        return
+      }
+      if (!document.getElementById(anchorId)) return
+      event.preventDefault()
+      navigateToAnchor(anchorId)
+      return
+    }
     const route = resolvePortfolioRoute(url.pathname)
     if (!route.isKnownPath) return
     event.preventDefault()
@@ -219,87 +154,54 @@ function PortfolioShellLayout({ sections, profile }) {
     })
   }
 
-  const activeLabel = sections.find(({ id }) => id === activeId)?.label || 'Overview'
-
   return (
-    <div className="grid min-h-screen bg-ink text-ink lg:grid-cols-[260px_minmax(0,1fr)]" onClick={handleInternalAnchorClick}>
-      <aside data-portfolio-sidebar className="flex flex-col items-stretch gap-3 border-b border-white/10 bg-ink px-4 py-3 text-paper sm:px-6 lg:sticky lg:top-0 lg:row-span-1 lg:self-start lg:h-dvh lg:max-h-dvh lg:overflow-y-auto lg:justify-between lg:gap-6 lg:border-b-0 lg:border-r lg:px-5 lg:py-4">
-        <div className="flex min-w-0 items-center gap-3 lg:block">
-          <div aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/5 font-mono text-sm font-medium tracking-[-0.06em] text-sage lg:size-10">TH</div>
-          <div className="min-w-0 lg:mt-3">
-            <p className="mb-1 hidden font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-sage lg:block">{profile.role}</p>
-            <h1 className="text-base font-semibold tracking-[-0.04em] text-paper sm:text-xl lg:text-[27px] lg:leading-tight">{profile.name}</h1>
-            <p className="mt-0.5 text-[11px] leading-4 text-paper/60 sm:text-xs lg:hidden">{profile.role}</p>
+    <div className="min-h-screen bg-canvas text-ink" onClick={handleInternalAnchorClick}>
+      <header ref={toolbarRef} data-portfolio-toolbar data-portfolio-mobile-navigation data-portfolio-sticky={toolbarIsSticky ? 'true' : 'false'} data-portfolio-sticky-ready={toolbarStickinessMeasured ? 'true' : undefined} className={`${toolbarIsSticky ? 'sticky top-0 z-50' : 'relative'} border-b border-line bg-canvas`}>
+          <div className="mx-auto w-full max-w-[1120px] px-4 py-2 sm:px-7 md:flex md:min-h-[76px] md:flex-wrap md:items-center md:justify-between md:gap-6 md:py-3">
+          <a href="#portfolio-content" className="sr-only z-50 font-semibold text-ink focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:w-max focus:max-w-[calc(100vw-2rem)] focus:min-h-11 focus:rounded-full focus:bg-paper focus:px-4 focus:py-3 focus:text-base focus:whitespace-normal focus:break-normal focus:outline focus:outline-2 focus:outline-accent">Skip to content</a>
+          <div className="flex min-h-11 min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1 md:shrink-0 md:flex-nowrap md:justify-start md:gap-8">
+            <div className="min-w-0">
+              <h1 className="break-words text-lg font-semibold tracking-tight text-ink sm:text-xl">{profile.name}</h1>
+              <p className="text-sm leading-5 text-muted">{profile.role}</p>
+            </div>
+            <div className="md:hidden"><SocialLinks profile={profile} /></div>
+          </div>
+
+          <div className="mt-2 flex flex-wrap items-center gap-1 md:mt-0 md:flex-[1_1_60%] md:justify-between md:gap-6">
+            <PortfolioNavigation sections={sections} activeId={activeId} onClick={handleNavigationClick} />
+            <a href={profile.resume} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 min-w-11 flex-[1_1_18%] items-center justify-center rounded-full px-2 text-xs font-semibold text-accent-ink underline decoration-accent underline-offset-4 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:text-sm md:hidden">Resume</a>
+            <div className="hidden flex-wrap items-center justify-end gap-2 md:flex">
+              <SocialLinks profile={profile} />
+              <ActionLink href={profile.resume} target="_blank" rel="noopener noreferrer" variant="primary" className="rounded-full px-5">
+                Resume
+              </ActionLink>
+            </div>
           </div>
         </div>
+      </header>
 
-        <div className="hidden lg:block">
-          <div className="mb-2 font-mono text-[9px] font-medium uppercase tracking-[0.16em] text-paper/70">Sections</div>
-          <PortfolioNavigation
-            sections={sections}
-            activeId={activeId}
-            enhanced={enhanced}
-            onTabClick={handleTabClick}
-            onTabKeyDown={handleTabKeyDown}
-            instanceId="desktop"
-          />
-        </div>
-
-        <div className="hidden border-t border-white/10 pt-3 lg:block">
-          <SocialLinks profile={profile} />
-        </div>
-      </aside>
-
-      <div className="flex min-h-screen min-w-0 flex-col bg-canvas lg:col-start-2">
-        <div data-portfolio-mobile-navigation className="sticky top-0 z-20 border-b border-line bg-canvas px-4 py-3 sm:px-6 lg:hidden">
-          <PortfolioNavigation
-            sections={sections}
-            activeId={activeId}
-            enhanced={enhanced}
-            onTabClick={handleTabClick}
-            onTabKeyDown={handleTabKeyDown}
-            instanceId="mobile"
-            mobile
-          />
-          <div className="mt-2 border-t border-line pt-2">
-            <SocialLinks profile={profile} mobile />
-          </div>
-        </div>
-
-        <header data-portfolio-toolbar className="flex min-h-[68px] items-center justify-between gap-4 border-b border-line bg-canvas px-5 py-3 sm:px-8 lg:sticky lg:top-0 lg:z-30 lg:px-8 2xl:px-10">
-          <p className="min-w-0 truncate font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted sm:text-[11px]">
-            <span className="text-ink">Portfolio</span>
-            <span className="mx-2 text-line" aria-hidden="true">/</span>
-            <span aria-live="polite">{activeLabel}</span>
-          </p>
-          <ActionLink href={profile.resume} target="_blank" rel="noopener noreferrer" className="shrink-0 px-3 py-2 text-xs sm:px-4 sm:text-sm">
-            Resume
-          </ActionLink>
-        </header>
-
-        <div className="mx-auto w-full max-w-[1500px] flex-1 px-5 py-8 sm:px-8 sm:py-8 lg:px-8 lg:py-8 2xl:px-10">
-          {sections.map(({ id, content }) => (
-            <section
-              key={id}
-              id={id}
-              className="min-w-0 scroll-mt-40 lg:scroll-mt-6"
-              role={enhanced ? 'tabpanel' : undefined}
-              aria-labelledby={enhanced ? `${desktopNavigation ? 'desktop' : 'mobile'}-tab-${id}` : undefined}
-              tabIndex={enhanced ? 0 : undefined}
-              hidden={activeId !== id}
-            >
-              {legacyAnchorIds[id]?.map((anchorId) => (
-                <span key={anchorId} id={anchorId} aria-hidden="true" className="sr-only" />
-              ))}
-              {content}
-            </section>
-          ))}
-        </div>
-
-        <footer className="border-t border-line px-5 py-5 text-center sm:px-8 lg:px-8 2xl:px-10">
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">&copy; Tran Ha Thu</p>
-        </footer>
+      <div id="portfolio-content" tabIndex={-1} className="mx-auto min-h-[calc(100vh-180px)] w-full max-w-[1120px] scroll-mt-36 px-5 pb-20 pt-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent sm:px-7 sm:pb-24 sm:pt-6">
+        {sections.map(({ id, content }) => (
+          <section
+            key={id}
+            id={id}
+            className="min-w-0 scroll-mt-32"
+            hidden={activeId !== id}
+          >
+            {legacyAnchorIds[id]?.map((anchorId) => (
+              <span key={anchorId} id={anchorId} aria-hidden="true" className="sr-only" />
+            ))}
+            {content}
+          </section>
+        ))}
       </div>
+
+      <footer className="border-t border-line">
+        <div className="mx-auto flex w-full max-w-[1120px] flex-wrap items-center justify-between gap-3 px-5 py-5 text-sm text-muted sm:px-7">
+          <p>© Tran Ha Thu</p>
+          <a className="inline-flex min-h-11 items-center text-muted underline decoration-line underline-offset-4 hover:text-ink hover:decoration-accent focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" href={`mailto:${profile.email}`}>Get in touch</a>
+        </div>
+      </footer>
     </div>
   )
 }

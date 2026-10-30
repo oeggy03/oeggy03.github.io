@@ -67,8 +67,8 @@ The site uses React 18, Vite 4, Tailwind CSS 3, JavaScript/JSX ES modules, Node.
 
 | Area | Location |
 | --- | --- |
-| Portfolio content data | `src/data/portfolio.js` |
-| Four routed views | `src/views/` |
+| Portfolio and case-study content data | `src/data/portfolio.js`, `src/data/featured-projects.js` |
+| Three routed views (Experience, Projects, Skills) | `src/views/` |
 | Shared shell and interface/content components | `src/components/layout/`, `src/components/ui/`, `src/components/content/` |
 | Clean route and history behavior | `src/navigation/`, `src/App.jsx` |
 | Browser entry and Tailwind source | `src/main.jsx`, `src/tailwind.css`, `tailwind.config.js` |
@@ -85,7 +85,7 @@ The site uses React 18, Vite 4, Tailwind CSS 3, JavaScript/JSX ES modules, Node.
 
 ## Website verification
 
-For website changes, use existing checks when authorized or requested. The portable commands are `npm run lint`, `npm run build`, `npm run check:seo`, and `npm run check:ui`; use `npm.cmd` in Windows PowerShell. The UI script reads as the source of coverage: it exercises direct loading and refresh for all ten routes, legacy-hash hydration, Back/Forward reading-position restoration, project filters and links, keyboard focus, 11 viewport sizes, mobile social/navigation targets, no-JavaScript content, local asset requests, and eight axe scans across desktop and mobile. Do not claim broader coverage than the script provides or weaken/skip frontend tests.
+For website changes, use existing checks when authorized or requested. The portable commands are `npm run lint`, `npm run build`, `npm run check:seo`, and `npm run check:ui`; use `npm.cmd` in Windows PowerShell. The UI script reads as the source of coverage: it exercises direct loading and refresh for eleven canonical routes plus the `/experience/` compatibility page, legacy-hash hydration, native in-page anchor history, Back/Forward reading-position restoration, project filters and links, keyboard focus, eleven viewport sizes, mobile social/navigation targets, no-JavaScript content, local asset requests, 200% text in the routed views and both case studies, and twelve axe scans across desktop and mobile. It also checks the expanded Experience history in light and dark appearances. Do not claim broader coverage than the script provides or weaken/skip frontend tests.
 
 Use Windows `npm.cmd` commands in PowerShell. A local preview can be served with:
 
