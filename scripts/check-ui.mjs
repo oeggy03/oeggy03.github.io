@@ -176,9 +176,59 @@ function trackPage(page) {
 async function settle(page) {
   await page.evaluate(async () => {
     await document.fonts?.ready
+    const content = document.getElementById('portfolio-content')
+    const activeAnimations = content?.getAnimations().filter((animation) => animation.playState === 'running') || []
+    await Promise.all(activeAnimations.map((animation) => animation.finished.catch(() => undefined)))
     for (let frame = 0; frame < 4; frame += 1) await new Promise(requestAnimationFrame)
     await new Promise((resolve) => setTimeout(resolve, 100))
   })
+  await waitForStableScroll(page)
+}
+
+async function installRouteFadeProbe(page) {
+  await page.evaluate(() => {
+    window.__portfolioRouteFades = []
+    const originalAnimate = Element.prototype.animate
+    Element.prototype.animate = function trackPortfolioFade(keyframes, options) {
+      const animation = originalAnimate.call(this, keyframes, options)
+      if (this.id === 'portfolio-content') {
+        const frames = animation.effect?.getKeyframes() || keyframes
+        window.__portfolioRouteFades.push({
+          fromOpacity: Number(frames[0]?.opacity),
+          toOpacity: Number(frames.at(-1)?.opacity),
+          duration: animation.effect?.getTiming().duration,
+        })
+      }
+      return animation
+    }
+  })
+}
+
+async function waitForStableScroll(page, { stableFrames = 4, maxFrames = 240 } = {}) {
+  return page.evaluate(({ requiredStableFrames, maximumFrames }) => new Promise((resolve, reject) => {
+    let previousY = window.scrollY
+    let stableFrameCount = 0
+    let frameCount = 0
+    const inspect = () => {
+      const currentY = window.scrollY
+      stableFrameCount = Math.abs(currentY - previousY) < 0.5 ? stableFrameCount + 1 : 0
+      previousY = currentY
+      frameCount += 1
+      if (stableFrameCount >= requiredStableFrames) {
+        resolve(currentY)
+      } else if (frameCount >= maximumFrames) {
+        reject(new Error(`Scroll did not settle after ${maximumFrames} animation frames.`))
+      } else {
+        requestAnimationFrame(inspect)
+      }
+    }
+    requestAnimationFrame(inspect)
+  }), { requiredStableFrames: stableFrames, maximumFrames: maxFrames })
+}
+
+async function waitForScrollProgress(page, startingY) {
+  await page.waitForFunction((previousY) => Math.abs(window.scrollY - previousY) > 1, startingY, { timeout: 4000 })
+  return page.evaluate(() => window.scrollY)
 }
 
 function activeSection(page, sectionId) {
@@ -630,7 +680,7 @@ async function run() {
         '2022', '2026', '4.6/5.0', 'first class honours', 'distinction in software engineering', "dean's list",
       ]) await assert.ok(text.includes(fact), `Experience should include the confirmed fact: ${fact}.`)
       await assert.equal(await experience.getByRole('heading', { name: 'I build useful and scalable software.', exact: true }).count(), 1, 'Experience should use the requested headline exactly.')
-      await assert.ok(text.includes('hey, i’m ha thu, a backend engineer and graduate of the national university of singapore.'), 'Experience should retain the requested friendly introduction.')
+      await assert.ok(text.includes('hey, i’m ha thu, a backend engineer and computer science graduate of the national university of singapore.'), 'Experience should retain the requested friendly introduction.')
       await assert.ok(text.includes('i’m committed to building practical, useful software with the future in mind'), 'Experience should include the supplied purpose statement.')
       await assert.ok(text.includes('i enjoy experimenting with new technologies along the way'), 'Experience should include the supplied interest in experimenting.')
       for (const project of projectNames.slice(0, 6)) await assert.ok(!text.includes(project.toLowerCase()), `Experience should not contain older project ${project}.`)
@@ -677,6 +727,7 @@ async function run() {
       const experienceJump = page.getByRole('navigation', { name: 'Explore this page' }).getByRole('link', { name: 'View experience', exact: true })
       await experienceJump.click()
       await assert.equal(new URL(page.url()).hash, '#work-history', 'The hero should link to the in-page work history.')
+      await waitForStableScroll(page)
       await assert.ok(await page.locator('#work-history').isVisible(), 'The work-history anchor target should be available.')
       await assert.equal(await page.locator('#work-history').evaluate((element) => element === document.activeElement), true, 'Following the work-history link should focus its heading container.')
       const workHistoryBounds = await page.locator('#work-history').boundingBox()
@@ -694,6 +745,7 @@ async function run() {
       await page.locator('a[href="#education"]').click()
       await assert.equal(new URL(page.url()).pathname, '/', 'Education should remain an in-page link rather than a routed view.')
       await assert.equal(new URL(page.url()).hash, '#education', 'Education should use its native fragment target.')
+      await waitForStableScroll(page)
       const educationBounds = await page.locator('#education').boundingBox()
       const toolbarBounds = await page.locator('[data-portfolio-toolbar]').boundingBox()
       await assert.ok(educationBounds && toolbarBounds && educationBounds.y >= toolbarBounds.y + toolbarBounds.height, 'The Education section should clear the sticky header.')
@@ -708,6 +760,7 @@ async function run() {
       await page.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
       await page.locator('a[href="#what-im-building"]').click()
       await assert.equal(new URL(page.url()).hash, '#what-im-building', 'The featured-project link should remain a native in-page anchor.')
+      await waitForStableScroll(page)
       const buildingBounds = await page.locator('#what-im-building').boundingBox()
       const buildingHeaderBounds = await page.locator('[data-portfolio-toolbar]').boundingBox()
       await assert.ok(buildingBounds && buildingHeaderBounds && buildingBounds.y >= buildingHeaderBounds.y + buildingHeaderBounds.height, 'The featured-project section should clear the sticky header.')
@@ -970,6 +1023,274 @@ async function run() {
       await assert.ok(navStyle.reduced)
       await assert.equal(navStyle.transition, 'none', 'Section navigation should respect reduced motion.')
       await layoutPage.close()
+    })
+
+    await check('hero anchors make cancellable smooth progress on desktop and mobile', async () => {
+      for (const viewport of [
+        { width: 1440, height: 900 },
+        { width: 390, height: 844 },
+      ]) {
+        const motionPage = await browser.newPage({ viewport })
+        trackPage(motionPage)
+        await motionPage.emulateMedia({ reducedMotion: 'no-preference' })
+        await motionPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+        await settle(motionPage)
+        await motionPage.evaluate(() => {
+          const originalScrollIntoView = Element.prototype.scrollIntoView
+          window.__scrollIntoViewRequests = []
+          Element.prototype.scrollIntoView = function scrollIntoViewWithTracking(options) {
+            window.__scrollIntoViewRequests.push({ id: this.id, behavior: options?.behavior || 'auto' })
+            return originalScrollIntoView.call(this, options)
+          }
+        })
+        const startY = await motionPage.evaluate(() => window.scrollY)
+        await motionPage.getByRole('navigation', { name: 'Explore this page' }).getByRole('link', { name: 'What I’m building', exact: true }).click()
+        await assert.equal(new URL(motionPage.url()).hash, '#what-im-building')
+        const intermediateY = await waitForScrollProgress(motionPage, startY)
+        const finalY = await waitForStableScroll(motionPage)
+        await assert.ok(intermediateY > startY && finalY > intermediateY + 1, `${viewport.width}px smooth scrolling should pass through an intermediate position before reaching the target.`)
+        await assert.deepEqual(await motionPage.evaluate(() => window.__scrollIntoViewRequests.at(-1)), { id: 'what-im-building', behavior: 'smooth' })
+        await assert.equal(await motionPage.locator('#what-im-building').evaluate((element) => element === document.activeElement), true, 'The anchor target should receive focus while the document scrolls smoothly.')
+        const targetBounds = await motionPage.locator('#what-im-building').boundingBox()
+        const headerBounds = await motionPage.locator('[data-portfolio-toolbar]').boundingBox()
+        await assert.ok(targetBounds && headerBounds && targetBounds.y >= headerBounds.y + headerBounds.height, `${viewport.width}px smooth scrolling should clear the sticky header.`)
+        await motionPage.close()
+      }
+    })
+
+    await check('only explicit changed routes fade the portfolio content', async () => {
+      const motionPage = await browser.newPage({ viewport: { width: 1280, height: 900 } })
+      trackPage(motionPage)
+      await motionPage.emulateMedia({ reducedMotion: 'no-preference' })
+      await motionPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await settle(motionPage)
+      await installRouteFadeProbe(motionPage)
+      const content = motionPage.locator('#portfolio-content')
+      await assert.deepEqual(await content.evaluate((element) => ({ opacity: getComputedStyle(element).opacity, running: element.getAnimations().some((animation) => animation.playState === 'running') })), { opacity: '1', running: false }, 'Direct loads should not start a route fade.')
+
+      await motionPage.locator('nav[aria-label="Portfolio sections"] a[href="/skills/"]').click()
+      const sectionFade = await motionPage.evaluate(() => window.__portfolioRouteFades)
+      await assert.deepEqual(sectionFade, [{ fromOpacity: 0.3, toOpacity: 1, duration: 190 }], 'An explicit section change should invoke the brief opacity fade even if the test host observes it after completion.')
+      await assertActiveView(motionPage, 'Skills')
+      await settle(motionPage)
+      await assert.equal(await content.evaluate((element) => getComputedStyle(element).opacity), '1', 'A section fade should finish at full opacity.')
+      await assert.equal(await content.evaluate((element) => element.getAnimations().some((animation) => animation.playState === 'running')), false)
+
+      await motionPage.locator('nav[aria-label="Portfolio sections"] a[href="/skills/"]').click()
+      await waitForStableScroll(motionPage)
+      await assert.equal((await motionPage.evaluate(() => window.__portfolioRouteFades)).length, 1, 'A same-route click should not invoke a new fade.')
+      await assert.equal(await content.evaluate((element) => element.getAnimations().some((animation) => animation.playState === 'running')), false, 'A same-route click should not start another fade.')
+
+      await motionPage.goto(urlFor('/projects/'), { waitUntil: 'domcontentloaded' })
+      await settle(motionPage)
+      await installRouteFadeProbe(motionPage)
+      await motionPage.locator('#projects a[href="/projects/openclaw/"]').click()
+      await motionPage.waitForFunction(() => window.location.pathname === '/projects/openclaw/')
+      const projectFade = await motionPage.evaluate(() => window.__portfolioRouteFades)
+      await assert.deepEqual(projectFade, [{ fromOpacity: 0.3, toOpacity: 1, duration: 190 }], 'An explicit project change should invoke the same brief content fade.')
+      await settle(motionPage)
+      await assertProjectRoute(motionPage, 'My OpenClaw Lab')
+      await assert.equal(await content.evaluate((element) => getComputedStyle(element).opacity), '1')
+      await motionPage.goBack()
+      await motionPage.waitForFunction(() => window.location.pathname === '/projects/' && window.location.hash === '')
+      await settle(motionPage)
+      await assert.equal(await content.evaluate((element) => element.getAnimations().some((animation) => animation.playState === 'running')), false, 'History restoration should not animate the route.')
+      await assert.equal((await motionPage.evaluate(() => window.__portfolioRouteFades)).length, 1, 'History restoration should not invoke a new fade.')
+      await motionPage.close()
+    })
+
+    await check('rapid anchor changes preserve interrupted history offsets when a route is chosen', async () => {
+      const motionPage = await browser.newPage({ viewport: { width: 390, height: 844 } })
+      trackPage(motionPage)
+      await motionPage.emulateMedia({ reducedMotion: 'no-preference' })
+      await motionPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await settle(motionPage)
+      const featureLink = motionPage.locator('a[href="#what-im-building"]')
+      const startY = await motionPage.evaluate(() => window.scrollY)
+      await featureLink.click()
+      const firstIntermediateY = await waitForScrollProgress(motionPage, startY)
+
+      const educationLink = motionPage.locator('a[href="#education"]')
+      const secondStartingY = await motionPage.evaluate(() => window.scrollY)
+      await educationLink.evaluate((element) => element.click())
+      await assert.equal(new URL(motionPage.url()).hash, '#education')
+      const interruptedY = await waitForScrollProgress(motionPage, secondStartingY)
+      await assert.ok(Math.abs(interruptedY - firstIntermediateY) > 1, 'The second anchor should replace the first in-progress native scroll.')
+
+      await motionPage.evaluate(() => {
+        window.__skillsPreviousEntryOffset = null
+        const originalPushState = window.history.pushState.bind(window.history)
+        window.history.pushState = function recordPreviousRouteOffset(state, title, url) {
+          if (new URL(url, window.location.href).pathname === '/skills/') {
+            window.__skillsPreviousEntryOffset = window.history.state?.__portfolioScrollY
+          }
+          return originalPushState(state, title, url)
+        }
+      })
+      const educationDestinationY = await motionPage.locator('#education').evaluate((element) => element.getBoundingClientRect().top + window.scrollY - (Number.parseFloat(getComputedStyle(element).scrollMarginTop) || 0))
+      await motionPage.locator('nav[aria-label="Portfolio sections"] a[href="/skills/"]').click()
+      const routeInterruptedY = await motionPage.evaluate(() => window.__skillsPreviousEntryOffset)
+      await assert.ok(Number.isFinite(routeInterruptedY), 'The test should capture the actual previous-entry offset immediately before route history is pushed.')
+      await assert.ok(routeInterruptedY > 0 && Math.abs(routeInterruptedY - educationDestinationY) > 2, 'The saved education entry should retain the actual intermediate cancellation position.')
+      await assertActiveView(motionPage, 'Skills')
+      await settle(motionPage)
+      await assert.equal(new URL(motionPage.url()).pathname, '/skills/')
+      await assert.ok(Math.abs(await motionPage.evaluate(() => window.scrollY)) <= 2, 'The explicit route should cancel anchor motion and use its own top destination.')
+      await assert.equal(await motionPage.locator('#portfolio-content').evaluate((element) => element.getAnimations().some((animation) => animation.playState === 'running')), false, 'The cancelled route transition should leave no fade running.')
+
+      await motionPage.goBack()
+      await motionPage.waitForFunction(() => window.location.pathname === '/' && window.location.hash === '#education')
+      await waitForStableScroll(motionPage)
+      await assert.ok(Math.abs(await motionPage.evaluate(() => window.scrollY) - routeInterruptedY) <= 3, 'Back should restore the actual education-scroll position recorded when route navigation cancelled motion.')
+      await motionPage.goForward()
+      await motionPage.waitForFunction(() => window.location.pathname === '/skills/' && window.location.hash === '')
+      await settle(motionPage)
+      await assert.ok(Math.abs(await motionPage.evaluate(() => window.scrollY)) <= 2)
+      await motionPage.close()
+    })
+
+    await check('reduced motion keeps anchor scroll and route changes immediate, including preference changes', async () => {
+      const reducedPage = await browser.newPage({ viewport: { width: 390, height: 844 } })
+      trackPage(reducedPage)
+      await reducedPage.emulateMedia({ reducedMotion: 'reduce' })
+      await reducedPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await settle(reducedPage)
+      await reducedPage.evaluate(() => {
+        const originalScrollIntoView = Element.prototype.scrollIntoView
+        window.__scrollIntoViewRequests = []
+        Element.prototype.scrollIntoView = function scrollIntoViewWithTracking(options) {
+          window.__scrollIntoViewRequests.push({ id: this.id, behavior: options?.behavior || 'auto' })
+          return originalScrollIntoView.call(this, options)
+        }
+      })
+      await installRouteFadeProbe(reducedPage)
+      await reducedPage.locator('a[href="#what-im-building"]').click()
+      await waitForStableScroll(reducedPage)
+      await assert.deepEqual(await reducedPage.evaluate(() => window.__scrollIntoViewRequests.at(-1)), { id: 'what-im-building', behavior: 'auto' }, 'Reduced motion should use an immediate anchor scroll.')
+      await assert.equal(await reducedPage.locator('#portfolio-content').evaluate((element) => element.getAnimations().some((animation) => animation.playState === 'running')), false)
+      await reducedPage.locator('nav[aria-label="Portfolio sections"] a[href="/skills/"]').click()
+      await settle(reducedPage)
+      await assert.deepEqual(await reducedPage.evaluate(() => window.__portfolioRouteFades), [], 'Reduced-motion route navigation should not invoke a fade.')
+      await assert.equal(await reducedPage.locator('#portfolio-content').evaluate((element) => getComputedStyle(element).opacity), '1')
+      await assert.equal(await reducedPage.locator('#portfolio-content').evaluate((element) => element.getAnimations().some((animation) => animation.playState === 'running')), false, 'Reduced motion should bypass route fades.')
+      await reducedPage.close()
+
+      const skipPage = await browser.newPage({ viewport: { width: 1024, height: 768 } })
+      trackPage(skipPage)
+      await skipPage.emulateMedia({ reducedMotion: 'no-preference' })
+      await skipPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await settle(skipPage)
+      await skipPage.evaluate(() => {
+        const originalScrollIntoView = Element.prototype.scrollIntoView
+        window.__scrollIntoViewRequests = []
+        Element.prototype.scrollIntoView = function scrollIntoViewWithTracking(options) {
+          window.__scrollIntoViewRequests.push({ id: this.id, behavior: options?.behavior || 'auto' })
+          return originalScrollIntoView.call(this, options)
+        }
+      })
+      await skipPage.keyboard.press('Tab')
+      await assert.ok(await skipPage.locator('a[href="#portfolio-content"]').evaluate((element) => element === document.activeElement))
+      await skipPage.keyboard.press('Enter')
+      await assert.deepEqual(await skipPage.evaluate(() => window.__scrollIntoViewRequests.at(-1)), { id: 'portfolio-content', behavior: 'auto' }, 'The skip link should remain immediate when reduced motion is not requested.')
+      await assert.ok(await skipPage.locator('#portfolio-content').evaluate((element) => element === document.activeElement))
+      await skipPage.close()
+
+      const changingPage = await browser.newPage({ viewport: { width: 390, height: 844 } })
+      trackPage(changingPage)
+      await changingPage.emulateMedia({ reducedMotion: 'no-preference' })
+      await changingPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await settle(changingPage)
+      await changingPage.evaluate(() => {
+        const originalScrollIntoView = Element.prototype.scrollIntoView
+        window.__scrollIntoViewRequests = []
+        Element.prototype.scrollIntoView = function scrollIntoViewWithTracking(options) {
+          window.__scrollIntoViewRequests.push({ id: this.id, behavior: options?.behavior || 'auto' })
+          return originalScrollIntoView.call(this, options)
+        }
+      })
+      await installRouteFadeProbe(changingPage)
+      await changingPage.locator('a[href="#education"]').click()
+      await waitForScrollProgress(changingPage, 0)
+      await changingPage.locator('a[href="#work-history"]').evaluate((element) => element.click())
+      await assert.equal(new URL(changingPage.url()).hash, '#work-history')
+      const secondAnchorMotion = await changingPage.evaluate(() => {
+        const target = document.getElementById('work-history')
+        const targetY = target.getBoundingClientRect().top + window.scrollY
+        const marginTop = Number.parseFloat(getComputedStyle(target).scrollMarginTop) || 0
+        return { currentY: window.scrollY, destinationY: targetY - marginTop }
+      })
+      await assert.ok(Math.abs(secondAnchorMotion.currentY - secondAnchorMotion.destinationY) > 2, 'The replacement anchor should still be moving when the previous scroll completion is delivered.')
+      await changingPage.evaluate(() => window.dispatchEvent(new Event('scrollend')))
+      await assert.ok(Math.abs(await changingPage.evaluate(() => window.scrollY) - secondAnchorMotion.currentY) <= 1, 'An obsolete scrollend event should not move the replacement anchor.')
+      await changingPage.emulateMedia({ reducedMotion: 'reduce' })
+      await waitForStableScroll(changingPage)
+      await assert.deepEqual(await changingPage.evaluate(() => window.__scrollIntoViewRequests.at(-1)), { id: 'work-history', behavior: 'auto' }, 'Enabling reduced motion during a rapid anchor change should finish the latest anchor at its destination without smooth motion.')
+      const featureBounds = await changingPage.locator('#work-history').boundingBox()
+      const headerBounds = await changingPage.locator('[data-portfolio-toolbar]').boundingBox()
+      await assert.ok(featureBounds && headerBounds && featureBounds.y >= headerBounds.y + headerBounds.height, 'Reduced-motion preference changes should complete the latest anchor target.')
+      const completedWorkHistoryY = await changingPage.evaluate(() => window.scrollY)
+      await changingPage.evaluate(() => window.dispatchEvent(new Event('scrollend')))
+      await assert.ok(Math.abs(await changingPage.evaluate(() => window.scrollY) - completedWorkHistoryY) <= 1, 'A delayed old scrollend event should not disturb the completed replacement target.')
+
+      await changingPage.emulateMedia({ reducedMotion: 'no-preference' })
+      await changingPage.locator('nav[aria-label="Portfolio sections"] a[href="/skills/"]').click()
+      await assert.deepEqual(await changingPage.evaluate(() => window.__portfolioRouteFades), [{ fromOpacity: 0.3, toOpacity: 1, duration: 190 }], 'A normal-motion route change should invoke its fade.')
+      await changingPage.emulateMedia({ reducedMotion: 'reduce' })
+      await changingPage.waitForFunction(() => !document.getElementById('portfolio-content').getAnimations().some((animation) => animation.playState === 'running'))
+      await assert.equal(await changingPage.locator('#portfolio-content').evaluate((element) => getComputedStyle(element).opacity), '1', 'Enabling reduced motion should cancel the active fade at full opacity.')
+      await assert.deepEqual(await changingPage.evaluate(() => window.__portfolioRouteFades), [{ fromOpacity: 0.3, toOpacity: 1, duration: 190 }], 'Enabling reduced motion should cancel, not restart, the current fade.')
+      await changingPage.close()
+
+      const interruptedPage = await browser.newPage({ viewport: { width: 390, height: 844 } })
+      trackPage(interruptedPage)
+      await interruptedPage.emulateMedia({ reducedMotion: 'no-preference' })
+      await interruptedPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await settle(interruptedPage)
+      await interruptedPage.locator('a[href="#education"]').click()
+      await waitForScrollProgress(interruptedPage, 0)
+      await interruptedPage.mouse.move(200, 400)
+      await interruptedPage.mouse.wheel(0, 160)
+      await waitForStableScroll(interruptedPage)
+      const userInterruptedY = await interruptedPage.evaluate(() => window.scrollY)
+      await assert.ok(userInterruptedY > 0, 'A real wheel gesture should interrupt the anchor motion at the user’s chosen position.')
+      const educationDestinationY = await interruptedPage.locator('#education').evaluate((element) => element.getBoundingClientRect().top + window.scrollY - (Number.parseFloat(getComputedStyle(element).scrollMarginTop) || 0))
+      await assert.ok(Math.abs(userInterruptedY - educationDestinationY) > 2, 'The wheel-interrupted position should remain distinct from the original anchor destination.')
+      await interruptedPage.emulateMedia({ reducedMotion: 'reduce' })
+      await waitForStableScroll(interruptedPage)
+      await assert.ok(Math.abs(await interruptedPage.evaluate(() => window.scrollY) - userInterruptedY) <= 2, 'A later reduced-motion preference change should not revive a user-interrupted anchor target.')
+      await interruptedPage.close()
+
+      const keyboardInterruptPage = await browser.newPage({ viewport: { width: 390, height: 844 } })
+      trackPage(keyboardInterruptPage)
+      await keyboardInterruptPage.emulateMedia({ reducedMotion: 'no-preference' })
+      await keyboardInterruptPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await settle(keyboardInterruptPage)
+      await keyboardInterruptPage.locator('a[href="#what-im-building"]').click()
+      await waitForScrollProgress(keyboardInterruptPage, 0)
+      await keyboardInterruptPage.keyboard.press('Shift+Tab')
+      await keyboardInterruptPage.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+      const tabInterruptedState = await keyboardInterruptPage.evaluate(() => ({
+        y: window.scrollY,
+        tagName: document.activeElement?.tagName,
+        targetHasFocus: document.activeElement === document.getElementById('what-im-building'),
+      }))
+      await assert.equal(tabInterruptedState.tagName, 'A', 'Shift+Tab should move keyboard focus back to the previous in-page control.')
+      await assert.equal(tabInterruptedState.targetHasFocus, false, 'Keyboard focus should leave the anchor target while its native scroll is interrupted.')
+      await keyboardInterruptPage.emulateMedia({ reducedMotion: 'reduce' })
+      await waitForStableScroll(keyboardInterruptPage)
+      await assert.ok(Math.abs(await keyboardInterruptPage.evaluate(() => window.scrollY) - tabInterruptedState.y) <= 2, 'A later reduced-motion preference change should not snap focus navigation back to the interrupted anchor.')
+
+      await keyboardInterruptPage.emulateMedia({ reducedMotion: 'no-preference' })
+      const escapeStartY = await keyboardInterruptPage.evaluate(() => window.scrollY)
+      await keyboardInterruptPage.locator('a[href="#education"]').evaluate((element) => element.click())
+      await waitForScrollProgress(keyboardInterruptPage, escapeStartY)
+      await keyboardInterruptPage.keyboard.press('Escape')
+      await keyboardInterruptPage.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+      const escapeInterruptedY = await keyboardInterruptPage.evaluate(() => window.scrollY)
+      await keyboardInterruptPage.emulateMedia({ reducedMotion: 'reduce' })
+      await waitForStableScroll(keyboardInterruptPage)
+      await assert.ok(Math.abs(await keyboardInterruptPage.evaluate(() => window.scrollY) - escapeInterruptedY) <= 2, 'Escape should cancel the pending anchor target before reduced motion is enabled.')
+      await keyboardInterruptPage.close()
     })
 
     await check('200% text scaling preserves readable, non-overlapping layouts from mobile to desktop', async () => {

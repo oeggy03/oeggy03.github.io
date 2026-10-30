@@ -18,7 +18,7 @@ export const profile = {
   role: "Software Engineer",
   introEyebrow: "As a Backend engineer at TikTok...",
   introHeadline: "I build useful and scalable software.",
-  introduction: "Hey, I’m Ha Thu, a backend engineer and graduate of the National University of Singapore. I’m committed to building practical, useful software with the future in mind, and I enjoy experimenting with new technologies along the way.",
+  introduction: "Hey, I’m Ha Thu, a backend engineer and computer science graduate of the National University of Singapore. I’m committed to building practical, useful software with the future in mind, and I enjoy experimenting with new technologies along the way.",
   email: "tranhathuwork@gmail.com",
   github: "https://github.com/oeggy03",
   linkedin: "https://www.linkedin.com/in/tran-ha-thu/",

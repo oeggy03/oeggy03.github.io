@@ -58,6 +58,8 @@ Compact (320–767px)                 Regular (768px+)
 
 The signature is a personal introduction with a real portrait, a responsive headline, and three understated in-page links after the full friendly introduction. Their order follows the page: work history, education, then featured projects. This applies Apple’s guidance to “Order content by relative importance” (`layout.md` › Visual hierarchy) while keeping the complete introduction visible before the prompts. The current TikTok role stays visible while the seven earlier entries and their ordered employer marks sit behind a native summary. The two current experiments have their own full stories and a small featured preview after education and interests. The supplied headline and friendly introduction remain intact; the rest of the presentation avoids decorative code, invented metrics, and generic dashboard art.
 
+Explicit route changes use a short, opacity-only fade, while the three hero anchors use interruptible browser-native smooth scrolling. Direct loads, same-route clicks, history restoration, and skip links stay immediate. The fade and anchor scroll honor the reduced-motion preference, including changes made while motion is running. This follows Apple’s guidance to “Aim for brevity and precision in feedback animations” (`motion.md` › Providing feedback) and “Make motion optional” (`motion.md` › Best practices).
+
 The plan’s main risk was that a polished introduction could pull attention away from the work history. Keeping the current role visible while initially collapsing seven earlier entries leaves the current work easy to see and keeps the full history one action away.
 
 ## What works
@@ -66,7 +68,7 @@ The plan’s main risk was that a polished introduction could pull attention awa
 - Experience keeps confirmed employer, education, interests, and aspiration details, and features only the two user-authorized personal projects after career and education content.
 - The three current views use actual clean-path anchors, and project detail routes stay directly loadable.
 - One icon set communicates the three social destinations. Every icon-only social link has an accessible name and a 44px target.
-- The header uses an opaque surface, visible focus states, and reduced-motion-aware transitions.
+- The header uses an opaque surface and visible focus states; page transitions and hero-anchor scrolling honor reduced motion.
 - The header stays sticky only when it fits comfortably within the viewport, becomes static at enlarged text or short heights, and remains static without JavaScript.
 - Role dates use 18px medium type, education dates are separate from GPA, and the seven earlier-company marks wrap within narrow and enlarged-text layouts.
 - The new OpenClaw and Chinese Learning projects have dedicated long-form routes with motivation, capabilities, architecture, examples, deployment, future plans, local screenshots, and their supplied resource links. The six earlier projects retain their compact detail views.

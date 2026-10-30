@@ -41,6 +41,9 @@ async function settle(page) {
     const images = [...document.images]
     for (const image of images) image.loading = 'eager'
     await Promise.all(images.map((image) => image.decode().catch(() => undefined)))
+    const content = document.getElementById('portfolio-content')
+    const activeAnimations = content?.getAnimations().filter((animation) => animation.playState === 'running') || []
+    await Promise.all(activeAnimations.map((animation) => animation.finished.catch(() => undefined)))
     for (let frame = 0; frame < 4; frame += 1) await new Promise(requestAnimationFrame)
     await new Promise((resolve) => setTimeout(resolve, 120))
   })

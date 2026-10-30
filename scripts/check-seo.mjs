@@ -117,7 +117,7 @@ const landingMarkup = rootMain.slice(experienceStart, projectsStart)
 const landingText = textOf(landingMarkup).toLowerCase()
 for (const fact of [
   'software engineer', 'as a backend engineer at tiktok', 'i build useful and scalable software.',
-  'hey, i’m ha thu, a backend engineer and graduate of the national university of singapore.',
+  'hey, i’m ha thu, a backend engineer and computer science graduate of the national university of singapore.',
   'i’m committed to building practical, useful software with the future in mind',
   'i enjoy experimenting with new technologies along the way', 'national university of singapore',
   'bachelor of computing', 'computer science', '2022', '2026', 'gpa 4.6/5.0',
