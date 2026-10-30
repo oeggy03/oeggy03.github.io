@@ -10,32 +10,31 @@ export default function ExperienceView() {
     <div className="min-w-0 space-y-16 sm:space-y-24">
       <section aria-labelledby="experience-intro-heading" className="pt-2 sm:pt-8">
         <div className="grid min-w-0 grid-cols-[min(32vw,7rem)_minmax(0,1fr)] gap-x-4 gap-y-5 md:grid-cols-[minmax(0,1fr)_min(22rem,32vw)] md:gap-x-[min(3.5rem,4vw)] md:gap-y-0">
-          <p className="col-start-2 row-start-1 min-w-0 self-end text-sm font-semibold tracking-wide text-accent-ink sm:text-base md:col-start-1 md:text-lg">
+          <p className="col-start-2 row-start-1 min-w-0 self-center text-sm font-semibold tracking-wide text-accent-ink sm:text-base md:col-start-1 md:self-end md:text-lg">
             {profile.introEyebrow}
           </p>
 
-          <a href="#education"
-            className="col-start-2 row-start-2 inline-flex min-h-11 min-w-0 max-w-full flex-wrap items-center gap-2 text-sm font-medium leading-5 text-ink underline decoration-line underline-offset-4 hover:decoration-accent focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:text-base md:col-start-1 md:row-start-2">
-            <img src={nusLogo} alt="" width="40" height="40" className="size-9 shrink-0 rounded-md bg-paper p-1 object-contain ring-1 ring-line" decoding="async" />
-            <span className="min-w-0">NUS Computer Science graduate</span>
-            <span className="inline-flex min-h-11 min-w-0 max-w-full flex-wrap items-center gap-1 font-semibold text-accent-ink [overflow-wrap:anywhere]">
-              Education <ArrowDown aria-hidden="true" className="size-4" />
-            </span>
-          </a>
-
-          <figure className="col-start-1 row-span-2 row-start-1 aspect-[3/4] w-full self-start overflow-hidden rounded-2xl bg-surface md:col-start-2 md:row-span-4 md:row-start-1 md:max-w-[22rem] md:justify-self-end">
+          <figure className="col-start-1 row-start-1 aspect-[3/4] w-full self-start overflow-hidden rounded-2xl bg-surface md:col-start-2 md:row-span-3 md:row-start-1 md:max-w-[22rem] md:justify-self-end">
             <img src={profilePortrait.src} alt={profilePortrait.alt} width={profilePortrait.width} height={profilePortrait.height}
               className="size-full object-cover object-[center_28%]" loading="lazy" decoding="async" />
           </figure>
 
-          <h2 id="experience-intro-heading" className="col-span-2 row-start-3 max-w-3xl text-balance text-[2.75rem] font-semibold leading-[1.04] tracking-[-0.055em] text-ink sm:text-6xl md:col-span-1 md:col-start-1 md:row-start-3 lg:text-7xl">
+          <h2 id="experience-intro-heading" className="col-span-2 row-start-2 max-w-3xl text-balance text-[2.25rem] font-semibold leading-[1.04] tracking-[-0.055em] text-ink min-[360px]:text-[2.75rem] sm:text-6xl md:col-span-1 md:col-start-1 md:row-start-2 lg:text-7xl">
             {profile.introHeadline}
           </h2>
-          <div className="col-span-2 row-start-4 min-w-0 md:col-span-1 md:col-start-1 md:row-start-4">
+          <div className="col-span-2 row-start-3 min-w-0 md:col-span-1 md:col-start-1 md:row-start-3">
             <p className="max-w-2xl text-[1.0625rem] leading-8 text-muted sm:text-xl sm:leading-9">{profile.introduction}</p>
-            <a href="#what-im-building" className="mt-4 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-accent-ink underline decoration-line underline-offset-4 hover:decoration-accent focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-              What I’m building <ArrowDown aria-hidden="true" className="size-4" />
-            </a>
+            <nav aria-label="Explore this page" className="mt-4 flex min-w-0 flex-wrap gap-x-6 gap-y-2">
+              <a href="#work-history" className="inline-flex min-h-11 min-w-11 max-w-full flex-wrap items-center gap-1.5 break-normal text-sm font-semibold text-accent-ink underline decoration-line underline-offset-4 hover:decoration-accent focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                View experience <ArrowDown aria-hidden="true" className="size-4 shrink-0" />
+              </a>
+              <a href="#education" className="inline-flex min-h-11 min-w-11 max-w-full flex-wrap items-center gap-1.5 break-normal text-sm font-semibold text-accent-ink underline decoration-line underline-offset-4 hover:decoration-accent focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                View education <ArrowDown aria-hidden="true" className="size-4 shrink-0" />
+              </a>
+              <a href="#what-im-building" className="inline-flex min-h-11 min-w-11 max-w-full flex-wrap items-center gap-1.5 break-normal text-sm font-semibold text-accent-ink underline decoration-line underline-offset-4 hover:decoration-accent focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                What I’m building <ArrowDown aria-hidden="true" className="size-4 shrink-0" />
+              </a>
+            </nav>
           </div>
         </div>
       </section>

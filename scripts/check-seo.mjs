@@ -98,7 +98,7 @@ for (const path of portfolioRoutePaths) {
   const ids = [...main.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1])
   assert.equal(new Set(ids).size, ids.length, `${path} must not have duplicate IDs.`)
   const hashLinks = [...main.matchAll(/<a\b[^>]*\bhref="#([^"]+)"/gi)].map((match) => match[1])
-  assert.deepEqual(hashLinks, ['portfolio-content', 'education', 'what-im-building'], `${path} may use only the skip link and explicit Experience in-page links.`)
+  assert.deepEqual(hashLinks, ['portfolio-content', 'work-history', 'education', 'what-im-building'], `${path} may use only the skip link and three explicit Experience in-page links.`)
 
   for (const [, target] of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
     if (/^(?:[a-z]+:|\/\/|#)/i.test(target)) continue
@@ -122,11 +122,19 @@ for (const fact of [
   'i enjoy experimenting with new technologies along the way', 'national university of singapore',
   'bachelor of computing', 'computer science', '2022', '2026', 'gpa 4.6/5.0',
   'first class honours', 'distinction in software engineering', "dean's list", 'tiktok',
-  'nus computer science graduate', 'education', 'what i’m building', 'my openclaw lab', 'chinese learning toolkit',
+  'education', 'what i’m building', 'my openclaw lab', 'chinese learning toolkit',
 ]) assert.ok(landingText.includes(fact), `Experience landing is missing confirmed content: ${fact}`)
 for (const project of projects.slice(0, 6)) assert.ok(!landingText.includes(project.title.toLowerCase()), `The landing must not include older project ${project.title}.`)
 assert.match(landingMarkup, /<img\b[^>]*alt="Ha Thu outdoors with a camera"/)
-assert.match(landingMarkup, /<a\b[^>]*href="#education"/)
+const heroNavigation = landingMarkup.match(/<nav\b[^>]*aria-label="Explore this page"[^>]*>([\s\S]*?)<\/nav>/)?.[1]
+assert.ok(heroNavigation, 'The hero should group its in-page navigation after the introduction.')
+assert.doesNotMatch(heroNavigation, /NUS Computer Science graduate/, 'The hero navigation should not repeat an education teaser.')
+const heroLinks = [...heroNavigation.matchAll(/<a\b[^>]*href="#([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)].map(([, href, contents]) => ({ href: `#${href}`, label: textOf(contents) }))
+assert.deepEqual(heroLinks, [
+  { href: '#work-history', label: 'View experience' },
+  { href: '#education', label: 'View education' },
+  { href: '#what-im-building', label: 'What I’m building' },
+], 'The three hero in-page links must be native, named, and follow section order.')
 assert.match(landingMarkup, /<section\b[^>]*id="education"/)
 assert.match(landingMarkup, /<section\b[^>]*id="what-im-building"/)
 

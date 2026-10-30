@@ -4,7 +4,7 @@
 
 The portfolio’s single job is to help recruiters understand Tran’s engineering background and follow up. The earlier design had a clear record of work, yet its mobile header occupied roughly 270px before the introduction, 10–11px uppercase labels weakened the hierarchy, and repeated bordered cards made the page feel busier than its content. Rating: **Needs work**. The earlier version did not have a memorable visual signature.
 
-The Experience landing introduces Ha Thu with the supplied backend role, headline, local portrait, and a native Education link to NUS. The latest-first work history follows, with earlier roles in one native disclosure. Education and interests remain complete, then two user-authorized project features appear; the other six project cards remain on Projects. The visual system uses clear type, open spacing, and quiet separators.
+The Experience landing introduces Ha Thu with the supplied backend role, headline, and local portrait. A grouped row of native links follows the full introduction, leading to work history, education, and featured projects. The latest-first work history follows, with earlier roles in one native disclosure. Education and interests remain complete, then two user-authorized project features appear; the other six project cards remain on Projects. The visual system uses clear type, open spacing, and quiet separators.
 
 **Current assessment: Good.** The baseline hierarchy, touch-target, and legibility findings below have been addressed. Browser checks cover route behavior, responsive reflow, 44px controls, text contrast, and automated accessibility rules. This assessment reflects browser QA; it does not claim physical-device or screen-reader testing.
 
@@ -36,7 +36,7 @@ Separators use `#D2D2D7` in light mode and `#55555C` in dark mode. The primary a
 
 ### Type scale
 
-Use the system sans-serif stack throughout; keep hierarchy in size and weight rather than adding a display typeface. Utility text starts at 12px and is typically 14px, standard body text is 17px with 28px leading, section headings are 30–40px, and the opening headline is 44px on compact screens and 72px on regular screens. Long role detail uses 16px text with 28px leading. Text uses relative `rem` sizing so the layout can accommodate a 200% text preference.
+Use the system sans-serif stack throughout; keep hierarchy in size and weight rather than adding a display typeface. Utility text starts at 12px and is typically 14px, standard body text is 17px with 28px leading, and section headings are 30–40px. The opening headline scales from 36px at 320px to 44px from 360px, 60px on standard screens, and 72px on larger screens. Long role detail uses 16px text with 28px leading. Text uses relative `rem` sizing so the layout can accommodate a 200% text preference. This scale follows Apple’s typography guidance to “Use font sizes that most people can read easily” (`typography.md` › Ensuring legibility); the 320px, 200% wide-font check keeps the headline to eight lines or fewer.
 
 ### Layout
 
@@ -46,15 +46,17 @@ The mobile layout places a flexible identity and social row above three section 
 Compact (320–767px)                 Regular (768px+)
 [Identity + social]                 [Identity | navigation | social | Resume]
 [Experience Projects Skills Resume] [---------------------------------------]
-[Portrait + eyebrow + NUS Education] [Portrait | eyebrow + NUS Education]
-[Headline + friendly introduction]  [Headline + friendly introduction]
+[Portrait + eyebrow]                [Eyebrow | portrait]
+[Full-width headline]               [Headline | portrait]
+[Friendly introduction]             [Introduction | portrait]
+[Three in-page links, wrapped]        [Three links | portrait]
 [Current role + earlier roles]      [Current role + earlier roles + logos]
 [Education + interests]             [Education | Interests]
 ```
 
 ### Signature and motion
 
-The signature is a personal introduction with a real portrait and an immediately visible NUS Education link, followed by a clean latest-first chronology. The current TikTok role stays visible while the seven earlier entries and their ordered employer marks sit behind a native summary. The two current experiments have their own full stories and a small featured preview after education and interests. The supplied headline and friendly introduction remain intact; the rest of the presentation avoids decorative code, invented metrics, and generic dashboard art.
+The signature is a personal introduction with a real portrait, a responsive headline, and three understated in-page links after the full friendly introduction. Their order follows the page: work history, education, then featured projects. This applies Apple’s guidance to “Order content by relative importance” (`layout.md` › Visual hierarchy) while keeping the complete introduction visible before the prompts. The current TikTok role stays visible while the seven earlier entries and their ordered employer marks sit behind a native summary. The two current experiments have their own full stories and a small featured preview after education and interests. The supplied headline and friendly introduction remain intact; the rest of the presentation avoids decorative code, invented metrics, and generic dashboard art.
 
 The plan’s main risk was that a polished introduction could pull attention away from the work history. Keeping the current role visible while initially collapsing seven earlier entries leaves the current work easy to see and keeps the full history one action away.
 
@@ -69,7 +71,7 @@ The plan’s main risk was that a polished introduction could pull attention awa
 - Role dates use 18px medium type, education dates are separate from GPA, and the seven earlier-company marks wrap within narrow and enlarged-text layouts.
 - The new OpenClaw and Chinese Learning projects have dedicated long-form routes with motivation, capabilities, architecture, examples, deployment, future plans, local screenshots, and their supplied resource links. The six earlier projects retain their compact detail views.
 - The Projects index lists all eight cards. Hydrated filters show All (8), Backend (2), AI & bots (5), and Frontend (1); no-JavaScript output keeps direct project links and omits inactive filter controls.
-- The portrait is the original user-supplied image, bundled locally and used once in the visible hero. Its narrow-screen layout keeps the Education link within the first normal-size viewport.
+- The portrait is the original user-supplied image, bundled locally and used once in the visible hero. The three native hero links follow the full introduction, fit within the viewport width at 320px, and remain in the initial normal-size 390px viewport.
 
 ## Verification quality floor
 

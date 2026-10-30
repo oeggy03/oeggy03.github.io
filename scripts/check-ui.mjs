@@ -401,7 +401,7 @@ async function run() {
       const sections = await navLinks(page).evaluateAll((links) => links.map((link) => ({ href: link.getAttribute('href'), text: link.textContent.trim() })))
       await assert.deepEqual(sections.map(({ text }) => text), ['Experience', 'Projects', 'Skills'])
       await assert.deepEqual(sections.map(({ href }) => href), Object.values(sectionPaths), 'Section navigation must use real clean-route anchors.')
-      await assert.deepEqual(await page.locator('a[href^="#"]').evaluateAll((anchors) => anchors.map((anchor) => anchor.getAttribute('href'))), ['#portfolio-content', '#education', '#what-im-building'], 'Only the skip link and explicit Experience in-page links may use anchors.')
+      await assert.deepEqual(await page.locator('a[href^="#"]').evaluateAll((anchors) => anchors.map((anchor) => anchor.getAttribute('href'))), ['#portfolio-content', '#work-history', '#education', '#what-im-building'], 'Only the skip link and three explicit Experience in-page links may use anchors.')
 
       for (const label of ['Projects', 'Skills', 'Experience']) {
         await navLinks(page).getByText(label, { exact: true }).click()
@@ -590,6 +590,8 @@ async function run() {
       await assert.equal(await experienceSection.locator('[data-experience-id="tiktok-intern"]').isVisible(), false, 'Past roles should stay tucked away until requested.')
       const summaryBounds = await summary.boundingBox()
       await assert.ok(summaryBounds && summaryBounds.width >= 44 && summaryBounds.height >= 44, 'The native experience disclosure should have a 44px target.')
+      const summaryActionBounds = await summary.locator('[data-earlier-experience-action]').boundingBox()
+      await assert.ok(summaryActionBounds && Math.abs(summaryActionBounds.x + summaryActionBounds.width - summaryBounds.x - summaryBounds.width) <= 2, 'The earlier-role action should align with the disclosure’s right edge on desktop.')
       await assert.equal((await summary.innerText()).replace(/\s+/g, ' ').trim(), 'I also engineered at View earlier experience')
       const preview = summary.locator('[role="img"]')
       await assert.equal(await preview.count(), 1, 'The earlier-role summary should present one accessible employer-logo group.')
@@ -635,8 +637,13 @@ async function run() {
       await assert.equal(await experience.locator('img[src*="proj_images"]').count(), 0, 'Experience should not contain project images.')
 
       const education = experience.locator('#education')
-      const educationTeaser = experience.getByRole('link', { name: 'NUS Computer Science graduate Education', exact: true })
-      await assert.equal(await educationTeaser.count(), 1, 'The visible Education teaser should provide its complete visible text as the accessible link name.')
+      const heroNavigation = experience.getByRole('navigation', { name: 'Explore this page', exact: true })
+      await assert.deepEqual(await heroNavigation.getByRole('link').evaluateAll((links) => links.map((link) => ({ href: link.getAttribute('href'), name: link.textContent.replace(/\s+/g, ' ').trim() }))), [
+        { href: '#work-history', name: 'View experience' },
+        { href: '#education', name: 'View education' },
+        { href: '#what-im-building', name: 'What I’m building' },
+      ], 'The grouped hero links should follow the work-history, education, and featured-project order with visible accessible names.')
+      await assert.ok(await heroNavigation.evaluate((navigation) => navigation.previousElementSibling?.tagName === 'P'), 'The grouped links should follow the complete hero introduction.')
       const educationPeriod = education.getByText('Aug 2022 – May 2026', { exact: true })
       const educationDateStyle = await educationPeriod.evaluate((element) => ({ size: parseFloat(getComputedStyle(element).fontSize), weight: parseFloat(getComputedStyle(element).fontWeight) }))
       await assert.ok(educationDateStyle.size >= 18 && educationDateStyle.weight >= 500, 'The education dates should be distinct and legible at 18px or larger.')
@@ -655,10 +662,34 @@ async function run() {
         await page.setViewportSize(viewport)
         await page.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
         await settle(page)
-        const teaserBounds = await page.locator('a[href="#education"]').boundingBox()
-        await assert.ok(teaserBounds && teaserBounds.y >= 0 && teaserBounds.y + teaserBounds.height <= viewport.height, `The Education teaser should fit in the initial ${viewport.width}x${viewport.height} viewport.`)
+        const navBounds = await page.locator('nav[aria-label="Explore this page"]').boundingBox()
+        const descriptionBounds = await page.locator('#experience-intro-heading + div > p').boundingBox()
+        await assert.ok(navBounds && descriptionBounds && navBounds.x >= 0 && navBounds.x + navBounds.width <= viewport.width, `The grouped hero links should stay within the ${viewport.width}px viewport.`)
+        await assert.ok(navBounds.y >= descriptionBounds.y + descriptionBounds.height, 'The grouped links should follow the entire friendly introduction.')
+        if (viewport.width === 390) await assert.ok(navBounds.y + navBounds.height <= viewport.height, 'The grouped links should remain visible in the normal 390x844 first viewport.')
+        const disclosure = page.locator('#work-history details')
+        const summaryBounds = await disclosure.locator('summary').boundingBox()
+        const actionBounds = await disclosure.locator('summary [data-earlier-experience-action]').boundingBox()
+        await assert.ok(summaryBounds && actionBounds && Math.abs(actionBounds.x + actionBounds.width - summaryBounds.x - summaryBounds.width) <= 2, `The earlier-role action should align to the right on the ${viewport.width}px layout.`)
       }
       await page.setViewportSize({ width: 390, height: 844 })
+      await page.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      const experienceJump = page.getByRole('navigation', { name: 'Explore this page' }).getByRole('link', { name: 'View experience', exact: true })
+      await experienceJump.click()
+      await assert.equal(new URL(page.url()).hash, '#work-history', 'The hero should link to the in-page work history.')
+      await assert.ok(await page.locator('#work-history').isVisible(), 'The work-history anchor target should be available.')
+      await assert.equal(await page.locator('#work-history').evaluate((element) => element === document.activeElement), true, 'Following the work-history link should focus its heading container.')
+      const workHistoryBounds = await page.locator('#work-history').boundingBox()
+      const workHistoryHeaderBounds = await page.locator('[data-portfolio-toolbar]').boundingBox()
+      await assert.ok(workHistoryBounds && workHistoryHeaderBounds && workHistoryBounds.y >= workHistoryHeaderBounds.y + workHistoryHeaderBounds.height, 'The work-history section should clear the sticky header.')
+      await page.goBack()
+      await page.waitForFunction(() => window.location.pathname === '/' && window.location.hash === '')
+      await settle(page)
+      await assert.ok(Math.abs(await page.evaluate(() => window.scrollY)) <= 2, 'Back from work history should restore the Experience hero position.')
+      await page.goForward()
+      await page.waitForFunction(() => window.location.hash === '#work-history')
+      await settle(page)
+      await assert.equal(await page.locator('#work-history').count(), 1, 'Forward should restore the work-history anchor entry.')
       await page.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
       await page.locator('a[href="#education"]').click()
       await assert.equal(new URL(page.url()).pathname, '/', 'Education should remain an in-page link rather than a routed view.')
@@ -734,10 +765,16 @@ async function run() {
           await assert.equal(await details.evaluate((element) => element.open), true, 'Native details should open in a browser with JavaScript disabled.')
           await assert.ok(await staticPage.locator('#experience [data-experience-id="tiktok-intern"]').isVisible())
           await assertExperienceTimeline(staticPage, { openState: true })
+          await staticPage.getByRole('navigation', { name: 'Explore this page' }).getByRole('link', { name: 'View experience', exact: true }).click()
+          await assert.equal(new URL(staticPage.url()).hash, '#work-history', 'A native work-history anchor should work without JavaScript.')
+          await assert.ok(await staticPage.locator('#work-history').isVisible(), 'The work-history target should remain available without JavaScript.')
           await staticPage.locator('a[href="#education"]').click()
           await assert.equal(new URL(staticPage.url()).hash, '#education', 'A native Education anchor should work without JavaScript.')
           await assert.ok(await staticPage.locator('#education-heading').isVisible(), 'The Education heading should remain visible after its native anchor is followed.')
           await assert.ok(await staticPage.getByRole('heading', { name: 'Interests', exact: true }).isVisible(), 'The Education section should retain the supplied Interests heading without JavaScript.')
+          await staticPage.locator('a[href="#what-im-building"]').click()
+          await assert.equal(new URL(staticPage.url()).hash, '#what-im-building', 'A native featured-project anchor should work without JavaScript.')
+          await assert.ok(await staticPage.locator('#what-im-building').isVisible(), 'The featured-project section should remain available without JavaScript.')
           await assert.equal(await staticPage.getByRole('group', { name: 'Filter projects' }).count(), 0, 'JavaScript-only index filters should not be presented in no-JavaScript output.')
         }
         if (path === '/skills/') {
@@ -791,7 +828,7 @@ async function run() {
       const projectImages = await staticPage.locator('[id^="project-"] img').evaluateAll((images) => images.map((image) => image.currentSrc || image.src))
       for (const source of experienceImages) await assert.ok(!projectImages.includes(source), `Experience should not reuse project imagery: ${source}.`)
       const authoredHashLinks = await staticPage.locator('a[href^="#"]').evaluateAll((anchors) => anchors.map((anchor) => anchor.getAttribute('href')))
-      await assert.deepEqual(authoredHashLinks, ['#portfolio-content', '#education', '#what-im-building'], 'Static output may use only the native skip and Experience in-page anchors.')
+      await assert.deepEqual(authoredHashLinks, ['#portfolio-content', '#work-history', '#education', '#what-im-building'], 'Static output may use only the native skip and three Experience in-page anchors.')
       await staticContext.close()
     })
 
@@ -1035,6 +1072,16 @@ async function run() {
             await assert.ok(heroGeometry.headingWidth >= Math.min(320, viewport.width * 0.5), `The Experience headline should have a usable text column at ${viewport.width}px/200%, received ${heroGeometry.headingWidth}px.`)
             await assert.ok(heroGeometry.headingLines <= 8, `The Experience headline should reflow as readable lines at ${viewport.width}px/200%, received ${heroGeometry.headingLines}.`)
             await assert.ok(heroGeometry.portraitWidth <= viewport.width * 0.4, `The Experience portrait should leave room for text at ${viewport.width}px/200%.`)
+            if (viewport.width === 320) {
+              const wideFontHeadline = await zoomPage.locator('#experience-intro-heading').evaluate((heading) => {
+                heading.style.fontFamily = 'Verdana, sans-serif'
+                const range = document.createRange()
+                range.selectNodeContents(heading)
+                return { fontSize: parseFloat(getComputedStyle(heading).fontSize), lines: range.getClientRects().length }
+              })
+              await assert.equal(wideFontHeadline.fontSize, 72, 'The 320px headline should scale from 36px at 200% text.')
+              await assert.ok(wideFontHeadline.lines <= 8, `The headline should remain within eight lines at 320px/200% with a wider font, received ${wideFontHeadline.lines}.`)
+            }
             const toolbar = zoomPage.locator('[data-portfolio-toolbar]')
             if (viewport.width <= 390) {
               await zoomPage.waitForFunction(() => {
@@ -1047,6 +1094,9 @@ async function run() {
             const summary = disclosure.locator('summary')
             await summary.click()
             await assert.equal(await disclosure.evaluate((element) => element.open), true, 'The expanded-text experience disclosure should accept a real pointer click.')
+            const summaryBounds = await summary.boundingBox()
+            const actionBounds = await summary.locator('[data-earlier-experience-action]').boundingBox()
+            await assert.ok(summaryBounds && actionBounds && Math.abs(actionBounds.x + actionBounds.width - summaryBounds.x - summaryBounds.width) <= 2, `The disclosure action should align with the right edge at 200% text and ${viewport.width}px.`)
             await assert.ok(await zoomPage.locator('#experience [data-experience-id="tiktok-intern"]').isVisible(), 'Earlier roles should be reachable below the oversized static header.')
             if (viewport.width <= 390) {
               await summary.press('Enter')

@@ -108,7 +108,7 @@ function EmployerLogoPreview() {
 
 export default function ExperienceView() {
   return (
-    <section id="work-history" aria-labelledby="experience-heading" className="scroll-mt-32">
+    <section id="work-history" tabIndex={-1} aria-labelledby="experience-heading" className="scroll-mt-32 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent">
       <div className="mb-7 flex flex-wrap items-end justify-between gap-x-8 gap-y-3 border-b border-line pb-5 sm:mb-10 sm:pb-7">
         <h2 id="experience-heading" className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">Experience</h2>
         <p className="max-w-xl text-base leading-7 text-muted">My work so far.</p>
@@ -120,9 +120,11 @@ export default function ExperienceView() {
 
       <details className="group mt-6 border-y border-line">
         <summary className="flex min-h-11 list-none cursor-pointer flex-wrap items-center gap-x-4 gap-y-3 py-4 text-left focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
-          <span className="text-lg font-semibold tracking-tight text-ink">I also engineered at</span>
-          <EmployerLogoPreview />
-          <span className="inline-flex min-h-11 min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-accent-ink">
+          <span className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
+            <span className="text-lg font-semibold tracking-tight text-ink">I also engineered at</span>
+            <EmployerLogoPreview />
+          </span>
+          <span data-earlier-experience-action className="ml-auto inline-flex min-h-11 min-w-0 max-w-full flex-wrap items-center justify-end gap-x-2 gap-y-1 break-normal text-right text-sm font-semibold text-accent-ink">
             <span className="group-open:hidden">View earlier experience</span>
             <span className="hidden group-open:inline">Hide earlier experience</span>
             <ChevronDown aria-hidden="true" className="size-4 group-open:rotate-180" />
