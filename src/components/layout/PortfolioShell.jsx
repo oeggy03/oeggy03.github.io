@@ -158,7 +158,7 @@ function PortfolioShellLayout({ sections, profile }) {
     <div className="min-h-screen bg-canvas text-ink" onClick={handleInternalAnchorClick}>
       <header ref={toolbarRef} data-portfolio-toolbar data-portfolio-mobile-navigation data-portfolio-sticky={toolbarIsSticky ? 'true' : 'false'} data-portfolio-sticky-ready={toolbarStickinessMeasured ? 'true' : undefined} className={`${toolbarIsSticky ? 'sticky top-0 z-50' : 'relative'} border-b border-line bg-canvas`}>
           <div className="mx-auto w-full max-w-[1120px] px-4 py-2 sm:px-7 md:flex md:min-h-[76px] md:flex-wrap md:items-center md:justify-between md:gap-6 md:py-3">
-          <a href="#portfolio-content" className="sr-only z-50 rounded-full bg-paper px-4 py-3 text-base font-semibold text-ink focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:outline focus:outline-2 focus:outline-accent">Skip to content</a>
+          <a href="#portfolio-content" className="sr-only z-50 font-semibold text-ink focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:w-max focus:max-w-[calc(100vw-2rem)] focus:min-h-11 focus:rounded-full focus:bg-paper focus:px-4 focus:py-3 focus:text-base focus:whitespace-normal focus:break-normal focus:outline focus:outline-2 focus:outline-accent">Skip to content</a>
           <div className="flex min-h-11 min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1 md:shrink-0 md:flex-nowrap md:justify-start md:gap-8">
             <div className="min-w-0">
               <h1 className="break-words text-lg font-semibold tracking-tight text-ink sm:text-xl">{profile.name}</h1>

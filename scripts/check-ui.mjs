@@ -1260,6 +1260,58 @@ async function run() {
       await keyboardPage.close()
     })
 
+    await check('the skip link stays clipped when hidden and fits at 320px with 200% text', async () => {
+      const skipPage = await browser.newPage({ viewport: { width: 320, height: 568 } })
+      trackPage(skipPage)
+      await skipPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await skipPage.evaluate(() => { document.documentElement.style.fontSize = '200%' })
+      const skipLink = skipPage.locator('a[href="#portfolio-content"]')
+      await skipLink.evaluate((element) => { element.style.fontFamily = 'Verdana, sans-serif' })
+      await settle(skipPage)
+      const hiddenGeometry = await skipLink.evaluate((element) => {
+        const style = getComputedStyle(element)
+        const rect = element.getBoundingClientRect()
+        return {
+          width: rect.width,
+          height: rect.height,
+          clip: style.clip,
+          paddingTop: style.paddingTop,
+          paddingRight: style.paddingRight,
+          paddingBottom: style.paddingBottom,
+          paddingLeft: style.paddingLeft,
+        }
+      })
+      await assert.equal(hiddenGeometry.width, 1, 'The hidden skip link should retain its one-pixel clipped footprint.')
+      await assert.equal(hiddenGeometry.height, 1, 'The hidden skip link should retain its one-pixel clipped footprint.')
+      await assert.match(hiddenGeometry.clip, /rect\(/, 'The hidden skip link should remain clipped from visual layout.')
+      await assert.deepEqual([hiddenGeometry.paddingTop, hiddenGeometry.paddingRight, hiddenGeometry.paddingBottom, hiddenGeometry.paddingLeft], ['0px', '0px', '0px', '0px'], 'The hidden skip link should not carry focus-only padding.')
+
+      await skipPage.keyboard.press('Tab')
+      await assert.ok(await skipLink.evaluate((element) => element === document.activeElement), 'The skip link should remain the first keyboard target.')
+      await assert.notEqual(await skipLink.evaluate((element) => getComputedStyle(element).outlineStyle), 'none', 'The focused skip link should show a visible focus outline.')
+      const focusedGeometry = await skipLink.evaluate((element) => {
+        const rect = element.getBoundingClientRect()
+        const range = document.createRange()
+        range.selectNodeContents(element)
+        return {
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          bottom: rect.bottom,
+          width: rect.width,
+          height: rect.height,
+          text: [...range.getClientRects()].map(({ left, right }) => ({ left, right })),
+        }
+      })
+      await assert.ok(focusedGeometry.left >= 0 && focusedGeometry.right <= 320 && focusedGeometry.top >= 0 && focusedGeometry.bottom <= 568, 'The focused skip target should fit inside the 320x568 viewport.')
+      await assert.ok(focusedGeometry.width >= 44 && focusedGeometry.height >= 44, 'The focused skip link should remain at least 44px in both dimensions.')
+      await assert.ok(focusedGeometry.text.length > 0 && focusedGeometry.text.every(({ left, right }) => left >= 0 && right <= 320), 'Every focused skip-link text line should stay within the viewport.')
+      await assertVisibleTextFitsViewport(skipPage, 'Focused 320px/200% skip link', 320)
+      await skipPage.keyboard.press('Enter')
+      await assert.ok(await skipPage.locator('#portfolio-content').evaluate((element) => element === document.activeElement), 'Activating the focused skip link should focus the main content.')
+      await skipPage.close()
+    })
+
     await check('WCAG 2.1 A/AA and WCAG 2.2 AA axe scans on twelve desktop and mobile views', async () => {
       for (const viewport of [
         { label: 'desktop', width: 1440, height: 900 },
