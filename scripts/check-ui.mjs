@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
+import { readFile } from 'node:fs/promises'
 import { chromium } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import { portfolioCompatibilityRoutePaths, portfolioRoutePaths, resolvePortfolioRoute } from '../src/navigation/routes.js'
@@ -24,18 +26,47 @@ const terminalIndexAliases = portfolioRoutePaths.map((route) => ({
   alias: route === '/' ? '/index.html' : `${route}index.html`,
   route,
 }))
-const compatibilityIndexAliases = portfolioCompatibilityRoutePaths.map((route) => ({
-  alias: `${route}index.html`, route: '/',
+const compatibilityRoutePaths = new Map([
+  ['/experience/', '/'],
+  ['/projects/openclaw/', '/openclaw_agent/info/'],
+  ['/projects/chinese-learning/', '/call_analyzer_chinese_learning/info/'],
+  ['/projects/openclaw_agent/', '/openclaw_agent/'],
+  ['/projects/call_analyzer_chinese_learning/', '/call_analyzer_chinese_learning/'],
+  ['/projects/traders_edge/', '/traders_edge/'],
+])
+const compatibilityIndexAliases = portfolioCompatibilityRoutePaths.map((alias) => ({
+  alias: `${alias}index.html`, route: compatibilityRoutePaths.get(alias),
 }))
 const compatibilityAliases = [
-  ...portfolioCompatibilityRoutePaths.map((route) => ({ alias: route, route: '/' })),
+  ...portfolioCompatibilityRoutePaths.map((alias) => ({ alias, route: compatibilityRoutePaths.get(alias) })),
   ...compatibilityIndexAliases,
 ]
-const projectNames = ['FoROOM', 'Buddy4Good', 'Eggbot', 'TeleAI', 'FoodHero', 'Portfolio Website', 'My OpenClaw Lab', 'Chinese Learning Toolkit']
+const projectNames = ['FoROOM', 'Buddy4Good', 'Eggbot', 'TeleAI', 'FoodHero', 'Portfolio Website', 'My OpenClaw Lab', 'Chinese Learning Toolkit', 'Trader’s Edge']
 const projectIds = {
   FoROOM: 'foroom', Buddy4Good: 'buddy4good', Eggbot: 'eggbot',
   TeleAI: 'teleai', FoodHero: 'foodhero', 'Portfolio Website': 'portfolio',
-  'My OpenClaw Lab': 'openclaw', 'Chinese Learning Toolkit': 'chinese-learning',
+  'My OpenClaw Lab': 'openclaw', 'Chinese Learning Toolkit': 'chinese-learning', 'Trader’s Edge': 'traders-edge',
+}
+const projectPaths = {
+  foroom: '/projects/foroom/',
+  buddy4good: '/projects/buddy4good/',
+  eggbot: '/projects/eggbot/',
+  teleai: '/projects/teleai/',
+  foodhero: '/projects/foodhero/',
+  portfolio: '/projects/portfolio/',
+  openclaw: '/openclaw_agent/',
+  'chinese-learning': '/call_analyzer_chinese_learning/',
+  'traders-edge': '/traders_edge/',
+}
+const projectInfoPaths = {
+  openclaw: '/openclaw_agent/info/',
+  'chinese-learning': '/call_analyzer_chinese_learning/info/',
+  'traders-edge': '/traders_edge/info/',
+}
+const caseStudySynopses = {
+  openclaw: 'A personal agent lab for connecting real tools and building an assistant that remembers useful context about how I work.',
+  'chinese-learning': 'A local-first Chinese vocabulary workflow that turns reviewed lesson words into a daily Telegram recall message.',
+  'traders-edge': 'A trading education game where learners practice market orders, read price signals and test strategies in guided, historical and multiplayer scenarios.',
 }
 const expectedExperienceIds = ['tiktok-backend', 'tiktok-intern', 'nus-ta', 'gic', 'uptale', 'hdb', 'eastspring', 'astar']
 const expectedExperienceDates = [
@@ -125,6 +156,7 @@ const projectOutboundLinksById = {
     'https://github.com/oeggy03/call_analyzer_lesson_db',
     'https://github.com/oeggy03/call_analyzer_active_recall',
   ],
+  'traders-edge': ['https://github.com/Traders-Edge/traders_edge'],
 }
 const experienceOutboundLinks = [
   'https://www.tiktok.com/',
@@ -140,6 +172,53 @@ const consoleErrors = []
 const pageErrors = []
 const internalRequestFailures = []
 const externalRequestFailures = new Set()
+
+async function assertEmailToastLayout(page, label, { maxHeight, maxTopInset = 24 } = {}) {
+  const toast = page.locator('[data-copy-email-toast]')
+  await assert.ok(await toast.isVisible(), `${label} toast should be visible.`)
+  const layout = await toast.evaluate((element) => {
+    const message = element.querySelector('[data-copy-email-message]')
+    const dismiss = element.querySelector('button[aria-label="Dismiss email copy message"]')
+    const range = document.createRange()
+    range.selectNodeContents(message)
+    const firstLine = [...range.getClientRects()]
+      .filter((rect) => rect.width > 0 && rect.height > 0)
+      .sort((first, second) => first.top - second.top || first.left - second.left)[0]
+    const style = getComputedStyle(element)
+    const channels = (color) => color.match(/[\d.]+/g).slice(0, 3).map(Number).map((value) => {
+      const normalized = value / 255
+      return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
+    })
+    const [foregroundR, foregroundG, foregroundB] = channels(style.color)
+    const [backgroundR, backgroundG, backgroundB] = channels(style.backgroundColor)
+    const foregroundLuminance = 0.2126 * foregroundR + 0.7152 * foregroundG + 0.0722 * foregroundB
+    const backgroundLuminance = 0.2126 * backgroundR + 0.7152 * backgroundG + 0.0722 * backgroundB
+    const contrast = (Math.max(foregroundLuminance, backgroundLuminance) + 0.05) / (Math.min(foregroundLuminance, backgroundLuminance) + 0.05)
+    const rect = (node) => {
+      const { x, y, width, height, right, bottom } = node.getBoundingClientRect()
+      return { x, y, width, height, right, bottom }
+    }
+    return {
+      toast: rect(element),
+      message: rect(message),
+      dismiss: rect(dismiss),
+      firstLine: firstLine ? { left: firstLine.left, right: firstLine.right, top: firstLine.top, bottom: firstLine.bottom } : null,
+      foreground: style.color,
+      background: style.backgroundColor,
+      contrast,
+    }
+  })
+  const viewport = page.viewportSize()
+  await assert.ok(layout.firstLine, `${label} toast should expose a measurable message line.`)
+  await assert.ok(layout.toast.x >= 0 && layout.toast.y >= 0 && layout.toast.right <= viewport.width + 1 && layout.toast.bottom <= viewport.height + 1, `${label} toast should fit in the viewport: ${JSON.stringify(layout.toast)}.`)
+  await assert.ok(layout.dismiss.width >= 44 && layout.dismiss.height >= 44, `${label} dismiss control should retain a 44px touch target.`)
+  await assert.ok(layout.contrast >= 4.5, `${label} toast text should retain 4.5:1 contrast, received ${layout.contrast.toFixed(2)}:1 (${layout.foreground} on ${layout.background}).`)
+  await assert.ok(Math.abs(layout.firstLine.top - layout.dismiss.y) <= 20, `${label} message and dismiss control should share the first row: ${JSON.stringify(layout)}.`)
+  await assert.ok(layout.firstLine.right <= layout.dismiss.x + 1, `${label} first message row should not overlap the dismiss control: ${JSON.stringify(layout)}.`)
+  await assert.ok(layout.firstLine.top - layout.toast.y >= 8 && layout.firstLine.top - layout.toast.y <= maxTopInset, `${label} message should have modest top padding without a blank row: ${JSON.stringify(layout)}.`)
+  if (maxHeight) await assert.ok(layout.toast.height <= maxHeight, `${label} toast should remain compact at ${maxHeight}px or less, received ${layout.toast.height}px.`)
+  return layout
+}
 
 function urlFor(path) {
   return new URL(path, baseUrl).href
@@ -239,6 +318,59 @@ function navLinks(page) {
   return page.locator('nav[aria-label="Portfolio sections"]:visible a[href]')
 }
 
+async function renderedVisibleText(locator) {
+  return locator.evaluate((element) => {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+    const range = document.createRange()
+    const visible = []
+    while (walker.nextNode()) {
+      const node = walker.currentNode
+      if (!node.textContent.trim()) continue
+      let current = node.parentElement
+      let hidden = false
+      while (current && current !== element.parentElement) {
+        if (current.matches('.sr-only, [aria-hidden="true"]')) {
+          hidden = true
+          break
+        }
+        const style = getComputedStyle(current)
+        if (style.display === 'none' || style.visibility === 'hidden') {
+          hidden = true
+          break
+        }
+        current = current.parentElement
+      }
+      if (hidden) continue
+      range.selectNodeContents(node)
+      if ([...range.getClientRects()].some((rect) => rect.width > 0 && rect.height > 0)) visible.push(node.textContent.trim())
+    }
+    return visible.join(' ').replace(/\s+/g, ' ').trim()
+  })
+}
+
+async function assertWholeWords(locator, phrase, label) {
+  const splitWords = await locator.evaluate((element, phraseToFind) => {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+    const range = document.createRange()
+    while (walker.nextNode()) {
+      const node = walker.currentNode
+      const phraseStart = node.textContent.indexOf(phraseToFind)
+      if (phraseStart < 0) continue
+      const phrase = node.textContent.slice(phraseStart, phraseStart + phraseToFind.length)
+      const split = []
+      for (const word of phrase.matchAll(/\S+/g)) {
+        range.setStart(node, phraseStart + word.index)
+        range.setEnd(node, phraseStart + word.index + word[0].length)
+        const rects = [...range.getClientRects()].filter((rect) => rect.width > 0 && rect.height > 0)
+        if (rects.length !== 1) split.push({ word: word[0], rects: rects.length })
+      }
+      return split
+    }
+    return [{ error: `Visible phrase “${phraseToFind}” was not found.` }]
+  }, phrase)
+  await assert.deepEqual(splitWords, [], `${label} should wrap only between words: ${JSON.stringify(splitWords)}.`)
+}
+
 async function assertCleanRoute(page, path) {
   await page.waitForFunction((expected) => window.location.pathname === expected && window.location.hash === '', path)
   await assert.equal(new URL(page.url()).pathname, path)
@@ -273,13 +405,24 @@ async function assertRouteMetadata(page, path) {
 }
 
 async function assertProjectRoute(page, project) {
-  const path = `/projects/${projectIds[project]}/`
+  const path = projectPaths[projectIds[project]]
   await assertCleanRoute(page, path)
   await settle(page)
   await assert.equal(await activeSection(page, 'projects').count(), 1, 'Project details should belong to the visible Projects section.')
   await assert.ok(await page.locator(`#project-heading-${projectIds[project]}`).isVisible(), `${project} detail heading should be visible.`)
   const selectedProject = page.locator(`nav[aria-label="Choose a project"] a[href="${path}"][aria-current="page"]`)
   if (await selectedProject.count()) await assert.equal(await selectedProject.count(), 1, `${project} should be the selected real project link.`)
+}
+
+async function assertProjectInfoRoute(page, project) {
+  const id = projectIds[project]
+  const path = projectInfoPaths[id]
+  await assertCleanRoute(page, path)
+  await settle(page)
+  await assert.equal(await activeSection(page, 'projects').count(), 1, 'Full writeups should belong to the visible Projects section.')
+  await assert.ok(await page.locator(`#project-heading-${id}`).isVisible(), `${project} writeup heading should be visible.`)
+  const selectedProject = page.locator(`nav[aria-label="Choose a project"] a[href="${projectPaths[id]}"][aria-current="page"]`)
+  if (await selectedProject.count()) await assert.equal(await selectedProject.count(), 1, `${project} overview should remain selected while reading its writeup.`)
 }
 
 async function assertExperienceTimeline(page, { openState = false } = {}) {
@@ -300,9 +443,20 @@ async function assertExperienceTimeline(page, { openState = false } = {}) {
   await assert.deepEqual(dateRanges, expectedExperienceDates, 'Experience should preserve every supplied date period in timeline order.')
   const text = await items.evaluateAll((entries) => entries.map((entry) => entry.textContent).join(' '))
   await assert.equal((text.match(/TikTok/g) || []).length, 2, 'Both TikTok roles should appear as distinct entries.')
-  await assert.ok(text.includes('Backend Engineer'), 'The current TikTok Backend Engineer title should be visible.')
+  await assert.ok(text.includes('Backend and Site Reliability Engineer'), 'The current TikTok role should retain its updated title.')
+  await assert.match(text, /12 teams.{0,70}200 unique users/i, 'The current role should describe the teams and users served.')
+  await assert.match(text, /around 50 service issues each week/i, 'The current role should describe the on-call workload.')
+  await assert.match(text, /close to \$5 million/i, 'The current role should preserve the supplied savings scale.')
+  await assert.match(text, /English and Chinese/i, 'The current role should retain the two working languages.')
+  await assert.match(text, /1,000 students/i, 'The NUS teaching role should retain its student reach.')
+  await assert.match(text, /4\.8\/5.{0,40}4\.7\/5/i, 'The teaching role should preserve both course feedback scores.')
+  await assert.match(text, /300 staff/i, 'The GIC role should preserve the staff workflow reach.')
+  await assert.match(text, /100 customers/i, 'The Uptale role should preserve the customer reach.')
   await assert.ok(text.includes('Artificial Intelligence Intern'), 'The A*STAR role should retain its supplied title.')
   await assert.match(text, /average.{0,30}88% accuracy/i, 'The HDB entry should retain the supplied average accuracy metric.')
+  await assert.match(text, /80%/, 'The HDB role should retain the reporting-efficiency metric.')
+  await assert.match(text, /100 production and raw database tables/i, 'The Eastspring role should preserve its database scale.')
+  await assert.match(text, /10 types of trash/i, 'The A*STAR role should preserve the robot task detail.')
 
   const decodedImages = await items.locator('img').evaluateAll(async (images) => Promise.all(images.map(async (image) => {
     image.loading = 'eager'
@@ -323,11 +477,50 @@ async function assertProfileCardState(page, state) {
   await assert.equal(await card.getAttribute('data-state'), state)
   await assert.equal(await card.getAttribute('aria-pressed'), String(showingProfile), 'The profile-card button state should be exposed to assistive technology.')
   const accessibleName = await card.getAttribute('aria-label')
-  await assert.equal(accessibleName, showingProfile ? 'Show photo' : 'Flip card to show profile details', 'The profile-card name should include its visible label and describe the next action.')
+  await assert.equal(accessibleName, showingProfile ? 'Show photo' : 'Flip card to show profile details', 'The profile-card button should retain its accessible action name.')
+  await assert.equal((await card.innerText()).trim(), '', 'The profile-card control should show only its reverse glyph, without Flip card or Photo text.')
+  const icon = card.locator('span[aria-hidden="true"] > svg')
+  await assert.equal(await icon.count(), 1, 'The profile-card control should show one decorative reverse glyph.')
+  await assert.ok(await icon.isVisible(), 'The reverse glyph should remain visible on each card face.')
+  const glyphCircle = icon.locator('xpath=ancestor::span[1]')
+  const glyphBounds = await glyphCircle.boundingBox()
+  const glyphStyle = await glyphCircle.evaluate((element) => getComputedStyle(element).borderRadius)
+  await assert.ok(glyphBounds && glyphBounds.width >= 44 && glyphBounds.height >= 44, 'The reverse glyph overlay should meet the 44px touch target minimum.')
+  await assert.match(glyphStyle, /9999px/, 'The reverse glyph should sit in a circular overlay.')
 }
 
 function profileCardSurface(page) {
   return page.locator('button[data-profile-card]').locator('xpath=ancestor::figure[1]')
+}
+
+async function assertProfilePhotoFillsFace(page, label, viewportWidth) {
+  const photo = page.locator('img[alt="Ha Thu outdoors with a camera"]')
+  const geometry = await photo.evaluate(async (image) => {
+    image.loading = 'eager'
+    await image.decode()
+    const rect = (element) => {
+      const { x, y, width, height, right, bottom } = element.getBoundingClientRect()
+      return { x, y, width, height, right, bottom }
+    }
+    return {
+      image: rect(image),
+      face: rect(image.parentElement),
+      back: rect(document.querySelector('#profile-card-back')),
+      button: rect(document.querySelector('button[data-profile-card]')),
+      fit: getComputedStyle(image).objectFit,
+      naturalWidth: image.naturalWidth,
+      naturalHeight: image.naturalHeight,
+    }
+  })
+  await assert.equal(geometry.naturalWidth, 2100, `${label} should keep the original portrait asset width.`)
+  await assert.equal(geometry.naturalHeight, 3000, `${label} should keep the original portrait asset height.`)
+  await assert.equal(geometry.fit, 'cover', `${label} should crop the unchanged portrait to cover the face.`)
+  for (const edge of ['x', 'y', 'right', 'bottom']) {
+    await assert.ok(Math.abs(geometry.image[edge] - geometry.face[edge]) <= 1, `${label} portrait ${edge} should match its card face: ${JSON.stringify(geometry)}.`)
+    await assert.ok(Math.abs(geometry.back[edge] - geometry.face[edge]) <= 1, `${label} reverse face ${edge} should match the photo face: ${JSON.stringify(geometry)}.`)
+    await assert.ok(Math.abs(geometry.button[edge] - geometry.face[edge]) <= 1, `${label} full-card button ${edge} should match the face: ${JSON.stringify(geometry)}.`)
+  }
+  await assert.ok(geometry.face.x >= 0 && geometry.face.right <= viewportWidth, `${label} photo face should fit within the viewport: ${JSON.stringify(geometry.face)}.`)
 }
 
 async function assertSingleVisibleMatch(locator, label) {
@@ -410,14 +603,13 @@ async function assertSocialActionsVisible(page, label) {
   const group = page.getByRole('group', { name: 'Contact and social links' })
   await assert.equal(await group.count(), 1, `${label} should expose one social links group.`)
   await assert.ok(await group.isVisible(), `${label} social links should be visible.`)
-  for (const [name, href] of [
-    ['Email Tran Ha Thu', 'mailto:tranhathuwork@gmail.com'],
-    ['Tran Ha Thu on GitHub', 'https://github.com/oeggy03'],
-    ['Tran Ha Thu on LinkedIn', 'https://www.linkedin.com/in/tran-ha-thu/'],
+  for (const [name, selector, href] of [
+    ['Copy work email to clipboard', group.getByRole('button', { name: 'Copy work email to clipboard', exact: true }), null],
+    ['Tran Ha Thu on GitHub', group.getByRole('link', { name: 'Tran Ha Thu on GitHub', exact: true }), 'https://github.com/oeggy03'],
+    ['Tran Ha Thu on LinkedIn', group.getByRole('link', { name: 'Tran Ha Thu on LinkedIn', exact: true }), 'https://www.linkedin.com/in/tran-ha-thu/'],
   ]) {
-    const link = group.getByRole('link', { name, exact: true })
-    await assert.equal(await link.getAttribute('href'), href, `${label} ${name} destination should be preserved.`)
-    const bounds = await link.boundingBox()
+    if (href) await assert.equal(await selector.getAttribute('href'), href, `${label} ${name} destination should be preserved.`)
+    const bounds = await selector.boundingBox()
     await assert.ok(bounds && bounds.y >= 0 && bounds.y + bounds.height <= page.viewportSize().height, `${label} ${name} should fit in the viewport.`)
     await assert.ok(bounds && bounds.width >= 44 && bounds.height >= 44, `${label} ${name} should provide a 44px touch target.`)
   }
@@ -431,7 +623,11 @@ async function run() {
     trackPage(page)
 
     await check('ordinary static HTTP server serves each generated route directly and on refresh', async () => {
-      assert.equal(portfolioRoutePaths.length, 11, 'The static route matrix should cover three views and eight projects.')
+      assert.equal(portfolioRoutePaths.length, 15, 'The static route matrix should cover three views, six ordinary details, and three overview/writeup pairs.')
+      assert.deepEqual(portfolioCompatibilityRoutePaths, [
+        '/experience/', '/projects/openclaw/', '/projects/chinese-learning/',
+        '/projects/openclaw_agent/', '/projects/call_analyzer_chinese_learning/', '/projects/traders_edge/',
+      ], 'The six compatibility paths should preserve the legacy Experience, case-study and PDF project links.')
       for (const path of portfolioRoutePaths) {
         const response = await context.request.get(urlFor(path))
         await assert.equal(response.status(), 200, `${path} should resolve directly over HTTP.`)
@@ -445,6 +641,14 @@ async function run() {
         await page.reload({ waitUntil: 'domcontentloaded' })
         await assert.equal(new URL(page.url()).pathname, path, `${path} refresh should retain the direct route.`)
       }
+      for (const [alias, route] of compatibilityRoutePaths) {
+        for (const path of [alias, `${alias}index.html`]) {
+          const response = await context.request.get(urlFor(path))
+          await assert.equal(response.status(), 200, `${path} should resolve to a generated compatibility HTML file.`)
+          await assert.match(response.headers()['content-type'] || '', /text\/html/i)
+          await assert.ok((await response.text()).includes(`rel="canonical" href="https://www.tranhathu.com${route}"`), `${path} should serve canonical metadata for ${route}.`)
+        }
+      }
     })
 
     await check('terminal index.html aliases hydrate to their matching clean routes', async () => {
@@ -454,13 +658,15 @@ async function run() {
         const label = Object.entries(sectionPaths).find(([, sectionRoute]) => sectionRoute === route)?.[0]
         if (label) {
           await assertActiveView(page, label)
-          await assertRouteMetadata(page, route)
         } else {
-          const projectId = route.match(/^\/projects\/([^/]+)\/$/)?.[1]
+          const resolvedRoute = resolvePortfolioRoute(route)
+          const projectId = resolvedRoute.projectId
           const project = Object.entries(projectIds).find(([, id]) => id === projectId)?.[0]
           await assert.ok(project, `${alias} should map to a known project route.`)
-          await assertProjectRoute(page, project)
+          if (resolvedRoute.projectView === 'info') await assertProjectInfoRoute(page, project)
+          else await assertProjectRoute(page, project)
         }
+        await assertRouteMetadata(page, route)
       }
     })
 
@@ -486,7 +692,15 @@ async function run() {
       for (const { alias, route } of compatibilityAliases) {
         await page.goto(urlFor(alias), { waitUntil: 'domcontentloaded' })
         await page.waitForFunction((expected) => window.location.pathname === expected && window.location.hash === '', route)
-        await assertActiveView(page, 'Experience')
+        if (route === '/') {
+          await assertActiveView(page, 'Experience')
+        } else {
+          const resolvedRoute = resolvePortfolioRoute(route)
+          const project = Object.entries(projectIds).find(([, id]) => id === resolvedRoute.projectId)?.[0]
+          await assert.ok(project, `${alias} should resolve to a known project.`)
+          if (resolvedRoute.projectView === 'info') await assertProjectInfoRoute(page, project)
+          else await assertProjectRoute(page, project)
+        }
         await assertRouteMetadata(page, route)
       }
 
@@ -507,12 +721,14 @@ async function run() {
 
     await check('legacy hashes canonicalize after matching SSR hydration without errors', async () => {
       const before = { console: consoleErrors.length, pages: pageErrors.length }
+      legacyRoutes['project-openclaw'] = projectPaths.openclaw
+      legacyRoutes['project-chinese-learning'] = projectPaths['chinese-learning']
       for (const [fragment, path] of Object.entries(legacyRoutes)) {
         await page.goto(`${urlFor('/')}#${fragment}`, { waitUntil: 'domcontentloaded' })
         await page.waitForFunction((expected) => window.location.pathname === expected && window.location.hash === '', path)
         await settle(page)
         await assert.equal(new URL(page.url()).pathname, path, `#${fragment} should map to ${path}.`)
-        const sectionId = path.startsWith('/projects/') ? 'projects' : path.slice(1, -1) || 'experience'
+        const sectionId = path.startsWith('/projects/') || projectPaths.openclaw === path || projectPaths['chinese-learning'] === path || projectPaths['traders-edge'] === path ? 'projects' : path.slice(1, -1) || 'experience'
         await assert.equal(await activeSection(page, sectionId).count(), 1, `#${fragment} should hydrate to the correct visible section.`)
       }
       await assert.deepEqual(consoleErrors.slice(before.console), [], 'Legacy route hydration should not produce console errors or hydration mismatch warnings.')
@@ -541,19 +757,20 @@ async function run() {
       await page.goto(urlFor('/projects/'), { waitUntil: 'domcontentloaded' })
       await assertActiveView(page, 'Projects')
       const index = page.locator('#projects [data-project-index]')
-      const cards = index.locator('a[href^="/projects/"]')
-      await assert.equal(await cards.count(), 8, 'All eight project cards should be directly linkable from the index.')
+      const cards = index.locator('article')
+      await assert.equal(await cards.count(), 9, 'All nine project cards should appear on the index.')
       const filters = page.getByRole('group', { name: 'Filter projects' })
       const categoryCounts = ['All', 'Backend', 'AI & bots', 'Frontend']
-      const expectedCounts = [8, 2, 5, 1]
+      const expectedCounts = [9, 3, 5, 1]
       for (let index = 0; index < categoryCounts.length; index += 1) {
         const categoryButton = filters.getByRole('button').nth(index)
         await assert.equal((await categoryButton.innerText()).replace(/\s+/g, ' ').trim().replace(/\D/g, ''), String(expectedCounts[index]), `${categoryCounts[index]} should show its correct project count.`)
         await assert.equal((await categoryButton.innerText()).replace(String(expectedCounts[index]), '').trim(), categoryCounts[index])
       }
       for (const project of projectNames) {
-        const link = index.locator(`a[href="/projects/${projectIds[project]}/"]`)
-        await assert.equal(await link.getAttribute('href'), `/projects/${projectIds[project]}/`, `${project} should link to its clean detail route.`)
+        const path = projectPaths[projectIds[project]]
+        const link = index.locator(`a[href="${path}"]`)
+        await assert.equal(await link.getAttribute('href'), path, `${project} should link to its clean overview/detail route.`)
       }
 
       const aiFilter = page.getByRole('button', { name: /^AI & bots/ })
@@ -561,14 +778,23 @@ async function run() {
       await assert.equal(new URL(page.url()).pathname, '/projects/', 'Filtering should not navigate to a project detail.')
       await assert.equal(await aiFilter.getAttribute('aria-pressed'), 'true')
       await assert.equal(await cards.count(), 5, 'AI & bots should filter to five project cards.')
-      const aiCardOrder = await cards.evaluateAll((links) => links.map((link) => link.getAttribute('href')))
-      await assert.deepEqual(aiCardOrder.slice(0, 2), ['/projects/openclaw/', '/projects/chinese-learning/'], 'Featured projects should lead the filtered grid.')
+      const aiCardOrder = await cards.locator('a[href]').evaluateAll((links) => links.map((link) => link.getAttribute('href')))
+      await assert.deepEqual(aiCardOrder.slice(0, 2), [projectPaths.openclaw, projectPaths['chinese-learning']], 'Featured projects should lead the filtered grid.')
       const scrolledY = await scrollNaturallyTo(page, 150)
-      await assert.ok(scrolledY > 0, 'The filtered index should retain a real scroll position before opening a case study.')
-      await index.locator('a[href="/projects/openclaw/"]').click()
+      await assert.ok(scrolledY > 0, 'The filtered index should retain a real scroll position before opening a project overview.')
+      await index.locator(`a[href="${projectPaths.openclaw}"]`).click()
       await assertProjectRoute(page, 'My OpenClaw Lab')
-      const caseHeadingTop = await page.locator('#project-heading-openclaw').evaluate((element) => element.getBoundingClientRect().top)
-      await assert.ok(caseHeadingTop >= 0 && caseHeadingTop < 400, 'Opening a long-form project from a scrolled index should align its title near the viewport top.')
+      const cardHeadingTop = await page.locator('#project-heading-openclaw').evaluate((element) => element.getBoundingClientRect().top)
+      await assert.ok(cardHeadingTop >= 0 && cardHeadingTop < 400, 'Opening a project overview from a scrolled index should align its title near the viewport top.')
+      const fullWriteupLink = page.getByRole('link', { name: 'Read full project writeup for My OpenClaw Lab', exact: true })
+      await assert.ok(await fullWriteupLink.isVisible(), 'The overview card should clearly offer access to the full writeup.')
+      const fullWriteupBounds = await fullWriteupLink.boundingBox()
+      await assert.ok(fullWriteupBounds && fullWriteupBounds.height >= 44, 'The full-writeup action should remain comfortably large.')
+      await fullWriteupLink.click()
+      await assertProjectInfoRoute(page, 'My OpenClaw Lab')
+      await assertRouteMetadata(page, projectInfoPaths.openclaw)
+      await page.goBack()
+      await assertProjectRoute(page, 'My OpenClaw Lab')
       await page.goBack()
       await page.waitForFunction(() => window.location.pathname === '/projects/' && window.location.hash === '')
       await assert.equal(await cards.count(), 5, 'Back should restore the filtered project index.')
@@ -586,18 +812,36 @@ async function run() {
       const backendFilter = page.getByRole('button', { name: /^Backend/ })
       await backendFilter.click()
       await assert.equal(new URL(page.url()).pathname, '/projects/')
-      await assert.equal(await cards.count(), 2)
+      await assert.equal(await cards.count(), 3)
       await assert.equal(await backendFilter.getAttribute('aria-pressed'), 'true')
       const frontendFilter = page.getByRole('button', { name: /^Frontend/ })
       await frontendFilter.click()
       await assert.equal(await cards.count(), 1, 'Frontend should filter to the one supplied project.')
       await page.getByRole('button', { name: /^All/ }).click()
-      await assert.equal(await cards.count(), 8)
+      await assert.equal(await cards.count(), 9)
+
+      const traderCard = index.locator(`a[href="${projectPaths['traders-edge']}"]`)
+      await traderCard.click()
+      await assertProjectRoute(page, 'Trader’s Edge')
+      const traderRepoAction = page.getByRole('link', { name: 'View code', exact: true })
+      await assert.equal(await traderRepoAction.getAttribute('href'), 'https://github.com/Traders-Edge/traders_edge')
+      await assert.ok(await traderRepoAction.isVisible(), 'Trader’s Edge overview should expose its source repository.')
+      await page.getByRole('link', { name: 'Read full project writeup for Trader’s Edge', exact: true }).click()
+      await assertProjectInfoRoute(page, 'Trader’s Edge')
 
       await page.goto(urlFor('/projects/'), { waitUntil: 'domcontentloaded' })
       for (const project of projectNames) {
-        await page.goto(urlFor(`/projects/${projectIds[project]}/`), { waitUntil: 'domcontentloaded' })
+        await page.goto(urlFor(projectPaths[projectIds[project]]), { waitUntil: 'domcontentloaded' })
         await assertProjectRoute(page, project)
+        const synopsis = caseStudySynopses[projectIds[project]]
+        if (synopsis) {
+          await assert.ok(await page.locator(`#project-${projectIds[project]}`).getByText(synopsis, { exact: true }).isVisible(), `${project} overview should show its project synopsis before the full writeup.`)
+          const fullWriteupLink = page.getByRole('link', { name: `Read full project writeup for ${project}`, exact: true })
+          await assert.ok(await fullWriteupLink.isVisible(), `${project} overview should clearly link to its full writeup.`)
+          const titleBounds = await page.locator(`#project-heading-${projectIds[project]}`).boundingBox()
+          const actionBounds = await fullWriteupLink.boundingBox()
+          await assert.ok(actionBounds && actionBounds.height >= 44 && titleBounds && actionBounds.x + actionBounds.width / 2 > titleBounds.x + titleBounds.width / 2, `${project} should have a large top-right full-writeup action.`)
+        }
         const heading = page.locator(`#project-heading-${projectIds[project]}`)
         await heading.focus()
         await assert.ok(await heading.evaluate((element) => element === document.activeElement), `${project} heading should remain keyboard focusable.`)
@@ -605,15 +849,8 @@ async function run() {
           await assert.ok(await page.locator(`a[href="${href}"]`).count() > 0, `Missing ${project} destination ${href}.`)
         }
         const imagesByProject = {
-          'My OpenClaw Lab': [
-            ['OpenClaw brand banner showing its lobster mascot and wordmark, with the line “Your personal AI assistant, running on your own devices.”', 1280, 358],
-            ['OpenClaw conversation about comparing gaming mice and adding a Tecware EX2 to the cart.', 608, 726],
-            ['Shopee cart showing one Tecware EX2 mouse.', 1230, 636],
-          ],
-          'Chinese Learning Toolkit': [
-            ['A daily Telegram message with a sample of collected Chinese vocabulary.', 533, 257],
-            ['Telegram message showing a sample of daily Chinese vocabulary with readings and meanings.', 533, 257],
-          ],
+          'My OpenClaw Lab': [['OpenClaw brand banner showing its lobster mascot and wordmark, with the line “Your personal AI assistant, running on your own devices.”', 1280, 358]],
+          'Chinese Learning Toolkit': [['A daily Telegram message with a sample of collected Chinese vocabulary.', 533, 257]],
         }
         for (const [alt, expectedWidth, expectedHeight] of imagesByProject[project] || []) {
           const image = page.locator(`img[alt="${alt}"]`).first()
@@ -627,20 +864,47 @@ async function run() {
           await assert.equal(imageData.width, expectedWidth, `${project} should preserve the supplied image width.`)
           await assert.equal(imageData.height, expectedHeight, `${project} should preserve the supplied image height.`)
         }
+      }
+
+      for (const project of ['My OpenClaw Lab', 'Chinese Learning Toolkit', 'Trader’s Edge']) {
+        const path = projectInfoPaths[projectIds[project]]
+        await page.goto(urlFor(path), { waitUntil: 'domcontentloaded' })
+        await assertProjectInfoRoute(page, project)
+        await assertRouteMetadata(page, path)
+        const imagesByCaseStudy = {
+          'My OpenClaw Lab': [
+            ['OpenClaw conversation about comparing gaming mice and adding a Tecware EX2 to the cart.', 608, 726],
+            ['Shopee cart showing one Tecware EX2 mouse.', 1230, 636],
+          ],
+          'Chinese Learning Toolkit': [['Telegram message showing a sample of daily Chinese vocabulary with readings and meanings.', 533, 257]],
+        }
+        for (const [alt, expectedWidth, expectedHeight] of imagesByCaseStudy[project] || []) {
+          const image = page.locator(`img[alt="${alt}"]`).first()
+          await assert.ok(await image.count(), `${project} full writeup should retain its supplied report image: ${alt}`)
+          const imageData = await image.evaluate(async (element) => {
+            element.loading = 'eager'
+            await element.decode()
+            return { src: element.currentSrc || element.src, width: element.naturalWidth, height: element.naturalHeight }
+          })
+          await assert.ok(imageData.src.startsWith('data:image/') || new URL(imageData.src).origin === origin, `${project} image should use a local or inlined asset: ${alt}`)
+          await assert.equal(imageData.width, expectedWidth)
+          await assert.equal(imageData.height, expectedHeight)
+        }
         if (project === 'My OpenClaw Lab') {
-          const architecture = page.locator('#architecture-openclaw').locator('..')
-          await assert.equal(await architecture.locator('ul').count(), 1, 'OpenClaw architecture should be presented as connected components without a false sequence.')
-          await assert.equal(await architecture.locator('ol').count(), 0)
+          await assert.equal(await page.locator('#architecture-openclaw').locator('..').locator('ul').count(), 1, 'OpenClaw should describe connected tools without false ordering.')
+        } else if (project === 'Chinese Learning Toolkit') {
+          await assert.equal(await page.locator('#architecture-chinese-learning').locator('..').locator('ol').count(), 1, 'The Chinese-learning workflow should retain its real sequence.')
         }
-        if (project === 'Chinese Learning Toolkit') {
-          const architecture = page.locator('#architecture-chinese-learning').locator('..')
-          await assert.equal(await architecture.locator('ol').count(), 1, 'The Chinese-learning workflow should retain its ordered flow.')
-        }
+        const backLabel = project === 'Trader’s Edge' ? 'Back to Trader’s Edge' : 'Back to project overview'
+        const backToOverview = page.getByRole('link', { name: backLabel, exact: true })
+        await assert.ok(await backToOverview.isVisible(), `${project} writeup should link back to its overview.`)
+        await backToOverview.click()
+        await assertProjectRoute(page, project)
       }
 
       await page.goto(urlFor('/projects/foroom/'), { waitUntil: 'domcontentloaded' })
       const chooser = page.getByRole('navigation', { name: 'Choose a project' })
-      await assert.equal(await chooser.getByRole('link').count(), 8, 'The existing detail explorer should offer all eight direct project routes.')
+      await assert.equal(await chooser.getByRole('link').count(), 9, 'The existing detail explorer should offer all nine project routes.')
       await chooser.getByRole('link', { name: /My OpenClaw Lab/i }).click()
       await assertProjectRoute(page, 'My OpenClaw Lab')
       await page.goBack()
@@ -826,6 +1090,46 @@ async function run() {
       await reducedContext.close()
     })
 
+    await check('profile photo fills both card faces from 320px to desktop at normal and 200% text', async () => {
+      for (const viewport of [
+        { width: 320, height: 568 },
+        { width: 390, height: 844 },
+        { width: 768, height: 1024 },
+        { width: 1024, height: 768 },
+        { width: 1440, height: 900 },
+      ]) {
+        for (const textScale of [100, 200]) {
+          const cardContext = await browser.newContext({ viewport })
+          const cardPage = await cardContext.newPage()
+          trackPage(cardPage)
+          await cardPage.emulateMedia({ reducedMotion: 'reduce' })
+          await cardPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+          if (textScale === 200) await cardPage.evaluate(() => { document.documentElement.style.fontSize = '200%' })
+          await settle(cardPage)
+          const label = `${viewport.width}px/${textScale}%`
+          const card = cardPage.locator('button[data-profile-card]')
+          const backFace = cardPage.locator('#profile-card-back')
+          await assertProfileCardState(cardPage, 'photo')
+          await assertProfilePhotoFillsFace(cardPage, label, viewport.width)
+          await card.click()
+          await assertProfileCardState(cardPage, 'profile-id')
+          await assert.equal(await backFace.locator('img').count(), 0, `${label} reverse face should contain no portrait image.`)
+          const visibleBackText = await renderedVisibleText(backFace)
+          await assert.doesNotMatch(visibleBackText.toLowerCase(), /\bsingapore\b|fictional/, `${label} reverse face should omit decorative country/fiction headers.`)
+          await assert.match(visibleBackText.toLowerCase(), /singaporean/, `${label} reverse face should retain the citizenship fact.`)
+          await assert.match(visibleBackText.toLowerCase(), /h1b1 visa eligible|eligible for h1b1 visa/, `${label} reverse face should retain the visa fact.`)
+          if (viewport.width < 768) {
+            await assert.doesNotMatch(visibleBackText, /Tran Ha Thu|Backend Engineer/, `${label} should use the compact mobile facts.`)
+          } else {
+            await assert.ok(visibleBackText.includes('Tran Ha Thu'), `${label} desktop ID should retain the name.`)
+            await assert.ok(visibleBackText.includes('Backend Engineer at TikTok'), `${label} desktop ID should retain the current role.`)
+          }
+          if (textScale === 200) await assertVisibleTextFitsViewport(cardPage, `${label} reverse card`, viewport.width)
+          await cardContext.close()
+        }
+      }
+    })
+
     await check('profile card presents compact mobile details, full desktop details, and readable 200% text', async () => {
       const profileContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
       const profilePage = await profileContext.newPage()
@@ -838,17 +1142,23 @@ async function run() {
       await assertProfileCardState(profilePage, 'profile-id')
       await assert.equal(await card.getAttribute('aria-describedby'), 'profile-card-description', 'The active profile face should be described accessibly.')
       const description = surface.locator('#profile-card-description')
+      const backFace = surface.locator('#profile-card-back')
       await assert.equal(await description.innerText(), 'Singaporean. Eligible for H1B1 Visa.', 'The mobile card description should contain only its compact facts.')
-      await assert.ok(await surface.getByText('Singaporean', { exact: true }).isVisible())
-      await assertSingleVisibleMatch(surface.getByText('Eligible for H1B1 Visa', { exact: true }), 'The mobile visa fact')
+      const mobileDetails = (await renderedVisibleText(backFace)).toLowerCase()
+      await assert.match(mobileDetails, /\bsingaporean\b/, 'The compact ID should preserve the citizenship fact.')
+      await assert.match(mobileDetails, /h1b1 visa eligible/, 'The compact ID should preserve the visa fact.')
+      await assert.doesNotMatch(mobileDetails, /\bsingapore\b|fictional/, 'The compact ID should not add a country or fictional-card heading.')
+      await assert.equal(await backFace.locator('img').count(), 0, 'The reverse ID face should not show the portrait.')
       await assert.equal(await surface.getByText('Tran Ha Thu', { exact: true }).isVisible(), false, 'Mobile details should omit the full name and desktop-only fields.')
 
       await profilePage.setViewportSize({ width: 1440, height: 900 })
       await profilePage.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))))
       await assert.equal(await description.innerText(), 'Tran Ha Thu. Singaporean Citizen. Eligible for H1B1 Visa. Backend Engineer at TikTok.', 'The desktop accessible description should include all four profile facts.')
+      const desktopDetails = await renderedVisibleText(backFace)
       for (const value of ['Tran Ha Thu', 'Singaporean Citizen', 'Eligible for H1B1 Visa', 'Backend Engineer at TikTok']) {
-        await assertSingleVisibleMatch(surface.getByText(value, { exact: true }), `The desktop profile fact ${value}`)
+        await assert.ok(desktopDetails.includes(value), `The desktop profile card should visibly include ${value}.`)
       }
+      await assert.doesNotMatch(desktopDetails.toLowerCase(), /\bsingapore\b|fictional/, 'The desktop ID should omit a Singapore or fictional-card heading.')
 
       await profilePage.setViewportSize({ width: 320, height: 568 })
       await profilePage.evaluate(() => { document.documentElement.style.fontSize = '200%' })
@@ -1026,6 +1336,10 @@ async function run() {
       const resumeResponse = await context.request.get(new URL(await resume.getAttribute('href'), baseUrl).href)
       await assert.equal(resumeResponse.status(), 200, 'Resume should resolve to a built PDF.')
       await assert.match(resumeResponse.headers()['content-type'] || '', /application\/pdf/i)
+      const resumeSource = await readFile(new URL('../src/assets/Resume_TranHaThu.pdf', import.meta.url))
+      const expectedResumeSha256 = '1397baf8f3068943c8d8ea488a7753824fa4662fdf20c6f185223629268f6b14'
+      await assert.equal(createHash('sha256').update(resumeSource).digest('hex'), expectedResumeSha256, 'The supplied one-page resume PDF should retain its confirmed source bytes.')
+      await assert.deepEqual(await resumeResponse.body(), resumeSource, 'The served resume PDF should match the supplied source byte for byte.')
     })
 
     await check('JavaScript-disabled direct loads and refreshes preserve every route', async () => {
@@ -1038,15 +1352,20 @@ async function run() {
         await assert.ok(await staticPage.locator('main#root').count(), `${path} should contain usable server-rendered content without JavaScript.`)
         const canonical = `https://www.tranhathu.com${path}`
         await assert.equal(await staticPage.locator('link[rel="canonical"]').getAttribute('href'), canonical)
-        const sectionId = path === '/' ? 'experience' : path.startsWith('/projects/') ? 'projects' : path.slice(1, -1)
+        const projectRoute = resolvePortfolioRoute(path)
+        const sectionId = path === '/' ? 'experience' : projectRoute.projectId || path.startsWith('/projects/') ? 'projects' : path.slice(1, -1)
         await assert.equal(await staticPage.locator(`main section#${sectionId}:not([hidden])`).count(), 1, `${path} should show its matching section without JavaScript.`)
-        const projectId = path.match(/^\/projects\/([^/]+)\/$/)?.[1]
-        if (projectId && projectId !== 'index') {
+        const projectId = projectRoute.projectId
+        if (projectId) {
           await assert.ok(await staticPage.locator(`#project-heading-${projectId}`).isVisible(), `${path} should show its matching project without JavaScript.`)
+          if (projectRoute.projectView === 'overview' && projectInfoPaths[projectId]) {
+            const name = projectNames.find((project) => projectIds[project] === projectId)
+            await assert.ok(await staticPage.getByRole('link', { name: `Read full project writeup for ${name}`, exact: true }).isVisible(), `${path} should offer a real full-writeup anchor without JavaScript.`)
+          }
           for (const href of projectOutboundLinksById[projectId] || []) {
             await assert.ok(await staticPage.locator(`a[href="${href}"]`).count() > 0, `No-JavaScript ${path} should expose ${href}.`)
           }
-          if (projectId === 'openclaw' || projectId === 'chinese-learning') {
+          if (projectRoute.projectView === 'info' && (projectId === 'openclaw' || projectId === 'chinese-learning')) {
             const architectureHeading = projectId === 'openclaw' ? 'Architecture and components' : 'How it works'
             for (const heading of ['Why I started', 'What it does', architectureHeading, 'Examples', 'Deployment', 'Currently working on and future plans']) {
               await assert.ok(await staticPage.getByRole('heading', { name: heading, exact: true }).isVisible(), `No-JavaScript ${path} should retain the ${heading} section.`)
@@ -1082,7 +1401,7 @@ async function run() {
         if (path === '/projects/') {
           await assert.equal(await staticPage.getByRole('group', { name: 'Filter projects' }).count(), 0, 'JavaScript-only filters should remain hidden without hydration.')
           for (const project of projectNames) {
-            const cardLink = staticPage.locator(`#projects a[href="/projects/${projectIds[project]}/"]`)
+            const cardLink = staticPage.locator(`#projects a[href="${projectPaths[projectIds[project]]}"]`)
             await assert.ok(await cardLink.isVisible(), `No-JavaScript project cards should expose ${project}.`)
           }
         }
@@ -1098,11 +1417,17 @@ async function run() {
         await staticPage.goto(urlFor(alias), { waitUntil: 'domcontentloaded' })
         await assert.equal(new URL(staticPage.url()).pathname, alias, `No-JavaScript ${alias} should retain its static file URL.`)
         await assert.equal(await staticPage.locator('link[rel="canonical"]').getAttribute('href'), `https://www.tranhathu.com${route}`, `${alias} should serve the canonical metadata for ${route}.`)
-        const sectionId = route === '/' ? 'experience' : route.startsWith('/projects/') ? 'projects' : route.slice(1, -1)
+        const projectRoute = resolvePortfolioRoute(route)
+        const sectionId = route === '/' ? 'experience' : projectRoute.projectId || route.startsWith('/projects/') ? 'projects' : route.slice(1, -1)
         await assert.equal(await staticPage.locator(`main section#${sectionId}:not([hidden])`).count(), 1, `No-JavaScript ${alias} should show its matching view.`)
-        const projectId = route.match(/^\/projects\/([^/]+)\/$/)?.[1]
+        const projectId = projectRoute.projectId
         if (projectId) {
           await assert.ok(await staticPage.locator(`#project-heading-${projectId}`).isVisible(), `No-JavaScript ${alias} should expose its project detail.`)
+          const resolvedRoute = resolvePortfolioRoute(route)
+          if (resolvedRoute.projectView === 'overview' && projectInfoPaths[projectId]) {
+            const project = Object.entries(projectIds).find(([, id]) => id === projectId)?.[0]
+            await assert.ok(await staticPage.getByRole('link', { name: `Read full project writeup for ${project}`, exact: true }).isVisible(), `No-JavaScript ${alias} should expose the overview’s real writeup link.`)
+          }
         }
       }
 
@@ -1110,8 +1435,21 @@ async function run() {
         await staticPage.goto(urlFor(alias), { waitUntil: 'domcontentloaded' })
         await assert.equal(new URL(staticPage.url()).pathname, alias, `No-JavaScript ${alias} should keep its static compatibility URL.`)
         await assert.equal(await staticPage.locator('link[rel="canonical"]').getAttribute('href'), `https://www.tranhathu.com${route}`)
-        await assert.ok(await staticPage.locator('#experience').isVisible(), `${alias} should keep the Experience readable without JavaScript.`)
-        await assertExperienceTimeline(staticPage)
+        if (route === '/') {
+          await assert.ok(await staticPage.locator('#experience').isVisible(), `${alias} should keep the Experience readable without JavaScript.`)
+          await assertExperienceTimeline(staticPage)
+        } else {
+          const resolvedRoute = resolvePortfolioRoute(route)
+          const projectId = resolvedRoute.projectId
+          const project = Object.entries(projectIds).find(([, id]) => id === projectId)?.[0]
+          await assert.ok(await staticPage.locator(`#project-heading-${projectId}`).isVisible(), `${alias} should keep its project view readable without JavaScript.`)
+          if (resolvedRoute.projectView === 'info') {
+            const backLabel = project === 'Trader’s Edge' ? 'Back to Trader’s Edge' : 'Back to project overview'
+            await assert.ok(await staticPage.getByRole('link', { name: backLabel, exact: true }).isVisible())
+          } else if (projectInfoPaths[projectId]) {
+            await assert.ok(await staticPage.getByRole('link', { name: `Read full project writeup for ${project}`, exact: true }).isVisible())
+          }
+        }
       }
 
       await staticPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
@@ -1151,6 +1489,19 @@ async function run() {
         for (const [label, path] of Object.entries(sectionPaths)) {
           await layoutPage.goto(urlFor(path), { waitUntil: 'domcontentloaded' })
           await settle(layoutPage)
+          if (label === 'Experience') {
+            const tiktokEyebrow = layoutPage.getByText('As a Backend engineer at TikTok...', { exact: true })
+            await assert.equal(await tiktokEyebrow.count(), 1, 'The supplied TikTok eyebrow should remain available at its desktop breakpoint.')
+            if (viewport.width < 768) await assert.equal(await tiktokEyebrow.isVisible(), false, 'The mobile hero should hide the TikTok eyebrow beside the top portrait.')
+            else await assert.equal(await tiktokEyebrow.isVisible(), true, 'The desktop hero should retain its supplied TikTok eyebrow.')
+            if (viewport.width < 768) {
+              const resume = layoutPage.locator('[data-portfolio-toolbar]').getByRole('link', { name: 'Resume', exact: true })
+              await assert.ok(await resume.isVisible(), 'Resume should remain visible in mobile navigation.')
+              const colors = await resume.evaluate((element) => ({ background: getComputedStyle(element).backgroundColor, foreground: getComputedStyle(element).color }))
+              await assert.equal(colors.background, 'rgb(0, 83, 166)', `Mobile Resume should keep the filled blue action background, received ${colors.background}.`)
+              await assert.equal(colors.foreground, 'rgb(255, 255, 255)', 'Mobile Resume should use white text over the blue fill.')
+            }
+          }
           if (label === 'Experience' && [320, 390].includes(viewport.width)) {
             await layoutPage.waitForFunction(() => {
               const header = document.querySelector('[data-portfolio-toolbar]')
@@ -1168,7 +1519,7 @@ async function run() {
 
       for (const viewport of viewports) {
         await layoutPage.setViewportSize(viewport)
-        for (const path of ['/projects/openclaw/', '/projects/chinese-learning/']) {
+        for (const path of [...Object.values(projectPaths), ...Object.values(projectInfoPaths)]) {
           await layoutPage.goto(urlFor(path), { waitUntil: 'domcontentloaded' })
           await settle(layoutPage)
           const size = await layoutPage.evaluate(() => ({
@@ -1241,7 +1592,7 @@ async function run() {
         const bounds = await control.boundingBox()
         await assert.ok(bounds && bounds.width >= 44 && bounds.height >= 44, 'Project filters should be at least 44px square.')
       }
-      const projectLinks = await layoutPage.locator('#projects [data-project-index] a[href^="/projects/"]').all()
+      const projectLinks = await layoutPage.locator('#projects [data-project-index] article a[href]').all()
       for (const link of projectLinks) {
         const bounds = await link.boundingBox()
         await assert.ok(bounds && bounds.width >= 44 && bounds.height >= 44, 'Project links should be at least 44px square.')
@@ -1328,12 +1679,12 @@ async function run() {
       await motionPage.goto(urlFor('/projects/'), { waitUntil: 'domcontentloaded' })
       await settle(motionPage)
       await installRouteFadeProbe(motionPage)
-      await motionPage.locator('#projects a[href="/projects/openclaw/"]').click()
-      await motionPage.waitForFunction(() => window.location.pathname === '/projects/openclaw/')
+      await motionPage.locator(`#projects a[href="${projectPaths.openclaw}"]`).click()
+      await motionPage.waitForFunction(() => window.location.pathname === '/openclaw_agent/')
       const projectFade = await motionPage.evaluate(() => window.__portfolioRouteFades)
       await assert.deepEqual(projectFade, [{ fromOpacity: 0.3, toOpacity: 1, duration: 190 }], 'An explicit project change should invoke the same brief content fade.')
       await settle(motionPage)
-      await assertProjectRoute(motionPage, 'My OpenClaw Lab')
+          await assertProjectRoute(motionPage, 'My OpenClaw Lab')
       await assert.equal(await content.evaluate((element) => getComputedStyle(element).opacity), '1')
       await motionPage.goBack()
       await motionPage.waitForFunction(() => window.location.pathname === '/projects/' && window.location.hash === '')
@@ -1589,7 +1940,7 @@ async function run() {
           await assert.ok(geometry.links.every(({ width, height }) => width >= 44 && height >= 44), `${label} at ${viewport.width}px should retain 44px header targets at 200% text.`)
           if (label === 'Projects' && viewport.width === 1440) {
             const cardCopy = await zoomPage.locator('#projects [data-project-card-copy]').evaluateAll((elements) => elements.map((element) => {
-              const action = element.querySelector('a[href^="/projects/"]')
+              const action = element.querySelector('a')
               const range = document.createRange()
               range.selectNodeContents(action)
               const lineTops = [...range.getClientRects()].map((rect) => Math.round(rect.top))
@@ -1599,7 +1950,7 @@ async function run() {
                 actionLines: new Set(lineTops).size,
               }
             }))
-            await assert.equal(cardCopy.length, 6, 'All six earlier project cards should remain in the Projects index at 200% text.')
+            await assert.equal(cardCopy.length, 7, 'All seven standard project cards should remain in the Projects index at 200% text.')
             await assert.ok(cardCopy.every(({ width }) => width >= 320), `Earlier project cards should give their text a readable column at 1440px/200%, received ${cardCopy.map(({ width }) => Math.round(width)).join(', ')}px.`)
             await assert.ok(cardCopy.every(({ actionText, actionLines }) => actionText === 'View project' && actionLines === 1), 'Every earlier project action should stay readable on one line at 1440px/200%.')
           }
@@ -1627,7 +1978,7 @@ async function run() {
             })
             await assert.equal(narrowActions.featured.length, 2, 'Both featured project actions should remain available at 320px/200%.')
             await assert.ok(narrowActions.featured.every(({ left, right, lines, text }) => text === 'Explore project' && left >= 0 && right <= viewport.width && lines >= 1 && lines <= 2), 'Featured project labels should fit in the viewport and wrap onto at most two whole-word lines at 320px/200%.')
-            await assert.equal(narrowActions.earlier.length, 6, 'All six earlier project actions should remain available at 320px/200%.')
+            await assert.equal(narrowActions.earlier.length, 7, 'All seven standard project actions should remain available at 320px/200%.')
             await assert.ok(narrowActions.earlier.every(({ left, right, lines, text }) => text === 'View project' && left >= 0 && right <= viewport.width && lines === 1), 'Earlier project actions should stay inside the viewport and on one line at 320px/200%.')
           }
           if (label === 'Experience') {
@@ -1695,6 +2046,26 @@ async function run() {
         }
       }
 
+      await zoomPage.setViewportSize({ width: 320, height: 568 })
+      for (const [project, path] of [
+        ['My OpenClaw Lab', projectPaths.openclaw],
+        ['Chinese Learning Toolkit', projectPaths['chinese-learning']],
+        ['Trader’s Edge', projectPaths['traders-edge']],
+      ]) {
+        await zoomPage.goto(urlFor(path), { waitUntil: 'domcontentloaded' })
+        await zoomPage.evaluate(() => { document.documentElement.style.fontSize = '200%' })
+        await settle(zoomPage)
+        await assertProjectRoute(zoomPage, project)
+        const synopsis = caseStudySynopses[projectIds[project]]
+        await assert.ok(await zoomPage.locator(`#project-${projectIds[project]}`).getByText(synopsis, { exact: true }).isVisible(), `${project} overview synopsis should remain readable at 320px/200%.`)
+        const fullWriteupLink = zoomPage.getByRole('link', { name: `Read full project writeup for ${project}`, exact: true })
+        await assert.ok(await fullWriteupLink.isVisible(), `${project} full-writeup action should remain available at 320px/200%.`)
+        await assertWholeWords(fullWriteupLink, 'Read full project', `${project} full-writeup action at 320px/200%`)
+        await assertVisibleTextFitsViewport(zoomPage, `${project} overview at 320px/200%`, 320)
+        const width = await zoomPage.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth))
+        await assert.ok(width <= 320, `${project} overview should not overflow at 320px/200%.`)
+      }
+
       for (const viewport of [
         { width: 320, height: 568 },
         { width: 390, height: 844 },
@@ -1703,13 +2074,14 @@ async function run() {
       ]) {
         await zoomPage.setViewportSize(viewport)
         for (const [project, path] of [
-          ['My OpenClaw Lab', '/projects/openclaw/'],
-          ['Chinese Learning Toolkit', '/projects/chinese-learning/'],
+          ['My OpenClaw Lab', projectInfoPaths.openclaw],
+          ['Chinese Learning Toolkit', projectInfoPaths['chinese-learning']],
+          ['Trader’s Edge', projectInfoPaths['traders-edge']],
         ]) {
           await zoomPage.goto(urlFor(path), { waitUntil: 'domcontentloaded' })
           await zoomPage.evaluate(() => { document.documentElement.style.fontSize = '200%' })
           await settle(zoomPage)
-          await assertProjectRoute(zoomPage, project)
+          await assertProjectInfoRoute(zoomPage, project)
           await assertVisibleTextFitsViewport(zoomPage, `${project} at 200% and ${viewport.width}px`, viewport.width)
           const width = await zoomPage.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth))
           await assert.ok(width <= viewport.width, `${project} should not overflow at 200% and ${viewport.width}px.`)
@@ -1812,8 +2184,15 @@ async function run() {
       })
       await assert.equal(await toolbar.evaluate((element) => getComputedStyle(element).position), 'sticky')
       await assertAllVisibleTargets(keyboardPage, 'Short desktop viewport')
-      for (const label of [/^Email Tran Ha Thu$/, /on GitHub/i, /on LinkedIn/i]) {
-        await assert.ok(await toolbar.getByRole('link', { name: label }).isVisible(), `${String(label)} should remain available in the header.`)
+      const contactGroup = toolbar.getByRole('group', { name: 'Contact and social links' })
+      await assert.equal(await contactGroup.count(), 1, 'The sticky header should expose one contact and social group.')
+      const contactTargets = [
+        ['Copy work email to clipboard', contactGroup.getByRole('button', { name: 'Copy work email to clipboard', exact: true })],
+        ['GitHub', contactGroup.getByRole('link', { name: 'Tran Ha Thu on GitHub', exact: true })],
+        ['LinkedIn', contactGroup.getByRole('link', { name: 'Tran Ha Thu on LinkedIn', exact: true })],
+      ]
+      for (const [label, target] of contactTargets) {
+        await assert.ok(await target.isVisible(), `${label} should remain available in the sticky header.`)
       }
 
       await keyboardPage.keyboard.press('Tab')
@@ -1834,10 +2213,16 @@ async function run() {
       const readingY = await scrollNaturallyTo(keyboardPage, 200)
       await assert.ok(readingY >= 200, 'The sticky-header check should scroll through real page content.')
       await assert.ok(Math.abs((await toolbar.boundingBox()).y) <= 1, 'The header should remain at viewport Y=0 after scrolling.')
-      for (const label of ['Experience', 'Projects', 'Skills', 'Resume', /^Email Tran Ha Thu$/, /on GitHub/i, /on LinkedIn/i]) {
-        const link = toolbar.getByRole('link', { name: label })
-        const bounds = await link.boundingBox()
-        await assert.ok(bounds && bounds.y >= 0 && bounds.y + bounds.height <= 450, `${String(label)} should remain reachable within the short viewport.`)
+      const headerTargets = [
+        ['Experience', toolbar.getByRole('link', { name: 'Experience', exact: true })],
+        ['Projects', toolbar.getByRole('link', { name: 'Projects', exact: true })],
+        ['Skills', toolbar.getByRole('link', { name: 'Skills', exact: true })],
+        ['Resume', toolbar.getByRole('link', { name: 'Resume', exact: true })],
+        ...contactTargets,
+      ]
+      for (const [label, target] of headerTargets) {
+        const bounds = await target.boundingBox()
+        await assert.ok(bounds && bounds.y >= 0 && bounds.y + bounds.height <= 450, `${label} should remain reachable within the short viewport.`)
       }
       await keyboardPage.close()
     })
@@ -1894,7 +2279,149 @@ async function run() {
       await skipPage.close()
     })
 
-    await check('WCAG 2.1 A/AA and WCAG 2.2 AA axe scans on twelve desktop and mobile views', async () => {
+    await check('email copies to the clipboard with visible feedback, an honest failure path, and dismissible icon tips', async () => {
+      const mobileContext = await browser.newContext({ viewport: { width: 320, height: 568 } })
+      await mobileContext.grantPermissions(['clipboard-read', 'clipboard-write'], { origin })
+      const mobilePage = await mobileContext.newPage()
+      trackPage(mobilePage)
+      await mobilePage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await settle(mobilePage)
+      const group = mobilePage.locator('[data-portfolio-toolbar] [role="group"][aria-label="Contact and social links"]:visible')
+      const copyButton = group.locator('button[data-copy-email]:visible')
+      await assert.equal(await copyButton.count(), 1, 'The mobile header should expose one visible icon copy control.')
+      await copyButton.click()
+      const copiedMessage = 'My work email tranhathuwork@gmail.com has been copied to your clipboard!'
+      await assert.equal(await mobilePage.locator('[data-copy-email-message]').innerText(), copiedMessage, 'Successful email copies should display the requested confirmation text.')
+      await assert.equal(await mobilePage.locator('[data-copy-email-announcement]').getAttribute('role'), 'status', 'Success should be announced through a polite status region.')
+      await assert.equal(await mobilePage.locator('[data-copy-email-announcement]').innerText(), copiedMessage)
+      await assert.equal(await mobilePage.evaluate(() => navigator.clipboard.readText()), 'tranhathuwork@gmail.com', 'The copy control should write the work address to the real browser clipboard.')
+      const successToast = mobilePage.locator('[data-copy-email-toast]')
+      await assert.ok(await successToast.isVisible())
+      const successBounds = await successToast.boundingBox()
+      await assert.ok(successBounds && successBounds.x >= 0 && successBounds.y >= 0 && successBounds.x + successBounds.width <= 320 && successBounds.y + successBounds.height <= 568, `The mobile copy toast must fit inside the viewport, received ${JSON.stringify(successBounds)}.`)
+      await assertEmailToastLayout(mobilePage, '320px mobile success', { maxHeight: 160 })
+      const dismiss = successToast.getByRole('button', { name: 'Dismiss email copy message', exact: true })
+      const dismissBounds = await dismiss.boundingBox()
+      await assert.ok(dismissBounds && dismissBounds.width >= 44 && dismissBounds.height >= 44, 'The toast dismissal control should meet the minimum touch target.')
+      const toastAxe = await new AxeBuilder({ page: mobilePage })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+        .analyze()
+      await assert.deepEqual(toastAxe.violations.map(({ id }) => id), [], 'The visible email success toast should pass the WCAG axe rules.')
+      await dismiss.click()
+      await assert.equal(await successToast.isVisible(), false, 'The success message should have a clear dismissal action.')
+      await assert.ok(await copyButton.evaluate((element) => element === document.activeElement), 'Dismissing the success message should return keyboard focus to the copy control.')
+
+      const tips = [
+        ['Copy my email', 'button[data-copy-email]'],
+        ['View my GitHub', 'a[aria-label="Tran Ha Thu on GitHub"]'],
+        ['View my LinkedIn', 'a[aria-label="Tran Ha Thu on LinkedIn"]'],
+      ]
+      for (const [tooltipName, selector] of tips) {
+        const target = group.locator(`${selector}:visible`)
+        await target.focus()
+        const tooltip = group.getByRole('tooltip', { name: tooltipName, exact: true })
+        await assert.ok(await tooltip.isVisible(), `Keyboard focus should show the “${tooltipName}” tooltip.`)
+        const describedBy = await target.getAttribute('aria-describedby')
+        await assert.equal(await tooltip.getAttribute('id'), describedBy, `${tooltipName} should be referenced by its icon accessibly.`)
+        const tooltipBounds = await tooltip.boundingBox()
+        await assert.ok(tooltipBounds && tooltipBounds.x >= 0 && tooltipBounds.x + tooltipBounds.width <= 320, `${tooltipName} should stay inside the narrow viewport.`)
+        await mobilePage.keyboard.press('Escape')
+        await assert.equal(await tooltip.isVisible(), false, `${tooltipName} should dismiss with Escape.`)
+      }
+      const githubIcon = group.locator('a[aria-label="Tran Ha Thu on GitHub"]:visible')
+      await githubIcon.hover()
+      await assert.ok(await group.getByRole('tooltip', { name: 'View my GitHub', exact: true }).isVisible(), 'Pointer hover should also reveal the GitHub tooltip.')
+      await mobilePage.setViewportSize({ width: 390, height: 844 })
+      await mobilePage.evaluate(() => { document.documentElement.style.fontSize = '200%' })
+      await settle(mobilePage)
+      await githubIcon.hover()
+      const zoomedTooltip = await group.getByRole('tooltip', { name: 'View my GitHub', exact: true }).boundingBox()
+      await assert.ok(zoomedTooltip && zoomedTooltip.x >= 0 && zoomedTooltip.x + zoomedTooltip.width <= 390, `The GitHub tooltip should remain in the viewport at 200% text: ${JSON.stringify(zoomedTooltip)}.`)
+      await mobileContext.close()
+
+      const deniedContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
+      const deniedPage = await deniedContext.newPage()
+      trackPage(deniedPage)
+      await deniedPage.addInitScript(() => {
+        Object.defineProperty(navigator, 'clipboard', {
+          configurable: true,
+          value: { writeText: async () => { throw new DOMException('Clipboard access denied.', 'NotAllowedError') } },
+        })
+        document.execCommand = () => false
+      })
+      await deniedPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      const deniedGroup = deniedPage.locator('[data-portfolio-toolbar] [role="group"][aria-label="Contact and social links"]:visible')
+      const deniedCopyButton = deniedGroup.locator('button[data-copy-email]:visible')
+      await assert.equal(await deniedCopyButton.count(), 1, 'The denied clipboard path should activate the visible header copy control.')
+      await deniedCopyButton.click()
+      const failureMessage = deniedPage.locator('[data-copy-email-message]')
+      await assert.match(await failureMessage.innerText(), /copy failed/i, 'Clipboard denial should show an honest failure message.')
+      await assert.equal(await deniedPage.locator('[data-copy-email-announcement]').getAttribute('role'), 'alert', 'Clipboard failure should be announced assertively.')
+      await assert.ok(await failureMessage.getByText('tranhathuwork@gmail.com', { exact: true }).isVisible(), 'Clipboard failure should leave the work address visible and selectable.')
+      await assert.notEqual(await failureMessage.innerText(), copiedMessage, 'Clipboard denial must never report successful copying.')
+      await assertEmailToastLayout(deniedPage, '390px clipboard failure', { maxHeight: 180 })
+      const failureDismiss = deniedPage.locator('[data-copy-email-toast]').getByRole('button', { name: 'Dismiss email copy message', exact: true })
+      await failureDismiss.focus()
+      await failureDismiss.press('Enter')
+      await assert.equal(await deniedPage.locator('[data-copy-email-toast]').isVisible(), false, 'The honest clipboard failure should remain dismissible by keyboard.')
+      await assert.ok(await deniedCopyButton.evaluate((element) => element === document.activeElement), 'Dismissing clipboard failure should return focus to its copy control.')
+      await deniedContext.close()
+    })
+
+    await check('email toast keeps its compact row layout in light and dark mobile and desktop views, including 320px at 200%', async () => {
+      const copiedMessage = 'My work email tranhathuwork@gmail.com has been copied to your clipboard!'
+      for (const colorScheme of ['light', 'dark']) {
+        for (const viewport of [
+          { label: 'mobile', width: 390, height: 844, maxHeight: 110 },
+          { label: 'desktop', width: 1440, height: 900, maxHeight: 110 },
+        ]) {
+          const toastContext = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height }, colorScheme })
+          await toastContext.grantPermissions(['clipboard-read', 'clipboard-write'], { origin })
+          const toastPage = await toastContext.newPage()
+          trackPage(toastPage)
+          await toastPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+          await settle(toastPage)
+          const toolbarGroup = toastPage.locator('[data-portfolio-toolbar] [role="group"][aria-label="Contact and social links"]:visible')
+          const copyButton = toolbarGroup.locator('button[data-copy-email]:visible')
+          await assert.equal(await copyButton.count(), 1, `${colorScheme} ${viewport.label} should expose one visible copy control.`)
+          await copyButton.click()
+          await assert.equal(await toastPage.locator('[data-copy-email-message]').innerText(), copiedMessage, `${colorScheme} ${viewport.label} should display the exact success message.`)
+          await assert.equal(await toastPage.locator('[data-copy-email-announcement]').getAttribute('role'), 'status')
+          const layout = await assertEmailToastLayout(toastPage, `${colorScheme} ${viewport.label}`, { maxHeight: viewport.maxHeight })
+          await assert.equal(await toastPage.evaluate(() => matchMedia('(prefers-color-scheme: dark)').matches), colorScheme === 'dark')
+          if (viewport.label === 'mobile') await assert.ok(layout.toast.width <= 390, 'The mobile toast should preserve its narrow viewport width.')
+          const dismiss = toastPage.locator('[data-copy-email-toast]').getByRole('button', { name: 'Dismiss email copy message', exact: true })
+          await dismiss.focus()
+          await dismiss.press('Space')
+          await assert.equal(await toastPage.locator('[data-copy-email-toast]').isVisible(), false, `${colorScheme} ${viewport.label} toast should dismiss with Space.`)
+          await assert.ok(await copyButton.evaluate((element) => element === document.activeElement), `${colorScheme} ${viewport.label} dismissal should restore focus to the copy control.`)
+          await toastContext.close()
+        }
+      }
+
+      const zoomContext = await browser.newContext({ viewport: { width: 320, height: 568 } })
+      await zoomContext.grantPermissions(['clipboard-read', 'clipboard-write'], { origin })
+      const zoomPage = await zoomContext.newPage()
+      trackPage(zoomPage)
+      await zoomPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await zoomPage.evaluate(() => { document.documentElement.style.fontSize = '200%' })
+      await settle(zoomPage)
+      const zoomGroup = zoomPage.locator('[data-portfolio-toolbar] [role="group"][aria-label="Contact and social links"]:visible')
+      const zoomCopyButton = zoomGroup.locator('button[data-copy-email]:visible')
+      await zoomCopyButton.click()
+      await assert.equal(await zoomPage.locator('[data-copy-email-message]').innerText(), copiedMessage)
+      const zoomLayout = await assertEmailToastLayout(zoomPage, '320px/200% mobile success', { maxTopInset: 34 })
+      await assert.ok(zoomLayout.toast.height < 568, `The 320px/200% toast should fit vertically: ${JSON.stringify(zoomLayout.toast)}.`)
+      await assertVisibleTextFitsViewport(zoomPage, '320px/200% email toast', 320)
+      const zoomDismiss = zoomPage.locator('[data-copy-email-toast]').getByRole('button', { name: 'Dismiss email copy message', exact: true })
+      await zoomDismiss.focus()
+      await zoomDismiss.press('Enter')
+      await assert.equal(await zoomPage.locator('[data-copy-email-toast]').isVisible(), false, 'The zoomed toast should remain keyboard dismissible.')
+      await assert.ok(await zoomCopyButton.evaluate((element) => element === document.activeElement), 'The 320px/200% dismissal should return focus to the copy control.')
+      await zoomContext.close()
+    })
+
+    await check('WCAG 2.1 A/AA and WCAG 2.2 AA axe scans on twenty desktop and mobile views', async () => {
       for (const viewport of [
         { label: 'desktop', width: 1440, height: 900 },
         { label: 'mobile', width: 390, height: 844 },
@@ -1905,13 +2432,24 @@ async function run() {
         for (const [label, path] of [
           ...Object.entries(sectionPaths),
           ['FoROOM detail', '/projects/foroom/'],
-          ['OpenClaw case study', '/projects/openclaw/'],
-          ['Chinese Learning case study', '/projects/chinese-learning/'],
+          ['OpenClaw overview', projectPaths.openclaw],
+          ['OpenClaw case study', projectInfoPaths.openclaw],
+          ['Chinese Learning overview', projectPaths['chinese-learning']],
+          ['Chinese Learning case study', projectInfoPaths['chinese-learning']],
+          ['Trader’s Edge overview', projectPaths['traders-edge']],
+          ['Trader’s Edge case study', projectInfoPaths['traders-edge']],
         ]) {
           await scanPage.goto(urlFor(path), { waitUntil: 'domcontentloaded' })
-          if (label.endsWith('detail') || label.endsWith('case study')) {
-            const project = label === 'FoROOM detail' ? 'FoROOM' : label === 'OpenClaw case study' ? 'My OpenClaw Lab' : 'Chinese Learning Toolkit'
+          if (label.endsWith('detail')) {
+            await assertProjectRoute(scanPage, 'FoROOM')
+            await assertRouteMetadata(scanPage, path)
+          } else if (label.endsWith('overview')) {
+            const project = label === 'OpenClaw overview' ? 'My OpenClaw Lab' : label === 'Chinese Learning overview' ? 'Chinese Learning Toolkit' : 'Trader’s Edge'
             await assertProjectRoute(scanPage, project)
+            await assertRouteMetadata(scanPage, path)
+          } else if (label.endsWith('case study')) {
+            const project = label === 'OpenClaw case study' ? 'My OpenClaw Lab' : label === 'Chinese Learning case study' ? 'Chinese Learning Toolkit' : 'Trader’s Edge'
+            await assertProjectInfoRoute(scanPage, project)
             await assertRouteMetadata(scanPage, path)
           } else {
             await assertActiveView(scanPage, label)
@@ -1983,5 +2521,5 @@ if (failures.length) {
   console.error(`\n${failures.length} UI QA check(s) failed.`)
   process.exitCode = 1
 } else {
-  console.log('\nUI checks passed: eleven canonical routes, compatibility and legacy hydration, anchor and route history, eight project cards, keyboard focus, no-JavaScript content, responsive layouts, axe and runtime requests.')
+  console.log('\nUI checks passed: fifteen canonical routes, six compatibility aliases, overview/writeup navigation, nine project cards, profile-card geometry, resume byte identity, clipboard/toast/tooltips, keyboard focus, no-JavaScript content, responsive layouts, axe and runtime requests.')
 }

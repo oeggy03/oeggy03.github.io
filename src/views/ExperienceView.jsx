@@ -15,7 +15,7 @@ export default function ExperienceView() {
             <div className="w-28 max-w-full shrink-0 sm:w-32 md:col-start-2 md:row-span-3 md:row-start-1 md:w-full md:max-w-72 md:justify-self-end">
               <ProfileCard />
             </div>
-            <p className="min-w-0 flex-[1_1_9rem] self-center text-sm font-semibold tracking-wide text-accent-ink sm:text-base md:col-start-1 md:row-start-1 md:self-end md:text-base">
+            <p className="hidden min-w-0 flex-[1_1_9rem] self-center text-sm font-semibold tracking-wide text-accent-ink md:block md:col-start-1 md:row-start-1 md:self-end md:text-base">
               {profile.introEyebrow}
             </p>
           </div>

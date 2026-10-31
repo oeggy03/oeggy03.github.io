@@ -1,16 +1,16 @@
 import PropTypes from 'prop-types'
 import { ArrowLeft, ArrowUpRight } from 'lucide-react'
 import { Badge } from '../ui/index.jsx'
-import { sectionPathFor } from '../../navigation/routes.js'
+import { projectPathFor } from '../../navigation/routes.js'
 
 export default function ProjectCaseStudy({ project }) {
   const study = project.caseStudy
-  const componentArchitecture = project.id === 'openclaw'
+  const componentArchitecture = ['openclaw', 'traders-edge'].includes(project.id)
 
   return (
     <article id={`project-${project.id}`} aria-labelledby={`project-heading-${project.id}`} tabIndex={-1} className="min-w-0 scroll-mt-36 lg:scroll-mt-28">
-      <a href={sectionPathFor('projects')} className="inline-flex min-h-11 min-w-11 items-center gap-2 rounded-full px-3 text-sm font-semibold text-accent-ink underline decoration-line underline-offset-4 hover:text-ink hover:decoration-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-        <ArrowLeft aria-hidden="true" className="size-4" /> Back to projects
+      <a href={projectPathFor(project.id)} className="inline-flex min-h-11 min-w-11 items-center gap-2 rounded-full px-3 text-sm font-semibold text-accent-ink underline decoration-line underline-offset-4 hover:text-ink hover:decoration-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+        <ArrowLeft aria-hidden="true" className="size-4" /> Back to {project.id === 'traders-edge' ? 'Trader’s Edge' : 'project overview'}
       </a>
 
       <header className="mt-5 max-w-4xl">
@@ -30,12 +30,12 @@ export default function ProjectCaseStudy({ project }) {
       </figure>
 
       <div className="mt-12 max-w-4xl space-y-12 sm:mt-16 sm:space-y-16">
-        <section aria-labelledby={`motivation-${project.id}`}>
-          <h3 id={`motivation-${project.id}`} className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Why I started</h3>
+        {study.motivation.length > 0 && <section aria-labelledby={`motivation-${project.id}`}>
+          <h3 id={`motivation-${project.id}`} className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">{study.motivationTitle || 'Why I started'}</h3>
           <div className="mt-4 space-y-4 text-base leading-8 text-muted sm:text-lg">
             {study.motivation.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
           </div>
-        </section>
+        </section>}
 
         <section aria-labelledby={`capabilities-${project.id}`}>
           <h3 id={`capabilities-${project.id}`} className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">What it does</h3>
@@ -50,7 +50,7 @@ export default function ProjectCaseStudy({ project }) {
         </section>
 
         <section aria-labelledby={`architecture-${project.id}`}>
-          <h3 id={`architecture-${project.id}`} className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">{componentArchitecture ? 'Architecture and components' : 'How it works'}</h3>
+          <h3 id={`architecture-${project.id}`} className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">{study.architectureTitle || (componentArchitecture ? 'Architecture and components' : 'How it works')}</h3>
           <p className="mt-4 text-base leading-8 text-muted sm:text-lg">{study.architecture.summary}</p>
           {componentArchitecture ? (
             <ul className="mt-6 divide-y divide-line border-y border-line">
@@ -80,14 +80,14 @@ export default function ProjectCaseStudy({ project }) {
         </section>
 
         <section aria-labelledby={`examples-${project.id}`}>
-          <h3 id={`examples-${project.id}`} className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Examples</h3>
+          <h3 id={`examples-${project.id}`} className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">{study.examplesTitle || 'Examples'}</h3>
           <div className="mt-6 space-y-10">
             {study.examples.map((example) => (
               <article key={example.title} className="min-w-0">
                 <h4 className="text-xl font-semibold tracking-tight text-ink">{example.title}</h4>
                 <p className="mt-2 max-w-3xl text-base leading-8 text-muted">{example.text}</p>
                 {example.images.length > 0 && (
-                  <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-2">
+                  <div className={`mt-5 grid min-w-0 gap-5 ${project.id === 'traders-edge' ? 'lg:grid-cols-1' : 'xl:grid-cols-2'}`}>
                     {example.images.map((image) => (
                       <figure key={image.src} className="min-w-0 rounded-2xl bg-paper p-3 ring-1 ring-line/70 sm:p-4">
                         <a href={image.src} target="_blank" rel="noreferrer noopener" aria-label={`View full screenshot: ${image.alt}`} className="flex min-h-11 items-center justify-center rounded-xl bg-surface p-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -103,7 +103,7 @@ export default function ProjectCaseStudy({ project }) {
           </div>
         </section>
 
-        <section aria-labelledby={`deployment-${project.id}`}>
+        {study.deployment.length > 0 && <section aria-labelledby={`deployment-${project.id}`}>
           <h3 id={`deployment-${project.id}`} className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Deployment</h3>
           <dl className="mt-5 divide-y divide-line border-y border-line">
             {study.deployment.map((item) => (
@@ -113,14 +113,14 @@ export default function ProjectCaseStudy({ project }) {
               </div>
             ))}
           </dl>
-        </section>
+        </section>}
 
-        <section aria-labelledby={`future-${project.id}`}>
+        {study.futurePlans.length > 0 && <section aria-labelledby={`future-${project.id}`}>
           <h3 id={`future-${project.id}`} className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Currently working on and future plans</h3>
           <ul className="mt-4 list-disc space-y-3 pl-5 text-base leading-8 text-muted marker:text-accent-ink sm:text-lg">
             {study.futurePlans.map((plan) => <li key={plan} className="pl-1">{plan}</li>)}
           </ul>
-        </section>
+        </section>}
 
         <section aria-labelledby={`resources-${project.id}`} className="border-t border-line pt-7">
           <h3 id={`resources-${project.id}`} className="text-xl font-semibold text-ink">Project resources</h3>
@@ -154,12 +154,15 @@ ProjectCaseStudy.propTypes = {
     caseStudy: PropTypes.shape({
       eyebrow: PropTypes.string.isRequired,
       lead: PropTypes.string.isRequired,
+      motivationTitle: PropTypes.string,
       motivation: PropTypes.arrayOf(PropTypes.string).isRequired,
       capabilities: PropTypes.arrayOf(PropTypes.shape({ title: PropTypes.string.isRequired, text: PropTypes.string.isRequired })).isRequired,
       architecture: PropTypes.shape({
         summary: PropTypes.string.isRequired,
         steps: PropTypes.arrayOf(PropTypes.shape({ title: PropTypes.string.isRequired, text: PropTypes.string.isRequired })).isRequired,
       }).isRequired,
+      architectureTitle: PropTypes.string,
+      examplesTitle: PropTypes.string,
       examples: PropTypes.arrayOf(PropTypes.shape({
         title: PropTypes.string.isRequired,
         text: PropTypes.string.isRequired,

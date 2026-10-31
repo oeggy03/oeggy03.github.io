@@ -12,6 +12,7 @@ import gicLogo from "../assets/company-logos/gic.png"
 import uptaleLogo from "../assets/company-logos/uptale.png"
 import resumeFile from "../assets/Resume_TranHaThu.pdf"
 import { featuredProjects } from "./featured-projects.js"
+import { tradersEdgeProject } from "./traders-edge.js"
 
 export const profile = {
   name: "Tran Ha Thu",
@@ -188,7 +189,7 @@ const existingProjects = [
   },
 ]
 
-export const projects = [...existingProjects, ...featuredProjects]
+export const projects = [...existingProjects, ...featuredProjects, tradersEdgeProject]
 
 export const currentExperienceId = "tiktok-backend"
 
@@ -198,12 +199,14 @@ export const experiences = [
     startedAt: "2026-07",
     dates: "Jul 2026 – Present",
     company: "TikTok",
-    role: "Backend Engineer",
+    role: "Backend and Site Reliability Engineer",
     logo: tikTokLogo,
     logoAlt: "TikTok",
     url: "https://www.tiktok.com/",
     highlights: [
-      "Developed internal products with TypeScript and Go to improve reliability and observability of internal services.",
+      "Built internal apps that improved service reliability, observability and alarm handling for 12 teams and 200 unique users.",
+      "Maintained SLOs and service reliability as an on-call engineer, debugging and resolving around 50 service issues each week.",
+      "Saved close to $5 million by coordinating computing resource allocation across multiple teams in English and Chinese.",
     ],
     skills: ["TypeScript", "Go"],
   },
@@ -264,9 +267,9 @@ export const experiences = [
     logoAlt: "Uptale",
     url: "https://www.uptale.io/en/",
     highlights: [
-      "Implemented a full retrieval-augmented generation (RAG) pipeline in TypeScript and C# for gamified educational experiences used by over 100 customers.",
+      "Built an Azure RAG pipeline with TypeScript and C# to create complete AI-generated 3D VR scenarios for gamified educational experiences used by over 100 customers.",
     ],
-    skills: ["TypeScript", "C#", "RAG"],
+    skills: ["TypeScript", "C#", "Azure", "RAG"],
   },
   {
     id: "hdb",
@@ -292,7 +295,8 @@ export const experiences = [
     company: "Eastspring Investments Singapore",
     dates: "May 2023 – Aug 2023",
     highlights: [
-      "Maintained over 100 production and raw database tables with Python and SQL, and improved an AI chatbot with the OpenAI API.",
+      "Maintained over 100 production and raw database tables with Python and SQL.",
+      "Developed and optimized an AI chatbot using the ChatGPT API.",
     ],
     logo: eastspringLogo,
     logoAlt: "Eastspring Investments",
@@ -307,7 +311,7 @@ export const experiences = [
     company: "A*STAR - Agency for Science, Technology and Research",
     dates: "Dec 2019 – Jan 2020",
     highlights: [
-      "Trained a robotic arm to sort 10 types of trash using Python and OpenCV.",
+      "Trained a working robot arm from scratch to clear 10 types of trash using Python and OpenCV.",
     ],
     logo: aStarLogo,
     logoAlt: "Agency for Science, Technology and Research (A*STAR)",

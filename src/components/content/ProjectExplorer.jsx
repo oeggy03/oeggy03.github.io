@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { ActionLink, Badge, Panel } from '../ui/index.jsx'
 import { projects } from '../../data/portfolio.js'
 import { usePortfolioNavigation } from '../../navigation/NavigationContext.jsx'
-import { projectPathFor, sectionPathFor } from '../../navigation/routes.js'
+import { projectInfoPathFor, projectPathFor, resolvePortfolioRoute, sectionPathFor } from '../../navigation/routes.js'
 
 function ProjectLinks({ links }) {
   return (
@@ -26,17 +26,25 @@ ProjectLinks.propTypes = {
 function ProjectDetails({ project }) {
   const codeLink = project.links.find((link) => /back.?end/i.test(link.label))
     || project.links.find((link) => link.href.startsWith('https://github.com/') && !link.href.includes('/releases/'))
+  const projectCodeLink = project.id === 'openclaw' ? null : codeLink
 
   return (
     <div className="min-w-0 scroll-mt-36 lg:scroll-mt-28" id={`project-${project.id}`} aria-labelledby={`project-heading-${project.id}`} tabIndex={-1}>
       <Panel className="p-4 sm:p-7">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
+        <div className={`flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between ${project.caseStudy ? '' : 'sm:flex-wrap'}`}>
+          <div className="min-w-0 flex-1">
             <p className="mb-1.5 text-base font-medium text-muted">{project.category}</p>
             <h2 id={`project-heading-${project.id}`} tabIndex={-1} className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{project.title}</h2>
             <a href={sectionPathFor('projects')} className="mt-1 inline-flex min-h-11 min-w-11 items-center text-sm font-semibold text-muted underline decoration-line underline-offset-2 hover:text-ink hover:decoration-accent focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent lg:hidden">Back to projects</a>
           </div>
-          {codeLink && <ActionLink href={codeLink.href} variant="secondary" target="_blank" rel="noreferrer noopener" className="min-h-11 px-3 py-2 text-xs">View code</ActionLink>}
+          {project.caseStudy ? (
+            <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:items-end">
+              <ActionLink href={projectInfoPathFor(project.id)} showArrow={false} className="w-full break-normal px-3 py-3 text-base sm:w-auto sm:px-4" aria-label={`Read full project writeup for ${project.title}`}>
+                <span className="inline-flex items-center gap-2 break-normal">Read full project<ArrowRight aria-hidden="true" className="hidden size-4 shrink-0 sm:block" /></span>
+              </ActionLink>
+              {projectCodeLink && <ActionLink href={projectCodeLink.href} variant="secondary" showArrow={false} target="_blank" rel="noreferrer noopener" className="w-full min-h-11 break-normal px-3 py-2 text-sm sm:w-auto">View code</ActionLink>}
+            </div>
+          ) : projectCodeLink && <ActionLink href={projectCodeLink.href} variant="secondary" target="_blank" rel="noreferrer noopener" className="min-h-11 px-3 py-2 text-xs">View code</ActionLink>}
         </div>
 
         <div className="mt-7 flex aspect-video max-h-[360px] items-center justify-center overflow-hidden rounded-2xl bg-surface p-3 sm:p-5">
@@ -44,7 +52,7 @@ function ProjectDetails({ project }) {
         </div>
 
         <p className="mt-4 text-base leading-relaxed text-ink">{project.summary}</p>
-        {project.description && <p className="mt-2 text-sm leading-relaxed text-muted">{project.description}</p>}
+        {(project.description || project.caseStudy?.architecture?.summary) && <p className="mt-2 text-sm leading-relaxed text-muted">{project.description || project.caseStudy.architecture.summary}</p>}
         {project.implementation?.length > 0 && (
           <div className="mt-7 rounded-xl bg-surface px-4 py-4 sm:px-5">
             <p className="text-sm font-semibold text-muted">Implementation</p>
@@ -75,7 +83,8 @@ ProjectDetails.propTypes = { project: PropTypes.object.isRequired }
 
 export default function ProjectExplorer() {
   const { fragment, navigate } = usePortfolioNavigation()
-  const fragmentProject = projects.find((project) => fragment === `project-${project.id}`)
+  const route = resolvePortfolioRoute(fragment)
+  const fragmentProject = projects.find((project) => route.projectId === project.id)
   const selectedProject = fragmentProject || projects.find((project) => project.id === 'foroom')
 
   function chooseProject(projectId) {

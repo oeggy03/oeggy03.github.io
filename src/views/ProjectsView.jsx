@@ -4,13 +4,15 @@ import { usePortfolioNavigation } from '../navigation/NavigationContext.jsx'
 import ProjectCaseStudy from '../components/content/ProjectCaseStudy.jsx'
 import ProjectExplorer from '../components/content/ProjectExplorer.jsx'
 import ProjectIndex from '../components/content/ProjectIndex.jsx'
+import { resolvePortfolioRoute } from '../navigation/routes.js'
 
 export default function ProjectsView() {
   const { fragment } = usePortfolioNavigation()
   const [activeCategory, setActiveCategory] = useState('All')
-  const selectedProject = projects.find(({ id }) => fragment === `project-${id}`)
+  const route = resolvePortfolioRoute(fragment)
+  const selectedProject = projects.find(({ id }) => route.projectId === id)
 
-  if (selectedProject?.caseStudy) return <ProjectCaseStudy project={selectedProject} />
+  if (selectedProject?.caseStudy && route.projectView === 'info') return <ProjectCaseStudy project={selectedProject} />
   if (selectedProject) return <ProjectExplorer />
 
   return <ProjectIndex activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
