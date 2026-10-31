@@ -1,5 +1,7 @@
 # Portfolio design review
 
+> **Historical and superseded.** This review documents an earlier redesign and its findings. Its route structure, screenshots, and recommendations are not the current product specification. Use the [design and content guide](design-content-guide.md) for current owner-confirmed direction and the [project guide](project-guide.md) for current architecture.
+
 ## Summary
 
 The portfolio’s single job is to help recruiters understand Tran’s engineering background and follow up. The earlier design had a clear record of work, yet its mobile header occupied roughly 270px before the introduction, 10–11px uppercase labels weakened the hierarchy, and repeated bordered cards made the page feel busier than its content. Rating: **Needs work**. The earlier version did not have a memorable visual signature.

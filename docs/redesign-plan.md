@@ -1,5 +1,7 @@
 # Four-view portfolio plan
 
+> **Historical and superseded.** This was a plan for a four-view redesign that is no longer the current site structure. The current default has Experience, Projects, and Skills. Follow the [design and content guide](design-content-guide.md) and [project guide](project-guide.md) instead.
+
 ## Current redesign scope
 
 - Keep the four focused views: Overview, Projects, Experience, and Skills.

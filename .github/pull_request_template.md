@@ -4,20 +4,23 @@
 
 ## Implemented steps
 
-- <!-- List the meaningful completed steps. -->
+- <!-- List meaningful completed steps. -->
 
 ## Verification
 
-<!-- List exact commands actually run, outcomes, and any meaningful limits. -->
+<!-- List exact commands run, outcomes, and meaningful limits. -->
 
 ## Screenshots
 
-Select the applicable item. The screenshot item is mandatory for every UI or website behavior change.
+Choose the applicable item. Screenshots are mandatory for every website behavior or visual change.
 
-- [ ] UI or website behavior change: embed relevant, real desktop and mobile screenshots showing the changed routes or states. Include before/after or interaction states when useful. Commit the captures with this PR and identify them by immutable commit SHA. Do not include irrelevant or fabricated images.
+- [ ] Website behavior or visual change: embed relevant real screenshots of affected routes/states at desktop and mobile sizes. Include interaction states where useful. Commit the captures with this PR and identify them by immutable full commit SHA. Do not include stale, irrelevant, or fabricated images.
+- [ ] Docs/config-only change: `Screenshots: N/A (documentation/configuration-only change; no UI or website behavior changed.)`
 
-- [ ] Docs/config-only change: state `Screenshots: N/A (documentation/configuration-only change; no UI or website behavior changed.)`.
+## GitHub checks
+
+<!-- After an authorized push or PR update, report the latest full commit SHA and final applicable check results. Follow the exact-SHA loop in docs/agent-workflow.md. On PRs, deploy is expected to be skipped. -->
 
 ## Deployment boundary
 
-<!-- Pull requests are verified by CI. Merging to main publishes the site. Do not merge or deploy without user authorization. -->
+<!-- Do not merge or deploy without explicit owner authorization. Merging to main triggers the site deployment workflow. -->
