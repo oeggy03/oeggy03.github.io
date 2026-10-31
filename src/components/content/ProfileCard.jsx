@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Repeat2 } from 'lucide-react'
 import { profilePortrait } from '../../data/featured-projects.js'
 import { profile } from '../../data/portfolio.js'
 import { usePortfolioNavigation } from '../../navigation/NavigationContext.jsx'
@@ -115,34 +116,29 @@ export default function ProfileCard() {
     <figure className="mx-auto w-full min-w-0 max-w-28 sm:max-w-32 md:mx-0 md:max-w-72 md:justify-self-end">
       <div className="relative grid w-full min-w-0 [perspective:1000px]">
         <span className="grid w-full min-w-0">
-          <span className={`grid [grid-area:1/1] [transform-style:preserve-3d] transition-transform duration-700 ease-in-out motion-reduce:duration-0 motion-reduce:transition-none ${showingProfileId ? '[transform:rotateY(180deg)]' : '[transform:rotateY(0deg)]'}`}>
-            <span aria-hidden={showingProfileId} className="relative grid [grid-area:1/1] overflow-hidden rounded-2xl bg-surface shadow-sm ring-1 ring-line [backface-visibility:hidden]">
+          <span className={`relative grid w-full min-w-0 [grid-area:1/1] [transform-style:preserve-3d] transition-transform duration-700 ease-in-out motion-reduce:duration-0 motion-reduce:transition-none ${showingProfileId ? '[transform:rotateY(180deg)]' : '[transform:rotateY(0deg)]'}`}>
+            <span aria-hidden="true" className="[grid-area:1/1] aspect-[3/4] w-full min-w-0" />
+            <span aria-hidden={showingProfileId} className="absolute inset-0 overflow-hidden rounded-2xl bg-surface shadow-sm ring-1 ring-line [backface-visibility:hidden]">
               <img src={profilePortrait.src} alt={profilePortrait.alt} width={profilePortrait.width} height={profilePortrait.height}
-                className="block aspect-[3/4] w-full object-cover object-[center_28%]" loading="lazy" decoding="async" />
+                className="absolute inset-0 size-full object-cover object-[center_28%]" loading="lazy" decoding="async" />
             </span>
 
-            <span id="profile-card-back" aria-hidden={!showingProfileId} className="grid min-h-full [grid-area:1/1] rounded-2xl bg-paper p-2 shadow-sm ring-1 ring-line [backface-visibility:hidden] [transform:rotateY(180deg)] sm:p-3 md:p-5">
-              <span className="flex h-full min-h-[7rem] min-w-0 flex-col justify-between gap-2 [overflow-wrap:anywhere] md:min-h-[18rem] md:gap-4">
-                <span className="grid min-w-0 gap-2 text-xs font-semibold leading-4 text-ink md:hidden">
-                  <span>{profile.identity.citizenshipShort}</span>
-                  <span>{profile.identity.visaEligibility}</span>
-                </span>
-                <span className="hidden min-w-0 gap-3 [overflow-wrap:anywhere] md:grid">
-                  <span>
-                    <span className="block text-xs font-medium uppercase tracking-wide text-muted">Full name</span>
-                    <span className="mt-0.5 block text-lg font-semibold leading-6 text-ink">{profile.identity.fullName}</span>
+            <span id="profile-card-back" aria-hidden={!showingProfileId} className="relative grid [grid-area:1/1] min-w-0 rounded-2xl bg-gradient-to-br from-sky-100 via-paper to-blue-100 p-1 shadow-sm ring-1 ring-line [backface-visibility:hidden] [transform:rotateY(180deg)] sm:p-2 md:p-2 dark:from-slate-800 dark:via-paper dark:to-sky-950">
+              <span className="relative flex min-w-0 flex-col gap-2 rounded-xl border border-sky-800/20 bg-paper/90 p-2 [overflow-wrap:anywhere] sm:p-2 md:gap-3">
+                <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,transparent_28%,rgb(14_116_144_/_0.06)_28%,rgb(14_116_144_/_0.06)_29%,transparent_29%,transparent_69%,rgb(14_116_144_/_0.05)_69%,rgb(14_116_144_/_0.05)_70%,transparent_70%)]" />
+                <span className="relative hidden min-w-0 text-lg font-semibold leading-6 text-ink md:block">{profile.identity.fullName}</span>
+                <span className="relative grid min-w-0 gap-1 pb-11 text-xs leading-4 text-ink md:gap-2 md:border-t md:border-sky-800/20 md:pt-3">
+                  <span className="min-w-0 md:border-t md:border-sky-800/20 md:pt-2">
+                    <span className="hidden text-xs font-semibold uppercase tracking-wide text-muted md:block">Citizenship</span>
+                    <span className="block font-semibold leading-4 md:mt-0.5 md:text-sm md:leading-5">{profile.identity.citizenshipShort}<span className="hidden md:inline"> Citizen</span></span>
                   </span>
-                  <span>
-                    <span className="block text-xs font-medium uppercase tracking-wide text-muted">Citizenship</span>
-                    <span className="mt-0.5 block text-base leading-6 text-ink">{profile.identity.citizenship}</span>
+                  <span className="min-w-0 md:border-t md:border-sky-800/20 md:pt-2">
+                    <span className="hidden text-xs font-semibold uppercase tracking-wide text-muted md:block">Visa eligibility</span>
+                    <span className="block font-medium leading-4 md:mt-0.5 md:text-sm md:leading-5"><span className="md:hidden">H1B1 visa eligible</span><span className="hidden md:inline">{profile.identity.visaEligibility}</span></span>
                   </span>
-                  <span>
-                    <span className="block text-xs font-medium uppercase tracking-wide text-muted">Visa eligibility</span>
-                    <span className="mt-0.5 block text-base leading-6 text-ink">{profile.identity.visaEligibility}</span>
-                  </span>
-                  <span>
-                    <span className="block text-xs font-medium uppercase tracking-wide text-muted">Current role</span>
-                    <span className="mt-0.5 block text-base leading-6 text-ink">{profile.identity.currentRole}</span>
+                  <span className="hidden min-w-0 md:block md:border-t md:border-sky-800/20 md:pt-2">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted">Current role</span>
+                    <span className="mt-0.5 block text-sm font-medium leading-5">{profile.identity.currentRole}</span>
                   </span>
                 </span>
                 <span className="sr-only" id="profile-card-description">
@@ -171,8 +167,8 @@ export default function ProfileCard() {
           }}
           className="absolute inset-0 z-10 min-h-11 w-full min-w-0 cursor-pointer rounded-2xl text-left active:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
         >
-          <span className="absolute bottom-3 right-3 rounded-full bg-canvas/95 px-3 py-1.5 text-sm font-semibold text-ink shadow-sm">
-            {showingProfileId ? 'Photo' : 'Flip card'}
+          <span aria-hidden="true" className="absolute bottom-1 right-1 flex size-11 items-center justify-center rounded-full border border-line bg-paper/95 text-accent-ink shadow-sm sm:bottom-2 sm:right-2">
+            <Repeat2 className="size-5" />
           </span>
         </button>
       </div>

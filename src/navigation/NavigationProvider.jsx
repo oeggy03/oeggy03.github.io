@@ -338,7 +338,8 @@ export function PortfolioNavigationProvider({ initialRoute, children }) {
     const previousRoute = resolvePortfolioRoute(fragmentRef.current, projectIds)
     const previousSectionId = previousRoute.sectionId
     const previousProjectId = previousRoute.projectId
-    const previousProjectIsCaseStudy = Boolean(projects.find(({ id }) => id === previousProjectId)?.caseStudy)
+    const previousProjectIsCaseStudy = previousRoute.projectView === 'info'
+      && Boolean(projects.find(({ id }) => id === previousProjectId)?.caseStudy)
     const sameFragment = route.fragment === fragmentRef.current
     const nextUrl = routeUrl(route)
     const animateRoute = !sameFragment && currentUrl() !== nextUrl
@@ -416,7 +417,8 @@ export function PortfolioNavigationProvider({ initialRoute, children }) {
       const previousRoute = resolvePortfolioRoute(fragmentRef.current, projectIds)
       const previousSectionId = previousRoute.sectionId
       const previousProjectId = previousRoute.projectId
-      const previousProjectIsCaseStudy = Boolean(projects.find(({ id }) => id === previousProjectId)?.caseStudy)
+      const previousProjectIsCaseStudy = previousRoute.projectView === 'info'
+        && Boolean(projects.find(({ id }) => id === previousProjectId)?.caseStudy)
       const sameFragment = route.fragment === fragmentRef.current
       fragmentRef.current = route.fragment
       if (mode === 'restore') {
@@ -472,7 +474,8 @@ export function PortfolioNavigationProvider({ initialRoute, children }) {
       },
       previousSectionId: initialPreviousSection,
       previousProjectId: initialPreviousRoute.projectId,
-      previousProjectIsCaseStudy: Boolean(projects.find(({ id }) => id === initialPreviousRoute.projectId)?.caseStudy),
+      previousProjectIsCaseStudy: initialPreviousRoute.projectView === 'info'
+        && Boolean(projects.find(({ id }) => id === initialPreviousRoute.projectId)?.caseStudy),
       mode: 'navigate',
       sameFragment: initialRoute.fragment === 'experience',
     })

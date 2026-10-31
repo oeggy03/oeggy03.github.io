@@ -25,9 +25,10 @@ export const prerenderPages = portfolioRoutePaths.map((path) => {
 
 export const compatibilityPages = portfolioCompatibilityRoutePaths.map((outputPath) => {
   const route = resolvePortfolioRoute(outputPath)
+  const project = projects.find((entry) => entry.id === route.projectId)
   return {
     route: { ...route, outputPath },
-    project: null,
-    metadata: getPortfolioPageMetadata(route, null),
+    project,
+    metadata: getPortfolioPageMetadata(route, project),
   }
 })
