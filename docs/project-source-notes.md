@@ -19,6 +19,10 @@ Official tool references:
 - memory-lancedb-pro: <https://github.com/CortexReach/memory-lancedb-pro>
 - OpenAI Decisions guide (future exploration only): <https://developers.openai.com/api/docs/guides/decisions>
 
+The featured thumbnail is the official OpenClaw light banner, shown on its own light background so the dark wordmark remains legible in either site appearance. The downloaded 1280×358 PNG (SHA-256 `7f8c835df2dce54814324fa879133baa8a1ded01b9fa6bb6f9f335ad45cb8a6e`) is pinned to commit [`60ba2bc1c1074deeee38d6fb79de7864afd7cc7a`](https://github.com/openclaw/openclaw/tree/60ba2bc1c1074deeee38d6fb79de7864afd7cc7a): [`docs/assets/openclaw-banner-light.png`](https://github.com/openclaw/openclaw/blob/60ba2bc1c1074deeee38d6fb79de7864afd7cc7a/docs/assets/openclaw-banner-light.png). The repository declares the MIT license; the exact upstream notice is included at [`src/assets/featured/openclaw-LICENSE.txt`](../src/assets/featured/openclaw-LICENSE.txt) and matches the pinned [license file](https://github.com/openclaw/openclaw/blob/60ba2bc1c1074deeee38d6fb79de7864afd7cc7a/LICENSE).
+
+See [Experience refinements](experience-refinements.md) for the settled profile, typography, and content choices.
+
 ## Chinese Learning Toolkit
 
 The three related repositories were reviewed as one project. Their cached snapshot commits are recorded for traceability:

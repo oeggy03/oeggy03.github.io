@@ -316,6 +316,25 @@ async function assertExperienceTimeline(page, { openState = false } = {}) {
   }
 }
 
+async function assertProfileCardState(page, state) {
+  const card = page.locator('button[data-profile-card]')
+  const showingProfile = state === 'profile-id'
+  await assert.equal(await card.count(), 1, 'Experience should render one semantic profile-card button.')
+  await assert.equal(await card.getAttribute('data-state'), state)
+  await assert.equal(await card.getAttribute('aria-pressed'), String(showingProfile), 'The profile-card button state should be exposed to assistive technology.')
+  const accessibleName = await card.getAttribute('aria-label')
+  await assert.equal(accessibleName, showingProfile ? 'Show photo' : 'Flip card to show profile details', 'The profile-card name should include its visible label and describe the next action.')
+}
+
+function profileCardSurface(page) {
+  return page.locator('button[data-profile-card]').locator('xpath=ancestor::figure[1]')
+}
+
+async function assertSingleVisibleMatch(locator, label) {
+  const visibleCount = await locator.evaluateAll((elements) => elements.filter((element) => element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden').length)
+  await assert.equal(visibleCount, 1, `${label} should have exactly one visible responsive copy.`)
+}
+
 async function assertAllVisibleTargets(page, label) {
   const controls = await page.locator('a[href]:not([href="#portfolio-content"]), button, summary').all()
   for (const control of controls) {
@@ -332,7 +351,7 @@ async function assertVisibleTextFitsViewport(page, label, viewportWidth) {
     const range = document.createRange()
     const outside = []
     while (walker.nextNode()) {
-      if (!walker.currentNode.textContent.trim()) continue
+      if (!walker.currentNode.textContent.trim() || walker.currentNode.parentElement?.closest('.sr-only')) continue
       range.selectNodeContents(walker.currentNode)
       for (const rect of range.getClientRects()) {
         if (rect.width && (rect.left < -1 || rect.right > window.innerWidth + 1)) {
@@ -587,7 +606,7 @@ async function run() {
         }
         const imagesByProject = {
           'My OpenClaw Lab': [
-            ['A Shopee cart showing one Tecware EX2 mouse.', 1230, 636],
+            ['OpenClaw brand banner showing its lobster mascot and wordmark, with the line “Your personal AI assistant, running on your own devices.”', 1280, 358],
             ['OpenClaw conversation about comparing gaming mice and adding a Tecware EX2 to the cart.', 608, 726],
             ['Shopee cart showing one Tecware EX2 mouse.', 1230, 636],
           ],
@@ -653,6 +672,23 @@ async function run() {
       await assert.equal(await details.evaluate((element) => element.open), true, 'Clicking the summary should expand the earlier roles.')
       await assert.ok(await experienceSection.locator('[data-experience-id="tiktok-intern"]').isVisible())
       await assertExperienceTimeline(page, { openState: true })
+      const disclosureSpacing = await details.evaluate((element) => parseFloat(getComputedStyle(element).marginTop))
+      await assert.ok(disclosureSpacing >= 24, `The earlier-role disclosure should have at least 24px separation from the current role, received ${disclosureSpacing}px.`)
+      const employerMarkMetrics = await experienceSection.locator('[data-experience-id]').evaluateAll((entries) => entries.map((entry) => {
+        const header = entry.querySelector('article > div.flex')
+        const logo = header.querySelector('a[aria-label$="website"]')
+        const copy = logo?.nextElementSibling
+        const title = copy?.querySelector('h3')
+        const company = title?.nextElementSibling
+        const titleBounds = title?.getBoundingClientRect()
+        const companyBounds = company?.getBoundingClientRect()
+        return {
+          height: logo?.getBoundingClientRect().height,
+          gap: copy && logo ? copy.getBoundingClientRect().left - logo.getBoundingClientRect().right : Number.NaN,
+          titleAndCompanyHeight: titleBounds && companyBounds ? companyBounds.bottom - titleBounds.top : Number.NaN,
+        }
+      }))
+      await assert.ok(employerMarkMetrics.every(({ height, gap, titleAndCompanyHeight }) => height >= 64 && height <= 72 && gap >= 12 && Math.abs(height - titleAndCompanyHeight) <= 12), `Employer marks should match the 64–72px title-and-company block with at least 12px of breathing room, received ${JSON.stringify(employerMarkMetrics)}.`)
       const text = await experienceSection.innerText()
       for (const company of experiences) await assert.ok(text.includes(company), `Experience should show ${company}.`)
       const dateRanges = experienceDateRanges(await page.locator('#work-history').innerText())
@@ -670,6 +706,188 @@ async function run() {
       await assert.ok(await experienceSection.locator('[data-experience-id="tiktok-intern"]').isVisible())
     })
 
+    await check('profile card prerenders its photo, limits the timed demo to Experience, and toggles by keyboard', async () => {
+      const staticContext = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } })
+      const staticPage = await staticContext.newPage()
+      trackPage(staticPage)
+      await staticPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      const staticCard = staticPage.locator('button[data-profile-card]')
+      const staticSurface = profileCardSurface(staticPage)
+      await assert.equal(await staticCard.count(), 1, 'The Experience profile card should be present in prerendered HTML.')
+      await assert.equal(await staticCard.getAttribute('data-state'), 'photo', 'The prerendered card should start on its photo face.')
+      await assert.equal(await staticCard.getAttribute('aria-pressed'), 'false')
+      await assert.ok(await staticSurface.locator('img[alt="Ha Thu outdoors with a camera"]').isVisible(), 'The initial photo should be visible without JavaScript.')
+      await staticContext.close()
+
+      const demoContext = await browser.newContext({ viewport: { width: 1440, height: 900 } })
+      const demoPage = await demoContext.newPage()
+      trackPage(demoPage)
+      await demoPage.emulateMedia({ reducedMotion: 'no-preference' })
+      await demoPage.goto(urlFor('/projects/'), { waitUntil: 'domcontentloaded' })
+      const card = demoPage.locator('button[data-profile-card]')
+      await assert.equal(await card.count(), 1, 'The Experience card should remain prerendered on the Projects route.')
+      await assert.equal(await card.isVisible(), false, 'The Experience card should stay hidden on the Projects route.')
+      await demoPage.waitForTimeout(1100)
+      await assert.equal(await card.getAttribute('data-state'), 'photo', 'A hidden Experience view should not start or consume the profile preview.')
+
+      await demoPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await assertProfileCardState(demoPage, 'photo')
+      await demoPage.waitForTimeout(500)
+      await assertProfileCardState(demoPage, 'photo')
+      await demoPage.waitForFunction(() => document.querySelector('button[data-profile-card]')?.dataset.state === 'profile-id', null, { timeout: 1700 })
+      const profileShownAt = Date.now()
+      await demoPage.waitForTimeout(2200)
+      await assertProfileCardState(demoPage, 'profile-id')
+      await demoPage.waitForFunction(() => document.querySelector('button[data-profile-card]')?.dataset.state === 'photo', null, { timeout: 1600 })
+      const previewDuration = Date.now() - profileShownAt
+      await assert.ok(previewDuration >= 2500 && previewDuration <= 3900, `The profile details should remain up for about three seconds, received ${previewDuration}ms.`)
+
+      await demoPage.goto(urlFor('/projects/'), { waitUntil: 'domcontentloaded' })
+      await demoPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await demoPage.waitForTimeout(1100)
+      await assertProfileCardState(demoPage, 'photo')
+      await demoContext.close()
+
+      const keyboardContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
+      const keyboardPage = await keyboardContext.newPage()
+      trackPage(keyboardPage)
+      await keyboardPage.emulateMedia({ reducedMotion: 'no-preference' })
+      await keyboardPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      const keyboardCard = keyboardPage.locator('button[data-profile-card]')
+      await keyboardPage.waitForTimeout(100)
+      await keyboardCard.focus()
+      await keyboardPage.waitForTimeout(1100)
+      await assertProfileCardState(keyboardPage, 'photo')
+      await keyboardCard.press('Enter')
+      await assertProfileCardState(keyboardPage, 'profile-id')
+      await keyboardCard.press('Space')
+      await assertProfileCardState(keyboardPage, 'photo')
+      await keyboardPage.waitForTimeout(1000)
+      await assertProfileCardState(keyboardPage, 'photo')
+      await keyboardContext.close()
+
+      const pointerContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
+      const pointerPage = await pointerContext.newPage()
+      trackPage(pointerPage)
+      await pointerPage.emulateMedia({ reducedMotion: 'no-preference' })
+      await pointerPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await pointerPage.waitForTimeout(100)
+      await pointerPage.locator('nav[aria-label="Portfolio sections"] a[href="/"]').click()
+      await pointerPage.waitForTimeout(1100)
+      await assertProfileCardState(pointerPage, 'photo')
+      await pointerContext.close()
+
+      const keyboardActivityContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
+      const keyboardActivityPage = await keyboardActivityContext.newPage()
+      trackPage(keyboardActivityPage)
+      await keyboardActivityPage.emulateMedia({ reducedMotion: 'no-preference' })
+      await keyboardActivityPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await keyboardActivityPage.waitForTimeout(100)
+      const experienceLink = keyboardActivityPage.locator('nav[aria-label="Portfolio sections"] a[href="/"]')
+      await experienceLink.focus()
+      await experienceLink.press('Enter')
+      await keyboardActivityPage.waitForTimeout(1100)
+      await assertProfileCardState(keyboardActivityPage, 'photo')
+      await keyboardActivityContext.close()
+
+      const activationContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
+      const activationPage = await activationContext.newPage()
+      trackPage(activationPage)
+      await activationPage.emulateMedia({ reducedMotion: 'no-preference' })
+      await activationPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await activationPage.waitForTimeout(100)
+      const activationCard = activationPage.locator('button[data-profile-card]')
+      await activationCard.evaluate((element) => element.click())
+      await assertProfileCardState(activationPage, 'profile-id')
+      await activationPage.waitForTimeout(4200)
+      await assertProfileCardState(activationPage, 'profile-id')
+      await activationContext.close()
+
+      const reducedContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
+      const reducedPage = await reducedContext.newPage()
+      trackPage(reducedPage)
+      await reducedPage.emulateMedia({ reducedMotion: 'reduce' })
+      await reducedPage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      const reducedCard = reducedPage.locator('button[data-profile-card]')
+      await reducedPage.waitForTimeout(1100)
+      await assertProfileCardState(reducedPage, 'photo')
+      await reducedCard.click()
+      await assertProfileCardState(reducedPage, 'profile-id')
+      const reducedMotion = await reducedCard.evaluate((element) => {
+        const wrapper = element.parentElement
+        const flipper = wrapper.querySelector(':scope > span > span')
+        return {
+          transitionProperty: getComputedStyle(flipper).transitionProperty,
+          runningAnimations: [...wrapper.querySelectorAll('*')].flatMap((child) => child.getAnimations()).filter((animation) => animation.playState === 'running').length,
+        }
+      })
+      await assert.equal(reducedMotion.transitionProperty, 'none', 'Manual card flips should have no transition when reduced motion is requested.')
+      await assert.equal(reducedMotion.runningAnimations, 0, 'Manual card flips should be immediate when reduced motion is requested.')
+      await reducedContext.close()
+    })
+
+    await check('profile card presents compact mobile details, full desktop details, and readable 200% text', async () => {
+      const profileContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
+      const profilePage = await profileContext.newPage()
+      trackPage(profilePage)
+      await profilePage.emulateMedia({ reducedMotion: 'reduce' })
+      await profilePage.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      const card = profilePage.locator('button[data-profile-card]')
+      const surface = profileCardSurface(profilePage)
+      await card.click()
+      await assertProfileCardState(profilePage, 'profile-id')
+      await assert.equal(await card.getAttribute('aria-describedby'), 'profile-card-description', 'The active profile face should be described accessibly.')
+      const description = surface.locator('#profile-card-description')
+      await assert.equal(await description.innerText(), 'Singaporean. Eligible for H1B1 Visa.', 'The mobile card description should contain only its compact facts.')
+      await assert.ok(await surface.getByText('Singaporean', { exact: true }).isVisible())
+      await assertSingleVisibleMatch(surface.getByText('Eligible for H1B1 Visa', { exact: true }), 'The mobile visa fact')
+      await assert.equal(await surface.getByText('Tran Ha Thu', { exact: true }).isVisible(), false, 'Mobile details should omit the full name and desktop-only fields.')
+
+      await profilePage.setViewportSize({ width: 1440, height: 900 })
+      await profilePage.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+      await assert.equal(await description.innerText(), 'Tran Ha Thu. Singaporean Citizen. Eligible for H1B1 Visa. Backend Engineer at TikTok.', 'The desktop accessible description should include all four profile facts.')
+      for (const value of ['Tran Ha Thu', 'Singaporean Citizen', 'Eligible for H1B1 Visa', 'Backend Engineer at TikTok']) {
+        await assertSingleVisibleMatch(surface.getByText(value, { exact: true }), `The desktop profile fact ${value}`)
+      }
+
+      await profilePage.setViewportSize({ width: 320, height: 568 })
+      await profilePage.evaluate(() => { document.documentElement.style.fontSize = '200%' })
+      await profilePage.evaluate(async () => {
+        await document.fonts?.ready
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+      })
+      await assert.equal(await description.innerText(), 'Singaporean. Eligible for H1B1 Visa.', 'The 320px card should return to the compact accessible description.')
+      const cardGeometry = await surface.evaluate((element) => {
+        const rect = element.getBoundingClientRect()
+        return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height }
+      })
+      await assert.ok(cardGeometry.width > 0 && cardGeometry.left >= 0 && cardGeometry.right <= 320, `The 320px profile card should fit within the viewport: ${JSON.stringify(cardGeometry)}.`)
+      await assert.ok(cardGeometry.height < 568, `The expanded profile details should remain reachable in the 568px viewport: ${JSON.stringify(cardGeometry)}.`)
+      await assertVisibleTextFitsViewport(profilePage, 'Expanded mobile profile card at 200%', 320)
+      const cardTextOverflow = await surface.evaluate((element) => {
+        const cardBounds = element.getBoundingClientRect()
+        const back = element.querySelector('#profile-card-back')
+        const walker = document.createTreeWalker(back, NodeFilter.SHOW_TEXT)
+        const range = document.createRange()
+        const outside = []
+        while (walker.nextNode()) {
+          const node = walker.currentNode
+          const parent = node.parentElement
+          if (!node.textContent.trim() || parent.closest('[aria-hidden="true"], .sr-only')) continue
+          if (getComputedStyle(parent).display === 'none' || getComputedStyle(parent).visibility === 'hidden') continue
+          range.selectNodeContents(node)
+          for (const line of range.getClientRects()) {
+            if (line.width && (line.left < cardBounds.left - 1 || line.right > cardBounds.right + 1)) {
+              outside.push({ text: node.textContent.trim(), left: line.left, right: line.right })
+            }
+          }
+        }
+        return outside
+      })
+      await assert.deepEqual(cardTextOverflow, [], `The 200% profile details should wrap within the card: ${JSON.stringify(cardTextOverflow)}.`)
+      await profileContext.close()
+    })
+
     await check('Experience facts and shared profile actions', async () => {
       await page.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
       await assertActiveView(page, 'Experience')
@@ -679,6 +897,20 @@ async function run() {
         'backend engineer', 'tiktok', 'national university of singapore', 'bachelor of computing', 'computer science',
         '2022', '2026', '4.6/5.0', 'first class honours', 'distinction in software engineering', "dean's list",
       ]) await assert.ok(text.includes(fact), `Experience should include the confirmed fact: ${fact}.`)
+      const interestsHeading = experience.getByRole('heading', { name: 'Interests', exact: true })
+      const interests = await interestsHeading.locator('xpath=following-sibling::ul[1]/li').allTextContents()
+      await assert.deepEqual(interests.map((interest) => interest.trim()), [
+        'Software engineering', 'Scalable systems and architecture', 'Tinkering with the latest technologies',
+      ], 'Experience should preserve the requested interests in order.')
+      const skillsHeading = experience.getByRole('heading', { name: 'Skills', exact: true })
+      const skillNames = (await skillsHeading.locator('xpath=following-sibling::p[1]').innerText())
+        .split(/\s*\u00b7\s*/).map((skill) => skill.trim())
+      await assert.deepEqual(skillNames, ['Software Development', 'Agentic Development', 'Scalable Systems', 'Version Control'], 'Experience should show the requested software skills in their own group.')
+      const priorLanguagesHeading = experience.getByRole('heading', { name: 'Previously worked with', exact: true })
+      const priorLanguages = (await priorLanguagesHeading.locator('xpath=following-sibling::p[1]').innerText())
+        .split(/\s*\u00b7\s*/).map((language) => language.trim())
+      await assert.deepEqual(priorLanguages, ['Go', 'Python', 'C#', 'Java', 'TypeScript'], 'Experience should show the requested previously used languages in their own group.')
+      await assert.ok(!text.includes('i want to build useful software and help others learn to program'), 'The old aspiration paragraph should be removed.')
       await assert.equal(await experience.getByRole('heading', { name: 'I build useful and scalable software.', exact: true }).count(), 1, 'Experience should use the requested headline exactly.')
       await assert.ok(text.includes('hey, i’m ha thu, a backend engineer and computer science graduate of the national university of singapore.'), 'Experience should retain the requested friendly introduction.')
       await assert.ok(text.includes('i’m committed to building practical, useful software with the future in mind'), 'Experience should include the supplied purpose statement.')
@@ -687,6 +919,18 @@ async function run() {
       await assert.equal(await experience.locator('img[src*="proj_images"]').count(), 0, 'Experience should not contain project images.')
 
       const education = experience.locator('#education')
+      await assert.ok(!/\bminors?\b/i.test(await education.innerText()), 'Education should not list minors.')
+      const honors = education.getByText("First Class Honours, Distinction in Software Engineering, Dean's List", { exact: true })
+      await assert.equal(await honors.count(), 1, 'Honours should appear together in one paragraph.')
+      await assert.equal(await honors.evaluate((element) => element.tagName), 'P', 'The combined honours line should use paragraph structure.')
+      const requestedAwards = [
+        'Best Work Award - Tembusu College',
+        'NUS Computing Student Life Award - Bronze',
+        'SMU Hack For Cities hackathon runner-up',
+      ]
+      const awardLines = await education.getByRole('group', { name: 'Awards', exact: true }).locator(':scope > p').allTextContents()
+      const normalizedAwardLines = awardLines.map((line) => line.replace(/\s+/g, ' ').trim())
+      await assert.deepEqual(normalizedAwardLines, requestedAwards, 'Education should show each requested award on its own line and in the supplied order.')
       const heroNavigation = experience.getByRole('navigation', { name: 'Explore this page', exact: true })
       await assert.deepEqual(await heroNavigation.getByRole('link').evaluateAll((links) => links.map((link) => ({ href: link.getAttribute('href'), name: link.textContent.replace(/\s+/g, ' ').trim() }))), [
         { href: '#work-history', name: 'View experience' },
@@ -696,7 +940,7 @@ async function run() {
       await assert.ok(await heroNavigation.evaluate((navigation) => navigation.previousElementSibling?.tagName === 'P'), 'The grouped links should follow the complete hero introduction.')
       const educationPeriod = education.getByText('Aug 2022 – May 2026', { exact: true })
       const educationDateStyle = await educationPeriod.evaluate((element) => ({ size: parseFloat(getComputedStyle(element).fontSize), weight: parseFloat(getComputedStyle(element).fontWeight) }))
-      await assert.ok(educationDateStyle.size >= 18 && educationDateStyle.weight >= 500, 'The education dates should be distinct and legible at 18px or larger.')
+      await assert.ok(educationDateStyle.size >= 16 && educationDateStyle.weight >= 500, 'The education dates should remain distinct and legible at 16px or larger.')
       await assert.ok(await education.getByText('GPA 4.6/5.0', { exact: true }).isVisible(), 'Education should keep the GPA separate from the dates.')
       await assert.equal(await education.getByRole('heading', { name: 'Education', exact: true }).count(), 1, 'The native education teaser should lead to the complete section.')
       const portrait = experience.locator('img[alt="Ha Thu outdoors with a camera"]')
@@ -774,7 +1018,7 @@ async function run() {
       await assert.equal(await page.locator('#what-im-building').count(), 1, 'Forward should restore the featured-project anchor entry.')
       await page.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
       const currentDates = await page.locator('#work-history [data-experience-id="tiktok-backend"] time').first().evaluate((element) => ({ size: parseFloat(getComputedStyle(element).fontSize), weight: parseFloat(getComputedStyle(element.parentElement).fontWeight) }))
-      await assert.ok(currentDates.size >= 18 && currentDates.weight >= 500, 'Experience dates should use at least 18px medium type.')
+      await assert.ok(currentDates.size >= 16 && currentDates.weight >= 500, 'Experience dates should remain at least 16px and medium weight.')
       await assertSocialActionsVisible(page, 'Desktop')
 
       const resume = page.locator('[data-portfolio-toolbar]').getByRole('link', { name: 'Resume', exact: true })
@@ -1303,6 +1547,7 @@ async function run() {
     await check('200% text scaling preserves readable, non-overlapping layouts from mobile to desktop', async () => {
       const zoomPage = await browser.newPage({ viewport: { width: 390, height: 844 } })
       trackPage(zoomPage)
+      await zoomPage.emulateMedia({ reducedMotion: 'reduce' })
       for (const viewport of [
         { width: 320, height: 568 },
         { width: 390, height: 844 },
@@ -1388,18 +1633,27 @@ async function run() {
           if (label === 'Experience') {
             const heroGeometry = await zoomPage.evaluate(() => {
               const heading = document.querySelector('#experience-intro-heading')
-              const portrait = document.querySelector('img[alt="Ha Thu outdoors with a camera"]')
+              const card = document.querySelector('button[data-profile-card]')
               const range = document.createRange()
               range.selectNodeContents(heading)
+              const headingRect = heading.getBoundingClientRect()
+              const cardRect = card.getBoundingClientRect()
+              const overlapsHeading = cardRect.left < headingRect.right - 1
+                && cardRect.right > headingRect.left + 1
+                && cardRect.top < headingRect.bottom - 1
+                && cardRect.bottom > headingRect.top + 1
               return {
                 headingWidth: heading.getBoundingClientRect().width,
                 headingLines: range.getClientRects().length,
-                portraitWidth: portrait.getBoundingClientRect().width,
+                cardLeft: cardRect.left,
+                cardRight: cardRect.right,
+                overlapsHeading,
               }
             })
             await assert.ok(heroGeometry.headingWidth >= Math.min(320, viewport.width * 0.5), `The Experience headline should have a usable text column at ${viewport.width}px/200%, received ${heroGeometry.headingWidth}px.`)
             await assert.ok(heroGeometry.headingLines <= 8, `The Experience headline should reflow as readable lines at ${viewport.width}px/200%, received ${heroGeometry.headingLines}.`)
-            await assert.ok(heroGeometry.portraitWidth <= viewport.width * 0.4, `The Experience portrait should leave room for text at ${viewport.width}px/200%.`)
+            await assert.ok(heroGeometry.cardLeft >= 0 && heroGeometry.cardRight <= viewport.width, `The Experience profile card should fit the ${viewport.width}px viewport at 200% text.`)
+            await assert.equal(heroGeometry.overlapsHeading, false, `The Experience profile card should not overlap the headline at ${viewport.width}px/200%.`)
             if (viewport.width === 320) {
               const wideFontHeadline = await zoomPage.locator('#experience-intro-heading').evaluate((heading) => {
                 heading.style.fontFamily = 'Verdana, sans-serif'
@@ -1407,7 +1661,7 @@ async function run() {
                 range.selectNodeContents(heading)
                 return { fontSize: parseFloat(getComputedStyle(heading).fontSize), lines: range.getClientRects().length }
               })
-              await assert.equal(wideFontHeadline.fontSize, 72, 'The 320px headline should scale from 36px at 200% text.')
+              await assert.equal(wideFontHeadline.fontSize, 64, 'The 320px headline should scale from 32px at 200% text.')
               await assert.ok(wideFontHeadline.lines <= 8, `The headline should remain within eight lines at 320px/200% with a wider font, received ${wideFontHeadline.lines}.`)
             }
             const toolbar = zoomPage.locator('[data-portfolio-toolbar]')
@@ -1514,7 +1768,7 @@ async function run() {
             const values = [luminance(foreground), luminance(background)].sort((a, b) => b - a)
             return (values[0] + 0.05) / (values[1] + 0.05)
           }
-          const mutedText = document.querySelector('#experience section p:last-child')
+          const mutedText = document.querySelector('#experience-intro-heading + div > p')
           const action = document.querySelector('[data-portfolio-toolbar] a.bg-action[href$=".pdf"]')
           const backgroundOf = (element) => {
             let current = element
@@ -1536,7 +1790,7 @@ async function run() {
             const srgb = channel / 255
             return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4
           }).reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0)
-          const element = document.querySelector('#experience section p:last-child')
+          const element = document.querySelector('#experience-intro-heading + div > p')
           let parent = element
           while (parent && getComputedStyle(parent).backgroundColor === 'rgba(0, 0, 0, 0)') parent = parent.parentElement
           const values = [luminance(getComputedStyle(element).color), luminance(getComputedStyle(parent).backgroundColor)].sort((a, b) => b - a)
@@ -1667,7 +1921,8 @@ async function run() {
             .analyze()
           if (result.violations.length) {
             const details = result.violations.map(({ id, impact, help, nodes }) => ({
-              id, impact, help, targets: nodes.flatMap((node) => node.target).slice(0, 10),
+              id, impact, help,
+              nodes: nodes.slice(0, 10).map(({ target, html, failureSummary }) => ({ target, html, failureSummary })),
             }))
             throw new Error(`${viewport.label} ${label} has axe violations:\n${JSON.stringify(details, null, 2)}`)
           }
@@ -1695,7 +1950,8 @@ async function run() {
             .analyze()
           if (result.violations.length) {
             const details = result.violations.map(({ id, impact, help, nodes }) => ({
-              id, impact, help, targets: nodes.flatMap((node) => node.target).slice(0, 10),
+              id, impact, help,
+              nodes: nodes.slice(0, 10).map(({ target, html, failureSummary }) => ({ target, html, failureSummary })),
             }))
           throw new Error(`${colorScheme} expanded Experience ${viewport.label} has axe violations:\n${JSON.stringify(details, null, 2)}`)
           }
