@@ -1,0 +1,10 @@
+---
+description: Fixture for a Cursor repository rule.
+alwaysApply: true
+metadata:
+  skills:
+    - portfolio-feature
+    - portfolio-verify
+---
+
+Read AGENTS.md and the project workflow.

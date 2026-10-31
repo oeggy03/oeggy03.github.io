@@ -1,5 +1,7 @@
 # QA report
 
+> **Historical and superseded.** This report records checks for an earlier branch and site structure. Its route counts, check results, and screenshots do not describe the current mainline. Use [current verification guidance](agent-workflow.md#website-verification) and the [project guide](project-guide.md) for current routes and scripts.
+
 ## Result
 
 Final local verification passed on branch `redesign/focused-four-section-portfolio` with source through commit `e8370b1`. The production build contains ten static portfolio routes and the reviewed social card. No deployment was run.

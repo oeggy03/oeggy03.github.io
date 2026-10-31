@@ -1,6 +1,9 @@
 {
   "homepage": "https://www.tranhathu.com/",
   "name": "portfolio-website",
+  "engines": {
+    "node": ">=22"
+  },
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,8 +12,11 @@
     "build": "node scripts/build.mjs",
     "check:seo": "node scripts/check-seo.mjs",
     "check:ui": "node scripts/check-ui.mjs",
+    "check:harness": "node scripts/check-harness.mjs",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "setup:agents": "node scripts/setup-agents.mjs",
+    "test:harness": "node --test scripts/lib/harness.test.mjs"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.6",
@@ -32,7 +38,9 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
     "postcss": "^8.5.1",
+    "smol-toml": "^1.9.1",
     "tailwindcss": "3.4.17",
-    "vite": "^4.4.5"
+    "vite": "^4.4.5",
+    "yaml": "^2.9.1"
   }
 }

@@ -5,13 +5,13 @@ description: Plan and implement a scoped website, documentation, or configuratio
 
 # Portfolio feature workflow
 
-Use for a scoped feature or repository task, including website behavior, documentation, or configuration. Follow [`AGENTS.md`](../../../AGENTS.md) and [`docs/agent-workflow.md`](../../../docs/agent-workflow.md) for product constraints, roles, branches, commits, and client limits.
+Use for a scoped website, documentation, or configuration change. Follow [`AGENTS.md`](../../../AGENTS.md), the [project guide](../../../docs/project-guide.md), and the [agent workflow](../../../docs/agent-workflow.md). For visual work, read the [design and content guide](../../../docs/design-content-guide.md).
 
-1. Inspect relevant source and existing checks. The coordinator writes down the user outcome, acceptance criteria, in-scope files, constraints, and settled TODOs before implementation.
-2. The coordinator assigns all actual edits to the configured developer after scope is settled. The developer implements the assigned scope directly and does not delegate again unless the owner explicitly asks. Do not have the coordinator implement app code, docs, fixes, or config.
-3. The developer follows existing React/Tailwind patterns and preserves the current routed view structure, all current project details, route behavior, accessible controls, and supplied facts. These counts are current content, not a cap on user-authorized additions or user-requested structure changes.
-4. Review the implementation against the agreed acceptance criteria. Route gaps and fixes through the developer; the verifier independently checks relevant behavior and reports only checks actually performed.
-5. For website changes, run existing frontend checks when authorized or requested. For docs/config-only changes, validate the changed files without running application tests unless requested. Never weaken or skip frontend tests to make a feature pass.
-6. Follow the branch and focused-commit policy in `AGENTS.md`. Commit or push only when the user authorized delivery; never merge or deploy without authorization.
+1. Inspect relevant source, documentation, and existing checks. The coordinator settles the user outcome, acceptance criteria, file scope, constraints, and decisions before edits.
+2. The coordinator assigns all actual edits to the configured developer after scope is settled. The developer implements only the assigned files and does not delegate again unless the owner explicitly asks.
+3. Follow the three-view default (Experience, Projects, Skills), preserve supplied project, role, skill, route, accessibility, and content facts, and honor explicit user-requested structure changes. Counts describe current content, not a cap on user-authorized additions.
+4. Review against the settled criteria. Route implementation gaps through the developer; the verifier independently checks assigned behavior and reports only checks actually performed.
+5. For website work, run existing checks when authorized or requested. For docs/config-only work, validate changed files and harness checks in scope without running application checks unless requested. Never weaken or skip frontend checks to make a change pass.
+6. Follow the branch and delivery boundaries in `AGENTS.md`. Commit, push, or open a PR only with explicit authorization; never merge or deploy without authorization. After an authorized push/PR update, follow the exact-SHA loop in the workflow handbook.
 
 Report files changed, important decisions, actual commands and results, and remaining limitations.

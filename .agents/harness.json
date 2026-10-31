@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "runtime": {
+    "node": ">=22",
+    "versionFile": ".nvmrc"
+  },
+  "canonicalGuidance": [
+    "AGENTS.md",
+    "docs/agent-workflow.md"
+  ],
+  "requiredGuides": [
+    "docs/agent-start.md",
+    "docs/project-guide.md",
+    "docs/design-content-guide.md"
+  ],
+  "sharedSkillsRoot": ".agents/skills",
+  "skills": [
+    "portfolio-feature",
+    "portfolio-ci",
+    "portfolio-harness",
+    "portfolio-verify",
+    "portfolio-pr"
+  ],
+  "roles": [
+    {
+      "name": "coordinator",
+      "description": "Plans portfolio tasks, settles scope, delegates implementation, reviews results, and coordinates authorized verification and delivery.",
+      "model": "gpt-6.1-sol",
+      "reasoning": "high",
+      "codexPath": ".codex/agents/coordinator.toml",
+      "cursorPath": ".cursor/agents/coordinator.md"
+    },
+    {
+      "name": "developer",
+      "description": "Implements settled portfolio changes in the assigned files using the existing project patterns.",
+      "model": "gpt-6-luna",
+      "reasoning": "xhigh",
+      "codexPath": ".codex/agents/developer.toml",
+      "cursorPath": ".cursor/agents/developer.md"
+    },
+    {
+      "name": "reviewer",
+      "description": "Performs a read-only review of a portfolio diff and reports actionable findings.",
+      "model": "gpt-6.1-sol",
+      "reasoning": "high",
+      "readonly": true,
+      "codexPath": ".codex/agents/reviewer.toml",
+      "cursorPath": ".cursor/agents/reviewer.md"
+    },
+    {
+      "name": "verifier",
+      "description": "Independently checks a scoped portfolio change against acceptance criteria and reports evidence.",
+      "model": "gpt-6-luna",
+      "reasoning": "xhigh",
+      "codexPath": ".codex/agents/verifier.toml",
+      "cursorPath": ".cursor/agents/verifier.md"
+    }
+  ],
+  "nativeFiles": [
+    {
+      "path": ".codex/config.toml",
+      "format": "toml",
+      "template": "codex-config"
+    },
+    {
+      "path": ".cursor/rules/repository.mdc",
+      "format": "yaml-frontmatter",
+      "template": "cursor-rule"
+    }
+  ],
+  "commands": {
+    "install": "npm ci",
+    "doctor": "npm run setup:agents",
+    "verification": "npm run check:harness",
+    "tests": "npm run test:harness"
+  }
+}
