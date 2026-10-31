@@ -1,4 +1,5 @@
 ﻿import heroPhoto from '../assets/featured/hero-photo.jpg'
+import openclawBanner from '../assets/featured/openclaw-banner-light.png'
 import shopeeInteraction from '../assets/featured/shopee-interaction.png'
 import shopeeCart from '../assets/featured/shopee-cart.png'
 import chineseDaily from '../assets/featured/chinese-daily.png'
@@ -16,10 +17,10 @@ export const featuredProjects = [
     title: 'My OpenClaw Lab',
     category: 'AI & bots',
     featured: true,
-    image: shopeeCart,
-    imageAlt: 'A Shopee cart showing one Tecware EX2 mouse.',
-    imageWidth: 1230,
-    imageHeight: 636,
+    image: openclawBanner,
+    imageAlt: 'OpenClaw brand banner showing its lobster mascot and wordmark, with the line “Your personal AI assistant, running on your own devices.”',
+    imageWidth: 1280,
+    imageHeight: 358,
     summary: 'A personal agent lab for connecting real tools and building an assistant that remembers useful context about how I work.',
     skills: ['OpenClaw', 'Telegram', 'OpenAI API', 'LanceDB', 'Hybrid retrieval', 'Playwright MCP'],
     links: [

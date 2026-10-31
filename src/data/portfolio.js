@@ -16,6 +16,13 @@ import { featuredProjects } from "./featured-projects.js"
 export const profile = {
   name: "Tran Ha Thu",
   role: "Software Engineer",
+  identity: {
+    fullName: "Tran Ha Thu",
+    citizenship: "Singaporean Citizen",
+    citizenshipShort: "Singaporean",
+    visaEligibility: "Eligible for H1B1 Visa",
+    currentRole: "Backend Engineer at TikTok",
+  },
   introEyebrow: "As a Backend engineer at TikTok...",
   introHeadline: "I build useful and scalable software.",
   introduction: "Hey, I’m Ha Thu, a backend engineer and computer science graduate of the National University of Singapore. I’m committed to building practical, useful software with the future in mind, and I enjoy experimenting with new technologies along the way.",
@@ -29,11 +36,11 @@ export const profile = {
     programme: "Bachelor of Computing – Computer Science",
     period: "Aug 2022 – May 2026",
     gpa: "4.6/5.0",
-    minors: ["Quantitative Finance", "Management"],
-    honors: [
-      "First Class Honours",
-      "Distinction in Software Engineering",
-      "Dean's List 2022",
+    honors: "First Class Honours, Distinction in Software Engineering, Dean's List",
+    awards: [
+      "Best Work Award - Tembusu College",
+      "NUS Computing Student Life Award - Bronze",
+      "SMU Hack For Cities hackathon runner-up",
     ],
     activities: [
       "Invited to CVWO; teaching assistant for five programming modules",
@@ -41,8 +48,9 @@ export const profile = {
     ],
     url: "https://nus.edu.sg/",
   },
-  interests: ["Software engineering", "Quantitative finance and trading", "Artificial intelligence"],
-  aspiration: "I want to build useful software and help others learn to program.",
+  interests: ["Software engineering", "Scalable systems and architecture", "Tinkering with the latest technologies"],
+  experienceSkills: ["Software Development", "Agentic Development", "Scalable Systems", "Version Control"],
+  previouslyWorkedWith: ["Go", "Python", "C#", "Java", "TypeScript"],
 }
 
 const existingProjects = [
