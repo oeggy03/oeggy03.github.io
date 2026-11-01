@@ -8,7 +8,7 @@ const dist = fileURLToPath(new URL('../dist/', import.meta.url))
 const origin = 'https://www.tranhathu.com'
 const canonical = `${origin}/`
 const projects = [
-  { id: 'foroom', title: 'FoROOM' },
+  { id: 'foroom', title: 'Demo Forum Website' },
   { id: 'buddy4good', title: 'Buddy4Good' },
   { id: 'eggbot', title: 'Eggbot' },
   { id: 'teleai', title: 'TeleAI' },
@@ -66,6 +66,18 @@ function extractElementById(html, tagName, id, path) {
     if (depth === 0) return html.slice(opening.index, tag.index + tag[0].length)
   }
   assert.fail(`${path} should close its #${id} ${tagName}.`)
+}
+
+function assertExpandableImages(markup, path) {
+  const images = [...markup.matchAll(/<img\b[^>]*>/gi)]
+  const imageActions = [...markup.matchAll(/<a\b(?=[^>]*\bdata-expandable-image)([^>]*)>([\s\S]*?)<\/a>/gi)]
+  assert.equal(imageActions.length, images.length, `${path} should wrap every project image in its own expandable-image link.`)
+  for (const [, attributes, contents] of imageActions) {
+    const href = attributes.match(/\bhref="([^"]+)"/)?.[1]
+    const src = contents.match(/<img\b[^>]*\bsrc="([^"]+)"/)?.[1]
+    assert.ok(href && src, `${path} image actions should preserve both a fallback href and an image source.`)
+    assert.equal(href, src, `${path} image links should open their original image assets without JavaScript.`)
+  }
 }
 
 function textOf(markup) {
@@ -280,12 +292,29 @@ const projectPaths = {
 const projectsMainMarkup = extractMain(htmlByPath.get('/projects/'), '/projects/')
 const projectIndexMarkup = extractDivWithMarker(projectsMainMarkup, 'data-project-index', '/projects/')
 assert.equal((projectIndexMarkup.match(/<article\b/g) || []).length, projects.length, 'The Projects view must include all nine current projects.')
+assertExpandableImages(projectIndexMarkup, '/projects/')
+const expectedProjectGroups = [
+  { id: 'exploring', title: 'Currently exploring', projectIds: ['openclaw', 'chinese-learning'] },
+  { id: 'featured', title: 'Other projects', projectIds: ['traders-edge'] },
+  { id: 'before-ai', title: 'Before the age of AI...', projectIds: ['portfolio', 'foroom', 'buddy4good', 'eggbot', 'teleai', 'foodhero'] },
+]
+const renderedGroupIds = [...projectIndexMarkup.matchAll(/data-project-group="([^"]+)"/g)].map(([, id]) => id)
+assert.deepEqual(renderedGroupIds, expectedProjectGroups.map(({ id }) => id), 'The Projects index should render every project group in the requested order.')
+for (const [index, group] of expectedProjectGroups.entries()) {
+  const groupStart = projectIndexMarkup.indexOf(`data-project-group="${group.id}"`)
+  const nextGroup = expectedProjectGroups[index + 1]
+  const nextGroupStart = nextGroup ? projectIndexMarkup.indexOf(`data-project-group="${nextGroup.id}"`) : projectIndexMarkup.length
+  const groupMarkup = projectIndexMarkup.slice(groupStart, nextGroupStart < 0 ? undefined : nextGroupStart)
+  assert.ok(groupMarkup.includes(group.title), `${group.id} should display the ${group.title} heading.`)
+  for (const projectId of group.projectIds) assert.ok(groupMarkup.includes(`href="${projectPaths[projectId]}"`), `${group.title} should include ${projectId} in the requested order.`)
+}
 for (const project of projects) {
   const projectId = project.id
   const projectPath = projectPaths[projectId]
   assert.ok(projectPath, `Missing declared detail route for ${projectId}.`)
   assert.ok(projectIndexMarkup.includes(`href="${projectPath}"`), `Missing project index card route: ${projectPath}`)
   const projectMarkup = extractMain(htmlByPath.get(projectPath), projectPath)
+  assertExpandableImages(extractElementById(projectMarkup, 'div', `project-${projectId}`, projectPath), projectPath)
   for (const destination of expectedOldDestinations[projectId] || []) assert.ok(projectMarkup.includes(`href="${destination}"`), `Missing original ${projectId} project destination: ${destination}`)
   for (const destination of project.links || []) assert.ok(projectMarkup.includes(`href="${destination.href}"`), `Missing ${projectId} card destination: ${destination.href}`)
 }
@@ -308,6 +337,7 @@ for (const [projectId, path, sectionTitles, destinations] of [
   for (const title of sectionTitles) assert.ok(caseMarkup.includes(title), `${path} should include the ${title} section.`)
   for (const destination of destinations) assert.ok(caseMarkup.includes(`href="${destination}"`), `${path} should preserve resource ${destination}.`)
   assert.ok(!markup.includes('href="/experience/"'))
+  assertExpandableImages(caseMarkup, path)
   const imageTags = [...caseMarkup.matchAll(/<img\b[^>]*\balt="([^"]*)"[^>]*>/g)]
   if (projectId === 'traders-edge') {
     assert.ok(imageTags.length >= 4, 'Trader’s Edge should include the project cover and several selected report figures.')
@@ -318,6 +348,8 @@ for (const [projectId, path, sectionTitles, destinations] of [
 const overviewPaths = [projectPaths.openclaw, projectPaths['chinese-learning'], projectPaths['traders-edge']]
 for (const path of overviewPaths) {
   const routeMarkup = extractMain(htmlByPath.get(path), path)
+  const projectId = resolvePortfolioRoute(path).projectId
+  assertExpandableImages(extractElementById(routeMarkup, 'div', `project-${projectId}`, path), path)
   assert.match(routeMarkup, /href="[^"]+\/info\/"[^>]*>[\s\S]*?Read full/i, `${path} must expose a native full-writeup link in the server-rendered overview.`)
   assert.ok(!routeMarkup.includes('Architecture and components'), `${path} overview must not reveal the full case study before the primary action.`)
 }
@@ -327,11 +359,32 @@ for (const fact of ['lancedb', 'playwright mcp', 'openai', 'windows wsl', 'stopp
 assert.doesNotMatch(openClawText, /cloud deployment is live|deployed to the cloud/)
 const chineseText = textOf(extractMain(htmlByPath.get('/call_analyzer_chinese_learning/info/'), '/call_analyzer_chinese_learning/info/')).toLowerCase()
 for (const fact of ['openrouter', 'sqlite', 'supabase', 'google cloud run', 'telegram', 'ten']) assert.ok(chineseText.includes(fact), `Chinese Learning case study should retain ${fact}.`)
+const chineseMarkup = extractMain(htmlByPath.get('/call_analyzer_chinese_learning/info/'), '/call_analyzer_chinese_learning/info/')
+const chineseMotivationMarkup = chineseMarkup.match(/<section\b[^>]*aria-labelledby="motivation-chinese-learning"[^>]*>([\s\S]*?)<\/section>/)?.[1]
+assert.ok(chineseMotivationMarkup, 'The Chinese Learning writeup should have a motivation section.')
+const chineseMotivation = textOf(chineseMotivationMarkup).toLowerCase()
+for (const fact of ['comprehension', 'speaking', 'vocabulary', 'workplace', 'different teams']) {
+  assert.ok(chineseMotivation.includes(fact), `Chinese Learning motivation should explain the workplace learning goal: ${fact}.`)
+}
+assert.doesNotMatch(chineseMotivation, /i love learning chinese/)
+const chineseFutureMarkup = chineseMarkup.match(/<section\b[^>]*aria-labelledby="future-chinese-learning"[^>]*>([\s\S]*?)<\/section>/)?.[1]
+assert.ok(chineseFutureMarkup && textOf(chineseFutureMarkup).toLowerCase().includes('windows version'), 'Chinese Learning future plans should include a Windows app version.')
 
 const tradersText = textOf(extractMain(htmlByPath.get('/traders_edge/info/'), '/traders_edge/info/')).toLowerCase()
 for (const fact of ['level_news_events', 'level_news_event_effects', 'level_news_event_tickers', 'order book', 'fictional', 'jsonb']) {
   assert.ok(tradersText.includes(fact), `Trader’s Edge writeup should include sourced project detail: ${fact}.`)
 }
+const forumProjectText = textOf(extractMain(htmlByPath.get('/projects/foroom/'), '/projects/foroom/')).toLowerCase()
+assert.ok(forumProjectText.includes('a project i created for an interview with cvwo (computing for voluntary welfare organisations), where i self-learned to manually build a full-stack forum website as a 1st year student.'), 'The forum project description should match the supplied copy.')
+for (const fact of ['demo forum website', 'interview with cvwo', 'computing for voluntary welfare organisations', 'self-learned', 'full-stack forum website', '1st year student']) {
+  assert.ok(forumProjectText.includes(fact), `The demo forum website should preserve its new description: ${fact}.`)
+}
+const tradersOverviewText = textOf(extractMain(htmlByPath.get('/traders_edge/'), '/traders_edge/')).toLowerCase()
+for (const fact of ['national university of singapore final-year project', 'fully controllable simulated market order book', 'news', 'interest rates']) {
+  assert.ok(tradersOverviewText.includes(fact), `Trader’s Edge overview should include the simulated-market description: ${fact}.`)
+}
+const featuredExperienceMarkup = extractElementById(rootMain, 'section', 'what-im-building', '/')
+assertExpandableImages(featuredExperienceMarkup, '/#what-im-building')
 
 for (const path of portfolioCompatibilityRoutePaths) {
   const aliasHtml = await readFile(routeFile(path), 'utf8')

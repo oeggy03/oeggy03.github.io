@@ -9,11 +9,13 @@ For a new clone or conversation, start with [AGENTS.md](../AGENTS.md), then use 
 | Route | Page |
 | --- | --- |
 | `/` | Experience: profile, current role, work history, education, interests, and two featured projects |
-| `/projects/` | All eight projects, category filters, and project details |
+| `/projects/` | All nine projects, grouped by project era, with category filters and project details |
 | `/skills/` | Supplied skills grouped with links to example projects |
-| `/projects/foroom/`, `/projects/buddy4good/`, `/projects/eggbot/`, `/projects/teleai/`, `/projects/foodhero/`, `/projects/portfolio/`, `/projects/openclaw/`, `/projects/chinese-learning/` | Eight direct project routes; OpenClaw and Chinese Learning have long-form case studies |
+| `/projects/foroom/`, `/projects/buddy4good/`, `/projects/eggbot/`, `/projects/teleai/`, `/projects/foodhero/`, `/projects/portfolio/` | Six standard project routes |
+| `/openclaw_agent/`, `/call_analyzer_chinese_learning/`, `/traders_edge/` | Project overview routes |
+| `/openclaw_agent/info/`, `/call_analyzer_chinese_learning/info/`, `/traders_edge/info/` | Long-form case studies |
 
-These are eleven canonical routes. The old `/experience/` path is generated as a compatibility page for the Experience landing. The route resolver also migrates recognized legacy hashes to clean section or project routes. In-page and skip links remain native anchors. Preserve direct load and refresh without relying on a single-page-app server fallback.
+These are fifteen canonical routes. The old `/experience/` path is generated as a compatibility page for the Experience landing. The route resolver also migrates recognized legacy hashes to clean section or project routes. In-page and skip links remain native anchors. Preserve direct load and refresh without relying on a single-page-app server fallback.
 
 The normal path through the site is the Experience profile and timeline, with links to the project index or skills. The shared header keeps section navigation, email, GitHub, LinkedIn, and the resume available. Project filters update the visible cards, and selecting a project uses its own clean route.
 
@@ -25,8 +27,9 @@ The normal path through the site is the Experience profile and timeline, with li
 | Shared header, footer, and route shell | `src/components/layout/PortfolioShell.jsx` | Holds section navigation and contact actions |
 | Reusable UI primitives | `src/components/ui/` | Buttons, panels, headings, and shared styles via Tailwind classes |
 | Content components | `src/components/content/` | Work timeline, project index/details, and featured case-study cards |
-| Portfolio source data | `src/data/portfolio.js` | Profile, work history, eight project records, skills, and existing links |
-| Featured case-study data | `src/data/featured-projects.js` | The two featured project records, images, and detailed story content |
+| Portfolio source data | `src/data/portfolio.js` | Profile, work history, six standard project records, combined list and groups for all nine projects, skills, and existing links |
+| Featured case-study data | `src/data/featured-projects.js` | OpenClaw and Chinese Learning records, images, and detailed story content |
+| Trader's Edge case study | `src/data/traders-edge.js` | Trader's Edge project record, screenshots, and detailed story content |
 | Route resolution and history | `src/navigation/` | `routes.js`, fragment aliases, React context/provider, and clean path navigation |
 | Browser entry and styles | `src/main.jsx`, `src/tailwind.css`, `tailwind.config.js` | React hydration, Tailwind directives, color tokens, and system font stacks |
 | HTML template and static metadata | `index.html`, `public/` | Base metadata, robots policy, social image, custom domain, and Pages marker |
@@ -41,9 +44,9 @@ All website styles are Tailwind utilities in JSX plus the theme in `tailwind.con
 
 ### Edit profile, work, projects, or skills
 
-- Update the relevant record in `src/data/portfolio.js`; keep the current profile, eight supplied projects, supplied roles, skills, and links intact unless the owner requests a content change.
+- Update the relevant record in `src/data/portfolio.js`; keep the current profile, nine supplied projects, supplied roles, skills, and links intact unless the owner requests a content change. The `projectGroups` export defines their order for the index and project navigation: Currently exploring, Other projects, then Before the age of AI...
 - Work history is rendered by `src/components/content/ExperienceTimeline.jsx`. Keep the current position first, completed roles latest by end date, and earlier roles in the native `<details>` disclosure.
-- Only the two currently owner-approved featured projects are on Experience. Their longer descriptions and screenshots belong in `src/data/featured-projects.js`; the remaining six project records stay in Projects.
+- Only the two currently owner-approved featured projects are on Experience. Their longer descriptions and screenshots belong in `src/data/featured-projects.js`; the remaining seven project records stay in Projects. The older-project group begins with Portfolio Website and Demo Forum Website.
 - When adding a project route, update the project ID allow-list and route generation in `src/navigation/routes.js`, the expected route/content lists in `scripts/check-seo.mjs` and `scripts/check-ui.mjs`, and the static screenshot coverage where useful. Confirm a generated `dist/projects/<id>/index.html` and refresh behavior.
 - Use supplied facts and approved assets only. Do not derive achievements, impact metrics, dates, credentials, image claims, or destinations from assumptions.
 

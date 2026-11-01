@@ -1,7 +1,8 @@
 import PropTypes from 'prop-types'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { ActionLink, Badge, Panel } from '../ui/index.jsx'
-import { projects } from '../../data/portfolio.js'
+import { projectGroups, projects } from '../../data/portfolio.js'
+import ExpandableImage from '../ui/ExpandableImage.jsx'
 import { usePortfolioNavigation } from '../../navigation/NavigationContext.jsx'
 import { projectInfoPathFor, projectPathFor, resolvePortfolioRoute, sectionPathFor } from '../../navigation/routes.js'
 
@@ -48,7 +49,8 @@ function ProjectDetails({ project }) {
         </div>
 
         <div className="mt-7 flex aspect-video max-h-[360px] items-center justify-center overflow-hidden rounded-2xl bg-surface p-3 sm:p-5">
-          <img className="h-full w-full object-contain" src={project.image} alt={project.imageAlt} width={project.imageWidth} height={project.imageHeight} loading="lazy" decoding="async" />
+          <ExpandableImage src={project.image} alt={project.imageAlt} width={project.imageWidth} height={project.imageHeight}
+            linkClassName="flex h-full w-full items-center justify-center" imageClassName="h-full w-full object-contain" loading="lazy" />
         </div>
 
         <p className="mt-4 text-base leading-relaxed text-ink">{project.summary}</p>
@@ -94,19 +96,28 @@ export default function ProjectExplorer() {
   return (
     <div data-project-explorer className="min-w-0">
       <div className="grid min-w-0 gap-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start">
-        <nav className="grid grid-cols-2 gap-1 border-b border-line pb-4 sm:grid-cols-3 lg:sticky lg:top-[112px] lg:flex lg:flex-col lg:gap-1 lg:border-b-0 lg:pb-0" aria-label="Choose a project">
-          {projects.map((project) => {
-            const selected = selectedProject?.id === project.id
-            return (
-              <a key={project.id} href={projectPathFor(project.id)} aria-current={fragmentProject?.id === project.id ? 'page' : undefined} onClick={(event) => {
-                if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.currentTarget.target || event.currentTarget.hasAttribute('download')) return
-                event.preventDefault()
-                chooseProject(project.id)
-              }} className={`flex min-h-11 min-w-0 items-center rounded-lg px-3 text-left text-sm font-medium leading-tight transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent lg:w-full ${selected ? 'bg-surface font-semibold text-ink underline decoration-accent decoration-2 underline-offset-4' : 'text-muted hover:bg-surface hover:text-ink'}`}>
-                <span className="min-w-0 [overflow-wrap:anywhere]">{project.title}</span>
-              </a>
-            )
-          })}
+        <nav className="flex min-w-0 flex-wrap gap-x-4 gap-y-5 border-b border-line pb-4 lg:sticky lg:top-[112px] lg:flex-col lg:flex-nowrap lg:gap-4 lg:border-b-0 lg:pb-0" aria-label="Choose a project">
+          {projectGroups.map((group) => (
+            <section key={group.id} data-project-group={group.id} aria-labelledby={`project-group-${group.id}`} className="min-w-0 w-full sm:w-[calc(50%-0.5rem)] lg:w-full">
+              <h3 id={`project-group-${group.id}`} className="mb-1.5 px-3 text-xs font-semibold leading-5 text-muted">{group.title}</h3>
+              <ul className="grid min-w-0 grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-1">
+                {group.projects.map((project) => {
+                  const selected = selectedProject?.id === project.id
+                  return (
+                    <li key={project.id} className="min-w-0">
+                      <a href={projectPathFor(project.id)} aria-current={fragmentProject?.id === project.id ? 'page' : undefined} onClick={(event) => {
+                        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.currentTarget.target || event.currentTarget.hasAttribute('download')) return
+                        event.preventDefault()
+                        chooseProject(project.id)
+                      }} className={`flex min-h-11 min-w-0 items-center rounded-lg px-3 text-left text-sm font-medium leading-tight transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent lg:w-full ${selected ? 'bg-surface font-semibold text-ink underline decoration-accent decoration-2 underline-offset-4' : 'text-muted hover:bg-surface hover:text-ink'}`}>
+                        <span className="min-w-0 [overflow-wrap:anywhere]">{project.title}</span>
+                      </a>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          ))}
         </nav>
         <ProjectDetails key={selectedProject?.id} project={selectedProject} />
       </div>

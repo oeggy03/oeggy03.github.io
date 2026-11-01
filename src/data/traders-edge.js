@@ -13,7 +13,7 @@ const tradersEdgeProject = {
   imageWidth: 1919,
   imageHeight: 909,
   summary: 'A trading education game where learners practice market orders, read price signals and test strategies in guided, historical and multiplayer scenarios.',
-  description: 'National University of Singapore final-year project',
+  description: 'National University of Singapore final-year project featuring a fully controllable simulated market order book, with market behavior controlled by simulated real-world events such as news and interest rates.',
   implementation: [
     { label: 'Frontend', value: 'React · TypeScript · Vite · Tailwind CSS' },
     { label: 'Database', value: 'Relational schema · JSONB' },

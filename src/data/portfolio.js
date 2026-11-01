@@ -57,13 +57,13 @@ export const profile = {
 const existingProjects = [
   {
     id: "foroom",
-    title: "FoROOM",
+    title: "Demo Forum Website",
     category: "Backend",
     image: foroomImage,
-    imageAlt: "FoROOM discussion forum interface",
+    imageAlt: "Demo Forum Website discussion interface",
     imageWidth: 1920,
     imageHeight: 1080,
-    summary: "A discussion forum for people with different interests and backgrounds.",
+    summary: "A project I created for an interview with CVWO (Computing for voluntary welfare organisations), where I self-learned to manually build a full-stack forum website as a 1st year student.",
     implementation: [
       { label: "Frontend", value: "React" },
       { label: "Backend", value: "Go" },
@@ -190,6 +190,26 @@ const existingProjects = [
 ]
 
 export const projects = [...existingProjects, ...featuredProjects, tradersEdgeProject]
+
+const projectsById = new Map(projects.map((project) => [project.id, project]))
+
+export const projectGroups = [
+  {
+    id: 'exploring',
+    title: 'Currently exploring',
+    projects: ['openclaw', 'chinese-learning'].map((id) => projectsById.get(id)),
+  },
+  {
+    id: 'featured',
+    title: 'Other projects',
+    projects: ['traders-edge'].map((id) => projectsById.get(id)),
+  },
+  {
+    id: 'before-ai',
+    title: 'Before the age of AI...',
+    projects: ['portfolio', 'foroom', 'buddy4good', 'eggbot', 'teleai', 'foodhero'].map((id) => projectsById.get(id)),
+  },
+]
 
 export const currentExperienceId = "tiktok-backend"
 
