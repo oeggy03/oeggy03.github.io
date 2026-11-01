@@ -111,7 +111,7 @@ export const featuredProjects = [
       eyebrow: 'Language learning workflow',
       lead: 'I built a practical way to keep Chinese words from a lesson or an everyday reading moment alive after I move on. The toolkit turns those discoveries into a practice loop: capture vocabulary, review it at my desk, then meet a small selection again in Telegram the next morning.',
       motivation: [
-        'I love learning Chinese, and this project grew from wanting to make that learning feel connected from one day to the next. Building the full loop lets me experiment with language tools while making each useful word easier to return to in my own routine.',
+        'I started this project because strong Chinese comprehension and speaking skills matter to me, and I want to keep building my vocabulary. My workplace responsibilities require me to communicate in Chinese with different teams, so I wanted a practical way to support that learning.',
         'I also wanted the computer to help me notice vocabulary without deciding what I have learned. Transcribed or recognized terms begin as drafts, so I can confirm, edit, merge or reject them before they join the words I revisit.',
       ],
       capabilities: [
@@ -159,6 +159,7 @@ export const featuredProjects = [
       ],
       futurePlans: [
         'I plan to extend the daily message into a reply and review-state loop, so my answers can shape which words I revisit next. That foundation can later support more adaptive spacing between practice sessions.',
+        'I also want to make a Windows version of the app.',
       ],
     },
   },

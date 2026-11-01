@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import { ArrowLeft, ArrowUpRight } from 'lucide-react'
 import { Badge } from '../ui/index.jsx'
+import ExpandableImage from '../ui/ExpandableImage.jsx'
 import { projectPathFor } from '../../navigation/routes.js'
 
 export default function ProjectCaseStudy({ project }) {
@@ -24,9 +25,8 @@ export default function ProjectCaseStudy({ project }) {
       </header>
 
       <figure className="mt-8 flex max-h-[min(70vh,36rem)] items-center justify-center overflow-hidden rounded-2xl bg-surface p-3 sm:p-6">
-        <a href={project.image} target="_blank" rel="noreferrer noopener" aria-label={`View full image: ${project.imageAlt}`} className="flex min-h-11 max-w-full items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent">
-          <img src={project.image} alt={project.imageAlt} width={project.imageWidth} height={project.imageHeight} className="max-h-[min(64vh,32rem)] max-w-full object-contain" decoding="async" />
-        </a>
+        <ExpandableImage src={project.image} alt={project.imageAlt} width={project.imageWidth} height={project.imageHeight}
+          linkClassName="flex min-h-11 max-w-full items-center justify-center" imageClassName="max-h-[min(64vh,32rem)] max-w-full object-contain" />
       </figure>
 
       <div className="mt-12 max-w-4xl space-y-12 sm:mt-16 sm:space-y-16">
@@ -90,9 +90,8 @@ export default function ProjectCaseStudy({ project }) {
                   <div className={`mt-5 grid min-w-0 gap-5 ${project.id === 'traders-edge' ? 'lg:grid-cols-1' : 'xl:grid-cols-2'}`}>
                     {example.images.map((image) => (
                       <figure key={image.src} className="min-w-0 rounded-2xl bg-paper p-3 ring-1 ring-line/70 sm:p-4">
-                        <a href={image.src} target="_blank" rel="noreferrer noopener" aria-label={`View full screenshot: ${image.alt}`} className="flex min-h-11 items-center justify-center rounded-xl bg-surface p-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                          <img src={image.src} alt={image.alt} width={image.width} height={image.height} className="max-h-[34rem] max-w-full object-contain" loading="lazy" decoding="async" />
-                        </a>
+                        <ExpandableImage src={image.src} alt={image.alt} width={image.width} height={image.height} caption={image.caption}
+                          linkClassName="flex min-h-11 items-center justify-center rounded-xl bg-surface p-2" imageClassName="max-h-[34rem] max-w-full object-contain" loading="lazy" />
                         <figcaption className="mt-3 text-sm leading-6 text-muted">{image.caption}</figcaption>
                       </figure>
                     ))}

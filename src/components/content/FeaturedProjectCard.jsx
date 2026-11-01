@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types'
 import { ActionLink } from '../ui/index.jsx'
+import ExpandableImage from '../ui/ExpandableImage.jsx'
 import { projectPathFor } from '../../navigation/routes.js'
 
 export default function FeaturedProjectCard({ project, compact = false, featuredOnExperience = false }) {
@@ -9,8 +10,8 @@ export default function FeaturedProjectCard({ project, compact = false, featured
   return (
     <article className={`min-w-0 overflow-hidden rounded-2xl bg-paper ring-1 ring-line/70 ${compact ? '' : 'flex flex-col'}`}>
       <div className={`flex items-center justify-center overflow-hidden bg-surface p-3 ${compact ? 'aspect-video max-h-44' : 'aspect-video max-h-[280px] sm:p-5'}`}>
-        <img src={project.image} alt={project.imageAlt} width={project.imageWidth} height={project.imageHeight}
-          className="max-h-full max-w-full object-contain" loading="lazy" decoding="async" />
+        <ExpandableImage src={project.image} alt={project.imageAlt} width={project.imageWidth} height={project.imageHeight}
+          linkClassName="flex h-full w-full items-center justify-center" imageClassName="max-h-full max-w-full object-contain" loading="lazy" />
       </div>
       <div className={`flex min-w-0 flex-1 flex-col ${compact ? 'p-4' : 'p-5 sm:p-6'}`}>
         <p className="text-sm font-medium text-muted">{project.category}</p>

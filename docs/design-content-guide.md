@@ -12,9 +12,10 @@ The following are owner-confirmed directions available in the conversation histo
 - The hero copy is “I build useful and scalable software.” It introduces Ha Thu as a TikTok backend engineer and NUS computer science graduate. Copy should sound friendly, practical, forward-looking, and interested in trying new technologies.
 - In Experience, keep the current job visible first and put seven earlier roles in a latest-first native disclosure. Show company marks with roles where already supplied, and keep the disclosure's prompt at the end of its row.
 - Keep grouped in-page prompts to Experience, Education, and Projects after the full introduction. Navigation motion should be smooth where enabled and respect reduced-motion preferences.
-- Keep education prominent, with the date range easy to scan. Feature only My OpenClaw Lab and Chinese Learning Toolkit in Experience, with their detailed case studies available on their project routes. Keep the other six project records in Projects.
+- Keep education prominent, with the date range easy to scan. Feature only My OpenClaw Lab and Chinese Learning Toolkit in Experience, with their detailed case studies available on their project routes. Keep the other seven project records in Projects.
 - Do not add an active red status dot, country taglines, or an expertise strip to Experience. Avoid awkward availability caveats or process notes in public copy.
 - Preserve the facts and links the owner supplied. Ask only when a required fact cannot be found in the repository or request.
+- On Projects, show Currently exploring first, then Other projects, then Before the age of AI...; order Portfolio Website and Demo Forum Website first within the last group. The project chooser uses this same order.
 
 These notes do not claim access to other private conversations. The prior design discussions available here are summarized above; do not infer additional preferences from unavailable chat history.
 
@@ -33,6 +34,7 @@ These are observations from the current implementation rather than permanent con
 - Use clean real `<a>` routes for sections and projects so they load directly and remain available without JavaScript. Use fragment links only for genuine in-page anchors and preserve migration of existing legacy hashes.
 - Keep native semantic elements when they already fit the job, including the work-history `<details>` disclosure. Preserve keyboard behavior, accessible names, current-page states, focus outlines, and visible skip navigation.
 - Maintain minimum 44px pointer targets. Support long text, 200% text scaling, narrow layouts, and high-contrast/forced-color users. Keep meaningful image alternatives and intrinsic dimensions to avoid layout shifts.
+- Project card and case-study images link to an expanded view in a native dialog. Provide a clear close button, return focus to the image link on dismissal, and retain the image URL as the link destination when JavaScript is unavailable.
 - Preserve the current purposeful anchor/route motion only where it helps orientation, and ensure `prefers-reduced-motion` makes movement immediate. Do not add animation just to make a page feel active.
 - A browser screenshot is evidence of its visible state only. For visual changes, inspect affected routes at desktop and mobile sizes; capture real screenshots when useful. The automated checks cover an 11-viewport layout matrix and additional keyboard, route, motion, text-scaling, and axe cases. They do not establish physical-device or manual screen-reader results.
 

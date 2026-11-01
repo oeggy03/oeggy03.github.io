@@ -41,9 +41,9 @@ const compatibilityAliases = [
   ...portfolioCompatibilityRoutePaths.map((alias) => ({ alias, route: compatibilityRoutePaths.get(alias) })),
   ...compatibilityIndexAliases,
 ]
-const projectNames = ['FoROOM', 'Buddy4Good', 'Eggbot', 'TeleAI', 'FoodHero', 'Portfolio Website', 'My OpenClaw Lab', 'Chinese Learning Toolkit', 'Trader’s Edge']
+const projectNames = ['Demo Forum Website', 'Buddy4Good', 'Eggbot', 'TeleAI', 'FoodHero', 'Portfolio Website', 'My OpenClaw Lab', 'Chinese Learning Toolkit', 'Trader’s Edge']
 const projectIds = {
-  FoROOM: 'foroom', Buddy4Good: 'buddy4good', Eggbot: 'eggbot',
+  'Demo Forum Website': 'foroom', Buddy4Good: 'buddy4good', Eggbot: 'eggbot',
   TeleAI: 'teleai', FoodHero: 'foodhero', 'Portfolio Website': 'portfolio',
   'My OpenClaw Lab': 'openclaw', 'Chinese Learning Toolkit': 'chinese-learning', 'Trader’s Edge': 'traders-edge',
 }
@@ -759,6 +759,38 @@ async function run() {
       const index = page.locator('#projects [data-project-index]')
       const cards = index.locator('article')
       await assert.equal(await cards.count(), 9, 'All nine project cards should appear on the index.')
+      const expectedGroups = [
+        { id: 'exploring', title: 'Currently exploring', projectIds: ['openclaw', 'chinese-learning'] },
+        { id: 'featured', title: 'Other projects', projectIds: ['traders-edge'] },
+        { id: 'before-ai', title: 'Before the age of AI...', projectIds: ['portfolio', 'foroom', 'buddy4good', 'eggbot', 'teleai', 'foodhero'] },
+      ]
+      const groupSections = index.locator('[data-project-group]')
+      const renderedGroups = await groupSections.evaluateAll((sections) => sections.map((section) => ({
+        id: section.getAttribute('data-project-group'),
+        title: section.querySelector('h2, h3')?.textContent.trim(),
+        projectIds: [...section.querySelectorAll('a[href^="/projects/"], a[href^="/openclaw_agent/"], a[href^="/call_analyzer_chinese_learning/"], a[href^="/traders_edge/"]')]
+          .map((link) => link.getAttribute('href')),
+      })))
+      const projectIdByPath = new Map(Object.entries(projectPaths).map(([id, path]) => [path, id]))
+      await assert.deepEqual(renderedGroups.map(({ id, title, projectIds: hrefs }) => ({
+        id,
+        title,
+        projectIds: hrefs.map((href) => projectIdByPath.get(href)).filter(Boolean),
+      })), expectedGroups, 'The index should render the same groups and requested project order as the shared data.')
+      const chooserResponse = await context.request.get(urlFor('/projects/foroom/'))
+      await assert.equal(chooserResponse.status(), 200)
+      const chooserHtml = await chooserResponse.text()
+      const chooserGroups = [...chooserHtml.matchAll(/data-project-group="([^"]+)"/g)].map(([, id]) => id)
+      await assert.deepEqual(chooserGroups, expectedGroups.map(({ id }) => id), 'Every project overview sidebar should render the shared groups in the same order.')
+      const chooserLinks = [...chooserHtml.matchAll(/<nav\b[^>]*aria-label="Choose a project"[^>]*>([\s\S]*?)<\/nav>/g)][0]?.[1] || ''
+      for (const [groupIndex, group] of expectedGroups.entries()) {
+        const groupStart = chooserLinks.indexOf(`data-project-group="${group.id}"`)
+        const nextGroup = expectedGroups[groupIndex + 1]
+        const nextGroupStart = nextGroup ? chooserLinks.indexOf(`data-project-group="${nextGroup.id}"`) : chooserLinks.length
+        const groupMarkup = chooserLinks.slice(groupStart, nextGroupStart < 0 ? undefined : nextGroupStart)
+        const projectHrefs = [...groupMarkup.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(([, href]) => href)
+        await assert.deepEqual(projectHrefs, group.projectIds.map((projectId) => projectPaths[projectId]), `${group.title} sidebar projects should follow the selected order.`)
+      }
       const filters = page.getByRole('group', { name: 'Filter projects' })
       const categoryCounts = ['All', 'Backend', 'AI & bots', 'Frontend']
       const expectedCounts = [9, 3, 5, 1]
@@ -778,8 +810,12 @@ async function run() {
       await assert.equal(new URL(page.url()).pathname, '/projects/', 'Filtering should not navigate to a project detail.')
       await assert.equal(await aiFilter.getAttribute('aria-pressed'), 'true')
       await assert.equal(await cards.count(), 5, 'AI & bots should filter to five project cards.')
-      const aiCardOrder = await cards.locator('a[href]').evaluateAll((links) => links.map((link) => link.getAttribute('href')))
+      const aiCardOrder = await cards.locator('a[href]').evaluateAll((links, projectRoutes) => links
+        .map((link) => link.getAttribute('href'))
+        .filter((href) => projectRoutes.includes(href)), Object.values(projectPaths))
       await assert.deepEqual(aiCardOrder.slice(0, 2), [projectPaths.openclaw, projectPaths['chinese-learning']], 'Featured projects should lead the filtered grid.')
+      await assert.equal(await index.locator('[data-project-group="featured"]').count(), 0, 'Groups with no matches should disappear from a category filter.')
+      await assert.equal(await index.locator('[data-project-group="before-ai"]').count(), 1, 'The older-project group should stay present when its category still has a result.')
       const scrolledY = await scrollNaturallyTo(page, 150)
       await assert.ok(scrolledY > 0, 'The filtered index should retain a real scroll position before opening a project overview.')
       await index.locator(`a[href="${projectPaths.openclaw}"]`).click()
@@ -842,6 +878,13 @@ async function run() {
           const actionBounds = await fullWriteupLink.boundingBox()
           await assert.ok(actionBounds && actionBounds.height >= 44 && titleBounds && actionBounds.x + actionBounds.width / 2 > titleBounds.x + titleBounds.width / 2, `${project} should have a large top-right full-writeup action.`)
         }
+        if (project === 'Trader’s Edge') {
+          const description = await page.locator('#project-traders-edge').innerText()
+          await assert.match(description, /National University of Singapore final-year project/i, 'Trader’s Edge overview should retain the final-year project context.')
+          await assert.match(description, /fully controllable simulated market order book/i, 'Trader’s Edge overview should describe a controllable simulated order book.')
+          await assert.match(description, /news/i, 'Trader’s Edge overview should name simulated news events.')
+          await assert.match(description, /interest rates/i, 'Trader’s Edge overview should name simulated interest-rate events.')
+        }
         const heading = page.locator(`#project-heading-${projectIds[project]}`)
         await heading.focus()
         await assert.ok(await heading.evaluate((element) => element === document.activeElement), `${project} heading should remain keyboard focusable.`)
@@ -866,11 +909,27 @@ async function run() {
         }
       }
 
+      await page.goto(urlFor('/projects/'), { waitUntil: 'domcontentloaded' })
+      const projectIndex = page.locator('#projects [data-project-index]')
+      await assert.ok(await projectIndex.getByRole('heading', { name: 'Demo Forum Website', exact: true }).isVisible(), 'The renamed forum card should use the requested title.')
+      await assert.ok(await projectIndex.getByText('A project I created for an interview with CVWO (Computing for voluntary welfare organisations), where I self-learned to manually build a full-stack forum website as a 1st year student.', { exact: true }).isVisible(), 'The forum card should show the supplied description verbatim.')
+
       for (const project of ['My OpenClaw Lab', 'Chinese Learning Toolkit', 'Trader’s Edge']) {
         const path = projectInfoPaths[projectIds[project]]
         await page.goto(urlFor(path), { waitUntil: 'domcontentloaded' })
         await assertProjectInfoRoute(page, project)
         await assertRouteMetadata(page, path)
+        if (project === 'Chinese Learning Toolkit') {
+          const motivationText = await page.locator('#motivation-chinese-learning').locator('..').innerText()
+          await assert.match(motivationText, /comprehension/i)
+          await assert.match(motivationText, /speaking/i)
+          await assert.match(motivationText, /vocabulary/i)
+          await assert.match(motivationText, /workplace|work responsibilities/i)
+          await assert.match(motivationText, /different teams/i)
+          await assert.match(motivationText, /Chinese/i)
+          await assert.doesNotMatch(motivationText, /I love learning Chinese/i, 'The replaced opening motivation should not return.')
+          await assert.match(await page.locator('#future-chinese-learning').locator('..').innerText(), /Windows version/i, 'Future plans should include a Windows version of the app.')
+        }
         const imagesByCaseStudy = {
           'My OpenClaw Lab': [
             ['OpenClaw conversation about comparing gaming mice and adding a Tecware EX2 to the cart.', 608, 726],
@@ -908,7 +967,133 @@ async function run() {
       await chooser.getByRole('link', { name: /My OpenClaw Lab/i }).click()
       await assertProjectRoute(page, 'My OpenClaw Lab')
       await page.goBack()
-      await assertProjectRoute(page, 'FoROOM')
+      await assertProjectRoute(page, 'Demo Forum Website')
+    })
+
+    await check('project imagery opens an accessible, dismissible full-image viewer', async () => {
+      const previousViewport = page.viewportSize()
+      const dialog = page.locator('[data-expanded-image-dialog]')
+      try {
+      await page.setViewportSize({ width: 390, height: 844 })
+      await page.goto(urlFor('/projects/'), { waitUntil: 'domcontentloaded' })
+      await settle(page)
+      const cardImages = page.locator('#projects [data-expandable-image]')
+      await assert.ok(await cardImages.count() >= 9, 'Every project card image on the index should expose an expandable-image link.')
+      for (const anchor of await cardImages.all()) {
+        const image = anchor.locator('img')
+        await assert.equal(await image.count(), 1, 'Each image action should contain one descriptive image.')
+        const match = await anchor.evaluate((element) => ({
+          href: new URL(element.href, window.location.href).href,
+          src: new URL(element.querySelector('img').src, window.location.href).href,
+          cursor: getComputedStyle(element).cursor,
+        }))
+        await assert.equal(match.href, match.src, 'Each project image action should link to its original image asset.')
+        await assert.equal(match.cursor, 'pointer', 'Expandable images should show a pointer cursor.')
+      }
+      const imageLink = cardImages.last()
+      await imageLink.scrollIntoViewIfNeeded()
+      await imageLink.focus()
+      const initialScrollY = await page.evaluate(() => window.scrollY)
+      await assert.ok(initialScrollY > 0, 'The image-viewer check should start from a nonzero reading position.')
+      await imageLink.press('Enter')
+      await page.waitForFunction(() => document.querySelector('[data-expanded-image-dialog]')?.open)
+      await assert.equal(new URL(page.url()).pathname, '/projects/', 'Opening an image should keep the current route.')
+      await assert.equal(new URL(page.url()).hash, '', 'Opening an image should not add a route fragment.')
+      await assert.equal(await page.evaluate(() => window.scrollY), initialScrollY, 'Opening an image should keep the reading position in place.')
+      const dialogImage = dialog.locator('img')
+      await assert.ok(await dialogImage.isVisible())
+      await assert.equal(await dialogImage.getAttribute('alt'), await imageLink.locator('img').getAttribute('alt'), 'The expanded image should preserve its descriptive alternative text.')
+      await page.mouse.wheel(0, 600)
+      await page.waitForTimeout(50)
+      await assert.equal(await page.evaluate(() => window.scrollY), initialScrollY, 'Wheel input should not move the page behind the open viewer.')
+      const dialogAxe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()
+      await assert.deepEqual(dialogAxe.violations, [], 'The open image dialog should pass axe WCAG checks.')
+      await dialog.locator('[data-expanded-image-close]').focus()
+      await page.keyboard.press('Tab')
+      await assert.ok(await dialog.evaluate((element) => element.contains(document.activeElement)), 'Tab should keep keyboard focus inside the modal.')
+      await page.keyboard.press('Tab')
+      await assert.ok(await dialog.evaluate((element) => element.contains(document.activeElement)), 'Repeated Tab should wrap focus back inside the modal.')
+      await dialog.locator('[data-expanded-image-close]').focus()
+      await page.keyboard.press('Shift+Tab')
+      await assert.ok(await dialog.evaluate((element) => element.contains(document.activeElement)), 'Shift+Tab at the first control should wrap focus inside the modal.')
+      await page.keyboard.press('Escape')
+      await page.waitForFunction(() => !document.querySelector('[data-expanded-image-dialog]'))
+      await assert.equal(await dialog.count(), 0, 'Escape should dismiss the image dialog.')
+      await assert.ok(await imageLink.evaluate((element) => element === document.activeElement), 'Dismissing the image dialog should return focus to its image link.')
+      await assert.equal(await page.evaluate(() => window.scrollY), initialScrollY, 'Closing the dialog should restore the saved reading position.')
+
+      await imageLink.click()
+      await assert.ok(await dialog.evaluate((element) => element.open), 'Pointer activation should open the image dialog.')
+      await dialog.locator('[data-expanded-image-close]').click()
+      await page.waitForFunction(() => !document.querySelector('[data-expanded-image-dialog]'))
+      await assert.equal(await dialog.count(), 0, 'The visible close action should dismiss the image dialog.')
+      await assert.ok(await imageLink.evaluate((element) => element === document.activeElement), 'Closing the viewer should restore focus to the clicked image.')
+
+      await imageLink.click()
+      await assert.ok(await dialog.evaluate((element) => element.open), 'The image dialog should open before backdrop dismissal is checked.')
+      await page.mouse.click(1, 1)
+      await page.waitForFunction(() => !document.querySelector('[data-expanded-image-dialog]'))
+      await assert.equal(await dialog.count(), 0, 'Clicking the dialog backdrop should dismiss the viewer.')
+      await assert.ok(await imageLink.evaluate((element) => element === document.activeElement), 'Backdrop dismissal should restore focus to the image link.')
+
+      await page.goto(urlFor('/'), { waitUntil: 'domcontentloaded' })
+      await navLinks(page).getByText('Projects', { exact: true }).click()
+      await assertActiveView(page, 'Projects')
+      await settle(page)
+      const historyImage = page.locator('#projects [data-project-index] [data-expandable-image]').last()
+      await historyImage.scrollIntoViewIfNeeded()
+      await historyImage.focus()
+      const outgoingScrollY = await page.evaluate(() => window.scrollY)
+      await assert.ok(outgoingScrollY > 0, 'The Back/Forward viewer check should start with a saved Projects reading position.')
+      await historyImage.press('Enter')
+      await page.waitForFunction(() => document.querySelector('[data-expanded-image-dialog]')?.open)
+      await page.goBack()
+      await page.waitForFunction(() => window.location.pathname === '/')
+      await settle(page)
+      await assert.equal(await page.locator('[data-expanded-image-dialog]').count(), 0, 'Back should dismiss an image viewer when its route changes.')
+      await assert.ok(await page.evaluate(() => window.scrollY) <= 2, 'Back should restore the prior route’s reading position after closing the viewer.')
+      await page.goForward()
+      await page.waitForFunction(() => window.location.pathname === '/projects/')
+      await settle(page)
+      await assert.equal(await page.locator('[data-expanded-image-dialog]').count(), 0, 'Forward should keep the viewer dismissed.')
+      await assert.equal(await page.evaluate(() => window.scrollY), outgoingScrollY, 'Forward should restore the Projects reading position saved before opening the viewer.')
+
+      await page.goto(urlFor('/traders_edge/info/'), { waitUntil: 'domcontentloaded' })
+      await page.setViewportSize({ width: 320, height: 568 })
+      await settle(page)
+      const studyImage = page.locator('#project-traders-edge [data-expandable-image]').first()
+      await studyImage.focus()
+      await studyImage.press('Enter')
+      await page.waitForFunction(() => document.querySelector('[data-expanded-image-dialog]')?.open)
+      await assert.ok(await dialog.evaluate((element) => element.open), 'Case-study images should open through keyboard activation.')
+      const dialogBounds = await dialog.boundingBox()
+      const viewport = page.viewportSize()
+      await assert.ok(dialogBounds && dialogBounds.x >= 0 && dialogBounds.y >= 0 && dialogBounds.x + dialogBounds.width <= viewport.width && dialogBounds.y + dialogBounds.height <= viewport.height, 'The expanded image dialog should fit the 320×568 mobile viewport.')
+      const imageBounds = await dialog.locator('img').boundingBox()
+      await assert.ok(imageBounds && imageBounds.width <= dialogBounds.width && imageBounds.height <= dialogBounds.height, 'The full image should remain inside the mobile dialog bounds.')
+      await page.keyboard.press('Escape')
+
+      for (const path of ['/', '/projects/', ...Object.values(projectPaths), ...Object.values(projectInfoPaths)]) {
+        await page.goto(urlFor(path), { waitUntil: 'domcontentloaded' })
+        await settle(page)
+        const projectId = resolvePortfolioRoute(path).projectId
+        const mediaRoot = path === '/'
+          ? page.locator('#what-im-building')
+          : path === '/projects/'
+            ? page.locator('#projects [data-project-index]')
+            : page.locator(`#project-${projectId}`)
+        const images = mediaRoot.locator('img')
+        const imageActions = mediaRoot.locator('a[data-expandable-image]')
+        await assert.ok(await images.count() > 0, `${path} should render its project images in the active view.`)
+        await assert.equal(await imageActions.locator('img').count(), await images.count(), `${path} should make every active-view project image expandable.`)
+      }
+      } finally {
+        if (await dialog.count() && await dialog.evaluate((element) => element.open)) {
+          await dialog.locator('[data-expanded-image-close]').click()
+          await dialog.waitFor({ state: 'detached' })
+        }
+        if (previousViewport) await page.setViewportSize(previousViewport)
+      }
     })
 
     await check('experience content is chronological and destination links remain available', async () => {
@@ -1391,7 +1576,31 @@ async function run() {
           await staticPage.locator('a[href="#what-im-building"]').click()
           await assert.equal(new URL(staticPage.url()).hash, '#what-im-building', 'A native featured-project anchor should work without JavaScript.')
           await assert.ok(await staticPage.locator('#what-im-building').isVisible(), 'The featured-project section should remain available without JavaScript.')
+          const featuredProjectImages = staticPage.locator('#what-im-building [data-expandable-image]')
+          await assert.equal(await featuredProjectImages.locator('img').count(), 2, 'Experience featured project images should remain linked in no-JavaScript markup.')
+          for (const action of await featuredProjectImages.all()) {
+            const source = await action.evaluate((element) => ({ href: new URL(element.href).href, src: new URL(element.querySelector('img').src).href }))
+            await assert.equal(source.href, source.src, 'Experience featured images should preserve their original asset links without JavaScript.')
+          }
           await assert.equal(await staticPage.getByRole('group', { name: 'Filter projects' }).count(), 0, 'JavaScript-only index filters should not be presented in no-JavaScript output.')
+        }
+        if (path === '/projects/') {
+          const projectImageActions = staticPage.locator('#projects [data-expandable-image]')
+          await assert.equal(await projectImageActions.locator('img').count(), 9, 'No-JavaScript index cards should keep every image visible inside its direct image link.')
+          for (const action of await projectImageActions.all()) {
+            const source = await action.evaluate((element) => ({ href: new URL(element.href).href, src: new URL(element.querySelector('img').src).href }))
+            await assert.equal(source.href, source.src, 'Without JavaScript, each image link should still open its original asset.')
+          }
+        }
+        if (projectId && (projectRoute.projectView === 'overview' || projectRoute.projectView === 'info')) {
+          const projectRoot = staticPage.locator(`#project-${projectId}`)
+          const images = projectRoot.locator('img')
+          const imageActions = projectRoot.locator('a[data-expandable-image]')
+          await assert.equal(await imageActions.locator('img').count(), await images.count(), `No-JavaScript ${path} should keep every project image linked to its original asset.`)
+          for (const action of await imageActions.all()) {
+            const source = await action.evaluate((element) => ({ href: new URL(element.href).href, src: new URL(element.querySelector('img').src).href }))
+            await assert.equal(source.href, source.src, `No-JavaScript ${path} image links should preserve their direct asset destination.`)
+          }
         }
         if (path === '/skills/') {
           for (const skill of skills) {
@@ -1950,9 +2159,9 @@ async function run() {
                 actionLines: new Set(lineTops).size,
               }
             }))
-            await assert.equal(cardCopy.length, 7, 'All seven standard project cards should remain in the Projects index at 200% text.')
-            await assert.ok(cardCopy.every(({ width }) => width >= 320), `Earlier project cards should give their text a readable column at 1440px/200%, received ${cardCopy.map(({ width }) => Math.round(width)).join(', ')}px.`)
-            await assert.ok(cardCopy.every(({ actionText, actionLines }) => actionText === 'View project' && actionLines === 1), 'Every earlier project action should stay readable on one line at 1440px/200%.')
+            await assert.equal(cardCopy.length, 6, 'All six Before the age of AI project cards should remain in the Projects index at 200% text.')
+            await assert.ok(cardCopy.every(({ width }) => width >= 320), `Before the age of AI project cards should give their text a readable column at 1440px/200%, received ${cardCopy.map(({ width }) => Math.round(width)).join(', ')}px.`)
+            await assert.ok(cardCopy.every(({ actionText, actionLines }) => actionText === 'View project' && actionLines === 1), 'Every Before the age of AI project action should stay readable on one line at 1440px/200%.')
           }
           if (label === 'Projects' && viewport.width === 320) {
             const narrowActions = await zoomPage.evaluate(() => {
@@ -1976,10 +2185,10 @@ async function run() {
                 earlier: [...document.querySelectorAll('#projects [data-project-card-copy] a')].map(geometryFor),
               }
             })
-            await assert.equal(narrowActions.featured.length, 2, 'Both featured project actions should remain available at 320px/200%.')
+            await assert.equal(narrowActions.featured.length, 3, 'All three currently exploring and featured project actions should remain available at 320px/200%.')
             await assert.ok(narrowActions.featured.every(({ left, right, lines, text }) => text === 'Explore project' && left >= 0 && right <= viewport.width && lines >= 1 && lines <= 2), 'Featured project labels should fit in the viewport and wrap onto at most two whole-word lines at 320px/200%.')
-            await assert.equal(narrowActions.earlier.length, 7, 'All seven standard project actions should remain available at 320px/200%.')
-            await assert.ok(narrowActions.earlier.every(({ left, right, lines, text }) => text === 'View project' && left >= 0 && right <= viewport.width && lines === 1), 'Earlier project actions should stay inside the viewport and on one line at 320px/200%.')
+            await assert.equal(narrowActions.earlier.length, 6, 'All six Before the age of AI project actions should remain available at 320px/200%.')
+            await assert.ok(narrowActions.earlier.every(({ left, right, lines, text }) => text === 'View project' && left >= 0 && right <= viewport.width && lines === 1), 'Before the age of AI project actions should stay inside the viewport and on one line at 320px/200%.')
           }
           if (label === 'Experience') {
             const heroGeometry = await zoomPage.evaluate(() => {
@@ -2431,7 +2640,7 @@ async function run() {
         trackPage(scanPage)
         for (const [label, path] of [
           ...Object.entries(sectionPaths),
-          ['FoROOM detail', '/projects/foroom/'],
+          ['Demo Forum Website detail', '/projects/foroom/'],
           ['OpenClaw overview', projectPaths.openclaw],
           ['OpenClaw case study', projectInfoPaths.openclaw],
           ['Chinese Learning overview', projectPaths['chinese-learning']],
@@ -2441,7 +2650,7 @@ async function run() {
         ]) {
           await scanPage.goto(urlFor(path), { waitUntil: 'domcontentloaded' })
           if (label.endsWith('detail')) {
-            await assertProjectRoute(scanPage, 'FoROOM')
+            await assertProjectRoute(scanPage, 'Demo Forum Website')
             await assertRouteMetadata(scanPage, path)
           } else if (label.endsWith('overview')) {
             const project = label === 'OpenClaw overview' ? 'My OpenClaw Lab' : label === 'Chinese Learning overview' ? 'Chinese Learning Toolkit' : 'Trader’s Edge'

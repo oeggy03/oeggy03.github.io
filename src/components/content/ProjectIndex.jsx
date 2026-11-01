@@ -1,20 +1,19 @@
 import { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import { SectionHeading } from '../ui/index.jsx'
-import { projects } from '../../data/portfolio.js'
+import { projects, projectGroups } from '../../data/portfolio.js'
 import FeaturedProjectCard from './FeaturedProjectCard.jsx'
+import ExpandableImage from '../ui/ExpandableImage.jsx'
 import { projectPathFor } from '../../navigation/routes.js'
 
 const categories = ['All', 'Backend', 'AI & bots', 'Frontend']
-const featuredProjects = projects.filter(({ featured }) => featured)
-const existingProjects = projects.filter(({ featured }) => !featured)
 
 function ProjectCard({ project }) {
   return (
     <article className="flex min-w-0 flex-wrap items-start gap-4 rounded-2xl bg-paper p-4 ring-1 ring-line/70 sm:items-center sm:gap-5 sm:p-5">
       <div className="flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-surface p-2 sm:size-28 sm:shrink-0 sm:aspect-square">
-        <img src={project.image} alt={project.imageAlt} width={project.imageWidth} height={project.imageHeight}
-          className="max-h-full max-w-full object-contain" loading="lazy" decoding="async" />
+        <ExpandableImage src={project.image} alt={project.imageAlt} width={project.imageWidth} height={project.imageHeight}
+          linkClassName="flex h-full w-full items-center justify-center" imageClassName="max-h-full max-w-full object-contain" loading="lazy" />
       </div>
       <div data-project-card-copy className="flex min-w-0 flex-[1_1_16rem] flex-col items-start">
         <p className="text-sm font-medium text-muted">{project.category}</p>
@@ -34,9 +33,6 @@ export default function ProjectIndex({ activeCategory, onCategoryChange }) {
   const [enhanced, setEnhanced] = useState(false)
   useEffect(() => setEnhanced(true), [])
 
-  const filteredFeatured = activeCategory === 'All' ? featuredProjects : featuredProjects.filter(({ category }) => category === activeCategory)
-  const filteredExisting = activeCategory === 'All' ? existingProjects : existingProjects.filter(({ category }) => category === activeCategory)
-
   return (
     <div data-project-index className="min-w-0 space-y-10">
       <SectionHeading eyebrow="Selected work" title="Projects" description="A mix of personal experiments and earlier applications, with direct access to project details and source links." />
@@ -55,28 +51,42 @@ export default function ProjectIndex({ activeCategory, onCategoryChange }) {
         </div>
       )}
 
-      {filteredFeatured.length > 0 && (
-        <section aria-labelledby="featured-projects-heading">
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium text-muted">Personal work</p>
-              <h3 id="featured-projects-heading" className="mt-1 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Currently exploring</h3>
-            </div>
-          </div>
-          <div className="grid min-w-0 gap-5 xl:grid-cols-2">
-            {filteredFeatured.map((project) => <FeaturedProjectCard key={project.id} project={project} />)}
-          </div>
-        </section>
-      )}
+      {projectGroups.map((group) => {
+        const filteredProjects = activeCategory === 'All'
+          ? group.projects
+          : group.projects.filter(({ category }) => category === activeCategory)
+        if (filteredProjects.length === 0) return null
 
-      {filteredExisting.length > 0 && (
-        <section aria-labelledby="other-projects-heading">
-          <h3 id="other-projects-heading" className="mb-5 text-2xl font-semibold tracking-tight text-ink">Other projects</h3>
-          <div className="grid min-w-0 gap-4 lg:grid-cols-2">
-            {filteredExisting.map((project) => <ProjectCard key={project.id} project={project} />)}
-          </div>
-        </section>
-      )}
+        const exploring = group.id === 'exploring'
+        const beforeAi = group.id === 'before-ai'
+        const headingId = exploring
+          ? 'featured-projects-heading'
+          : group.id === 'featured'
+            ? 'featured-work-projects-heading'
+            : beforeAi
+              ? 'other-projects-heading'
+              : `${group.id}-projects-heading`
+
+        return (
+          <section key={group.id} data-project-group={group.id} aria-labelledby={headingId}>
+            <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                {exploring && <p className="text-sm font-medium text-muted">Personal work</p>}
+                <h3 id={headingId} className="mt-1 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">{group.title}</h3>
+              </div>
+            </div>
+            {beforeAi ? (
+              <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+                {filteredProjects.map((project) => <ProjectCard key={project.id} project={project} />)}
+              </div>
+            ) : (
+              <div className="grid min-w-0 gap-5 xl:grid-cols-2">
+                {filteredProjects.map((project) => <FeaturedProjectCard key={project.id} project={project} />)}
+              </div>
+            )}
+          </section>
+        )
+      })}
     </div>
   )
 }
