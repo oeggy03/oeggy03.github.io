@@ -3,6 +3,13 @@ import openclawBanner from '../assets/featured/openclaw-banner-light.png'
 import shopeeInteraction from '../assets/featured/shopee-interaction.png'
 import shopeeCart from '../assets/featured/shopee-cart.png'
 import chineseDaily from '../assets/featured/chinese-daily.png'
+import captureLiveLesson from '../assets/featured/chinese-learning/capture-live-lesson.jpg'
+import defineSelectedText from '../assets/featured/chinese-learning/define-selected-text.jpg'
+import reviewGeneratedEntry from '../assets/featured/chinese-learning/review-generated-entry.jpg'
+import startWordOrPhoto from '../assets/featured/chinese-learning/start-word-or-photo.jpg'
+import completeLearningDetails from '../assets/featured/chinese-learning/complete-learning-details.jpg'
+import browseVocabularyBank from '../assets/featured/chinese-learning/browse-vocabulary-bank.jpg'
+import syncBeforeClose from '../assets/featured/chinese-learning/sync-before-close.jpg'
 
 export const profilePortrait = {
   src: heroPhoto,
@@ -10,6 +17,88 @@ export const profilePortrait = {
   width: 2100,
   height: 3000,
 }
+
+const chineseLearningShowcase = {
+  title: 'Product walkthrough',
+  intro: 'From a live lesson or selected text to a saved word and an explicit sync, each step keeps the learner in control.',
+  items: [
+    {
+      title: 'Capture a live lesson',
+      src: captureLiveLesson,
+      alt: 'Call Analyzer Live Lesson screen showing consent and setup checks beside a Chinese conversation transcript.',
+      caption: 'The Live Lesson workspace keeps participant consent and setup checks beside the transcript, where recognized terms become vocabulary candidates.',
+      width: 1280,
+      height: 686,
+    },
+    {
+      title: 'Define selected text instantly',
+      src: defineSelectedText,
+      alt: 'Quick definition card for 查询 showing pinyin, English meanings, and an Add word button over selected text.',
+      caption: 'Pressing Control–Option–5 on selected text opens a compact definition card, with a direct path to add the term.',
+      width: 820,
+      height: 406,
+    },
+    {
+      title: 'Review the generated entry',
+      src: reviewGeneratedEntry,
+      alt: 'Editable Add Word form for 查询 with pinyin, meaning, example sentence, translation, tags, and a Save button.',
+      caption: 'Choosing Add word opens an editable entry with generated learning details and tags, so the word can be checked before saving.',
+      width: 681,
+      height: 1280,
+    },
+    {
+      title: 'Start from a word or photo',
+      src: startWordOrPhoto,
+      alt: 'Call Analyzer Add Word screen with a photo upload workflow and blank fields for a manual vocabulary entry.',
+      caption: 'The Add Word workspace accepts photos for word suggestions or starts with a single simplified Chinese word.',
+      width: 1280,
+      height: 691,
+    },
+    {
+      title: 'Complete the learning details',
+      src: completeLearningDetails,
+      alt: 'Add Word form populated with pinyin, English meaning, a Chinese sample sentence, translation, tags, and generation status.',
+      caption: 'Generated fields remain editable, and the interface identifies the model and whether the learning-critical details are complete.',
+      width: 1280,
+      height: 687,
+    },
+    {
+      title: 'Browse the vocabulary bank',
+      src: browseVocabularyBank,
+      alt: 'Call Analyzer Vocabulary screen with search and filter controls above cards for saved Chinese words.',
+      caption: 'Saved words are searchable and filterable, with each card showing pinyin, meaning, example context, tags, and review status.',
+      width: 1280,
+      height: 686,
+    },
+    {
+      title: 'Keep sync under user control',
+      src: syncBeforeClose,
+      alt: 'macOS Unsynced vocabulary dialog asking whether to sync pending items before the app closes.',
+      caption: 'When the app closes with unsynced items, a native prompt offers an explicit choice to sync now or leave them for later.',
+      width: 792,
+      height: 598,
+    },
+  ],
+}
+
+const chineseLearningOverviewCapabilities = [
+  {
+    title: 'Instant word lookup',
+    text: 'Highlight Chinese text anywhere on your screen to instantly see its pinyin and meaning.',
+  },
+  {
+    title: 'Capture and review',
+    text: 'Turn consented lesson audio, selected text and photos into editable vocabulary candidates.',
+  },
+  {
+    title: 'Sync confirmed vocabulary',
+    text: 'Keep drafts local until review, then sync confirmed or manually saved words.',
+  },
+  {
+    title: 'Revisit words daily',
+    text: 'Receive a scheduled Telegram selection with Chinese text, pinyin and English glosses.',
+  },
+]
 
 export const featuredProjects = [
   {
@@ -101,6 +190,7 @@ export const featuredProjects = [
     imageWidth: 533,
     imageHeight: 257,
     summary: 'A local-first Chinese vocabulary workflow that turns reviewed lesson words into a daily Telegram recall message.',
+    overviewCapabilities: chineseLearningOverviewCapabilities,
     skills: ['Go', 'React', 'TypeScript', 'Wails', 'Swift', 'SQLite', 'Supabase', 'PostgreSQL', 'Google Cloud Run', 'Cloud Scheduler', 'Telegram'],
     links: [
       { label: 'Desktop app', href: 'https://github.com/oeggy03/call_analyzer' },
@@ -111,8 +201,9 @@ export const featuredProjects = [
       eyebrow: 'Language learning workflow',
       lead: 'I built a practical way to keep Chinese words from a lesson or an everyday reading moment alive after I move on. The toolkit turns those discoveries into a practice loop: capture vocabulary, review it at my desk, then meet a small selection again in Telegram the next morning.',
       motivation: [
-        'I started this project because strong Chinese comprehension and speaking skills matter to me, and I want to keep building my vocabulary. My workplace responsibilities require me to communicate in Chinese with different teams, so I wanted a practical way to support that learning.',
-        'I also wanted the computer to help me notice vocabulary without deciding what I have learned. Transcribed or recognized terms begin as drafts, so I can confirm, edit, merge or reject them before they join the words I revisit.',
+        'I started this project because strong Chinese comprehension and speaking skills matter to me, and I want to keep expanding my vocabulary. My work requires me to communicate in Chinese with different teams, which makes that learning immediately useful.',
+        'A new project at work was also exposing me to business-specific vocabulary I had not encountered elsewhere. At the same time, I began taking intermediate-level Chinese lessons online and was regularly engaging with Chinese-language content, from short-form videos to news articles. I had many ways to encounter new words, but I was missing an effective, low-friction way to capture them and bring them back into practice.',
+        'I wanted the computer to help me notice and organize vocabulary without deciding what I had learned. Transcribed or recognized terms begin as drafts, so I can confirm, edit, merge or reject them before they join the words I revisit.',
       ],
       capabilities: [
         {
@@ -137,6 +228,7 @@ export const featuredProjects = [
           { title: 'Deliver on schedule', text: 'Cloud Scheduler calls the service, which sends a morning message to Telegram.' },
         ],
       },
+      productWalkthrough: chineseLearningShowcase,
       examples: [
         {
           title: 'A small daily vocabulary sample',

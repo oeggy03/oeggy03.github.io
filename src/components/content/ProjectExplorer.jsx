@@ -24,6 +24,30 @@ ProjectLinks.propTypes = {
   links: PropTypes.arrayOf(PropTypes.shape({ label: PropTypes.string.isRequired, href: PropTypes.string.isRequired })).isRequired,
 }
 
+function CapabilitiesAtGlance({ projectId, capabilities }) {
+  return (
+    <section data-capabilities-at-a-glance className="mt-7 border-t border-line pt-5" aria-labelledby={`capabilities-glance-${projectId}`}>
+      <h3 id={`capabilities-glance-${projectId}`} className="text-xl font-semibold tracking-tight text-ink">Capabilities at a glance</h3>
+      <ul className="mt-4 divide-y divide-line border-y border-line">
+        {capabilities.map((capability) => (
+          <li key={capability.title} className="py-4">
+            <h4 className="text-base font-semibold text-ink">{capability.title}</h4>
+            <p className="mt-1 text-sm leading-6 text-muted">{capability.text}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+CapabilitiesAtGlance.propTypes = {
+  projectId: PropTypes.string.isRequired,
+  capabilities: PropTypes.arrayOf(PropTypes.shape({
+      title: PropTypes.string.isRequired,
+      text: PropTypes.string.isRequired,
+    })).isRequired,
+}
+
 function ProjectDetails({ project }) {
   const codeLink = project.links.find((link) => /back.?end/i.test(link.label))
     || project.links.find((link) => link.href.startsWith('https://github.com/') && !link.href.includes('/releases/'))
@@ -55,6 +79,7 @@ function ProjectDetails({ project }) {
 
         <p className="mt-4 text-base leading-relaxed text-ink">{project.summary}</p>
         {(project.description || project.caseStudy?.architecture?.summary) && <p className="mt-2 text-sm leading-relaxed text-muted">{project.description || project.caseStudy.architecture.summary}</p>}
+        {project.overviewCapabilities && <CapabilitiesAtGlance projectId={project.id} capabilities={project.overviewCapabilities} />}
         {project.implementation?.length > 0 && (
           <div className="mt-7 rounded-xl bg-surface px-4 py-4 sm:px-5">
             <p className="text-sm font-semibold text-muted">Implementation</p>

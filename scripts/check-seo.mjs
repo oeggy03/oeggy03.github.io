@@ -363,8 +363,8 @@ const chineseMarkup = extractMain(htmlByPath.get('/call_analyzer_chinese_learnin
 const chineseMotivationMarkup = chineseMarkup.match(/<section\b[^>]*aria-labelledby="motivation-chinese-learning"[^>]*>([\s\S]*?)<\/section>/)?.[1]
 assert.ok(chineseMotivationMarkup, 'The Chinese Learning writeup should have a motivation section.')
 const chineseMotivation = textOf(chineseMotivationMarkup).toLowerCase()
-for (const fact of ['comprehension', 'speaking', 'vocabulary', 'workplace', 'different teams']) {
-  assert.ok(chineseMotivation.includes(fact), `Chinese Learning motivation should explain the workplace learning goal: ${fact}.`)
+for (const fact of ['comprehension', 'speaking', 'vocabulary', 'work requires me', 'different teams', 'new project at work', 'business-specific vocabulary', 'intermediate-level chinese lessons online', 'chinese-language content', 'short-form videos', 'news articles', 'low-friction way to capture them']) {
+  assert.ok(chineseMotivation.includes(fact), `Chinese Learning motivation should retain the supplied context: ${fact}.`)
 }
 assert.doesNotMatch(chineseMotivation, /i love learning chinese/)
 const chineseFutureMarkup = chineseMarkup.match(/<section\b[^>]*aria-labelledby="future-chinese-learning"[^>]*>([\s\S]*?)<\/section>/)?.[1]
