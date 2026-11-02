@@ -68,6 +68,97 @@ const caseStudySynopses = {
   'chinese-learning': 'A local-first Chinese vocabulary workflow that turns reviewed lesson words into a daily Telegram recall message.',
   'traders-edge': 'A trading education game where learners practice market orders, read price signals and test strategies in guided, historical and multiplayer scenarios.',
 }
+const chineseLearningWalkthrough = [
+  {
+    title: 'Capture a live lesson',
+    alt: 'Call Analyzer Live Lesson screen showing consent and setup checks beside a Chinese conversation transcript.',
+    caption: 'The Live Lesson workspace keeps participant consent and setup checks beside the transcript, where recognized terms become vocabulary candidates.',
+    width: 1280,
+    height: 686,
+  },
+  {
+    title: 'Define selected text instantly',
+    alt: 'Quick definition card for 查询 showing pinyin, English meanings, and an Add word button over selected text.',
+    caption: 'Pressing Control–Option–5 on selected text opens a compact definition card, with a direct path to add the term.',
+    width: 820,
+    height: 406,
+  },
+  {
+    title: 'Review the generated entry',
+    alt: 'Editable Add Word form for 查询 with pinyin, meaning, example sentence, translation, tags, and a Save button.',
+    caption: 'Choosing Add word opens an editable entry with generated learning details and tags, so the word can be checked before saving.',
+    width: 681,
+    height: 1280,
+  },
+  {
+    title: 'Start from a word or photo',
+    alt: 'Call Analyzer Add Word screen with a photo upload workflow and blank fields for a manual vocabulary entry.',
+    caption: 'The Add Word workspace accepts photos for word suggestions or starts with a single simplified Chinese word.',
+    width: 1280,
+    height: 691,
+  },
+  {
+    title: 'Complete the learning details',
+    alt: 'Add Word form populated with pinyin, English meaning, a Chinese sample sentence, translation, tags, and generation status.',
+    caption: 'Generated fields remain editable, and the interface identifies the model and whether the learning-critical details are complete.',
+    width: 1280,
+    height: 687,
+  },
+  {
+    title: 'Browse the vocabulary bank',
+    alt: 'Call Analyzer Vocabulary screen with search and filter controls above cards for saved Chinese words.',
+    caption: 'Saved words are searchable and filterable, with each card showing pinyin, meaning, example context, tags, and review status.',
+    width: 1280,
+    height: 686,
+  },
+  {
+    title: 'Keep sync under user control',
+    alt: 'macOS Unsynced vocabulary dialog asking whether to sync pending items before the app closes.',
+    caption: 'When the app closes with unsynced items, a native prompt offers an explicit choice to sync now or leave them for later.',
+    width: 792,
+    height: 598,
+  },
+]
+const chineseLearningOverviewCapabilities = [
+  {
+    title: 'Instant word lookup',
+    text: 'Highlight Chinese text anywhere on your screen to instantly see its pinyin and meaning.',
+  },
+  {
+    title: 'Capture and review',
+    text: 'Turn consented lesson audio, selected text and photos into editable vocabulary candidates.',
+  },
+  {
+    title: 'Sync confirmed vocabulary',
+    text: 'Keep drafts local until review, then sync confirmed or manually saved words.',
+  },
+  {
+    title: 'Revisit words daily',
+    text: 'Receive a scheduled Telegram selection with Chinese text, pinyin and English glosses.',
+  },
+]
+const chineseLearningMotivationExpectations = [
+  [/comprehension/i, 'comprehension'],
+  [/speaking/i, 'speaking'],
+  [/vocabulary/i, 'vocabulary'],
+  [/work requires me|workplace|work responsibilities/i, 'workplace context'],
+  [/different teams/i, 'different teams'],
+  [/Chinese/i, 'Chinese context'],
+  [/new project at work/i, 'new work project'],
+  [/business-specific vocabulary/i, 'business-specific vocabulary'],
+  [/intermediate-level Chinese lessons online/i, 'intermediate online lessons'],
+  [/Chinese-language content/i, 'Chinese-language content'],
+  [/short-form videos/i, 'short-form videos'],
+  [/news articles/i, 'news articles'],
+  [/low-friction way to capture them and bring them back into practice/i, 'low-friction capture and revisit need'],
+]
+async function assertChineseLearningMotivation(page, context) {
+  const motivationText = await page.locator('#motivation-chinese-learning').locator('..').innerText()
+  for (const [pattern, label] of chineseLearningMotivationExpectations) {
+    await assert.match(motivationText, pattern, `${context} should retain ${label}.`)
+  }
+  await assert.doesNotMatch(motivationText, /I love learning Chinese/i, `${context} should not restore the replaced opening motivation.`)
+}
 const expectedExperienceIds = ['tiktok-backend', 'tiktok-intern', 'nus-ta', 'gic', 'uptale', 'hdb', 'eastspring', 'astar']
 const expectedExperienceDates = [
   'Jul 2026 - Present',
@@ -907,6 +998,18 @@ async function run() {
           await assert.equal(imageData.width, expectedWidth, `${project} should preserve the supplied image width.`)
           await assert.equal(imageData.height, expectedHeight, `${project} should preserve the supplied image height.`)
         }
+        if (project === 'Chinese Learning Toolkit') {
+          const capabilities = page.locator('#project-chinese-learning [data-capabilities-at-a-glance]')
+          await assert.equal(await capabilities.count(), 1, 'Chinese Learning should render one capabilities-at-a-glance section.')
+          await assert.ok(await capabilities.getByRole('heading', { name: 'Capabilities at a glance', exact: true }).isVisible(), 'Chinese Learning should show the Capabilities at a glance heading.')
+          await assert.equal(await capabilities.locator('ul > li').count(), chineseLearningOverviewCapabilities.length, 'Chinese Learning should show exactly four overview capabilities.')
+          const capabilityContent = await capabilities.locator('ul > li').evaluateAll((items) => items.map((item) => ({
+            title: item.querySelector('h4')?.textContent.trim(),
+            text: item.querySelector('p')?.textContent.trim(),
+          })))
+          await assert.deepEqual(capabilityContent, chineseLearningOverviewCapabilities, 'Overview capabilities should stay in the requested order and wording.')
+          await assert.equal(await page.locator('#project-chinese-learning [data-product-walkthrough]').count(), 0, 'The Chinese Learning overview should not render the product walkthrough.')
+        }
       }
 
       await page.goto(urlFor('/projects/'), { waitUntil: 'domcontentloaded' })
@@ -920,14 +1023,7 @@ async function run() {
         await assertProjectInfoRoute(page, project)
         await assertRouteMetadata(page, path)
         if (project === 'Chinese Learning Toolkit') {
-          const motivationText = await page.locator('#motivation-chinese-learning').locator('..').innerText()
-          await assert.match(motivationText, /comprehension/i)
-          await assert.match(motivationText, /speaking/i)
-          await assert.match(motivationText, /vocabulary/i)
-          await assert.match(motivationText, /workplace|work responsibilities/i)
-          await assert.match(motivationText, /different teams/i)
-          await assert.match(motivationText, /Chinese/i)
-          await assert.doesNotMatch(motivationText, /I love learning Chinese/i, 'The replaced opening motivation should not return.')
+          await assertChineseLearningMotivation(page, 'The Chinese Learning write-up motivation')
           await assert.match(await page.locator('#future-chinese-learning').locator('..').innerText(), /Windows version/i, 'Future plans should include a Windows version of the app.')
         }
         const imagesByCaseStudy = {
@@ -948,6 +1044,63 @@ async function run() {
           await assert.ok(imageData.src.startsWith('data:image/') || new URL(imageData.src).origin === origin, `${project} image should use a local or inlined asset: ${alt}`)
           await assert.equal(imageData.width, expectedWidth)
           await assert.equal(imageData.height, expectedHeight)
+        }
+        if (project === 'Chinese Learning Toolkit') {
+          const walkthrough = page.locator('#project-chinese-learning [data-product-walkthrough]')
+          await assert.equal(await walkthrough.count(), 1, 'Chinese Learning writeup should render one product walkthrough section.')
+          await assert.ok(await walkthrough.getByRole('heading', { name: 'Product walkthrough', exact: true }).isVisible(), 'Chinese Learning writeup should show the Product walkthrough heading.')
+          const walkthroughHeading = await walkthrough.getByRole('heading', { name: 'Product walkthrough', exact: true }).boundingBox()
+          const architectureHeading = await page.getByRole('heading', { name: 'How it works', exact: true }).boundingBox()
+          await assert.ok(walkthroughHeading && architectureHeading && walkthroughHeading.y < architectureHeading.y, 'The Product walkthrough should appear before How it works.')
+          await assert.equal(await walkthrough.locator('ol').count(), 1, 'Product walkthrough should use one ordered list for its sequence.')
+          const walkthroughItems = walkthrough.locator('ol > li')
+          await assert.equal(await walkthroughItems.count(), chineseLearningWalkthrough.length, 'Product walkthrough should contain all seven supplied screenshots.')
+          const content = await walkthroughItems.evaluateAll((items) => items.map((item) => {
+            const title = item.querySelector('h4').cloneNode(true)
+            title.querySelectorAll('[aria-hidden="true"]').forEach((element) => element.remove())
+            return {
+              title: title.textContent.trim(),
+              alt: item.querySelector('img')?.alt,
+              caption: item.querySelector('figcaption')?.textContent.trim(),
+            }
+          }))
+          await assert.deepEqual(content, chineseLearningWalkthrough.map(({ title, alt, caption }) => ({ title, alt, caption })), 'Product walkthrough content should stay in the requested order.')
+
+          for (const [index, expected] of chineseLearningWalkthrough.entries()) {
+            const item = walkthroughItems.nth(index)
+            const image = item.locator('img')
+            const imageData = await image.evaluate(async (element) => {
+              element.loading = 'eager'
+              await element.decode()
+              return {
+                src: element.currentSrc || element.src,
+                width: element.naturalWidth,
+                height: element.naturalHeight,
+                widthAttribute: Number(element.getAttribute('width')),
+                heightAttribute: Number(element.getAttribute('height')),
+              }
+            })
+            await assert.ok(imageData.src.startsWith('data:image/') || new URL(imageData.src).origin === origin, `Product walkthrough image ${index + 1} should be local or inlined.`)
+            await assert.equal(imageData.width, expected.width, `Product walkthrough image ${index + 1} should preserve its supplied width.`)
+            await assert.equal(imageData.height, expected.height, `Product walkthrough image ${index + 1} should preserve its supplied height.`)
+            await assert.equal(imageData.widthAttribute, expected.width, `Product walkthrough image ${index + 1} should declare its intrinsic width.`)
+            await assert.equal(imageData.heightAttribute, expected.height, `Product walkthrough image ${index + 1} should declare its intrinsic height.`)
+            const imageLink = item.locator('a[data-expandable-image]')
+            await assert.equal(await imageLink.count(), 1, `Product walkthrough image ${index + 1} should use the expandable image interaction.`)
+            const source = await imageLink.evaluate((element) => ({
+              href: new URL(element.href).href,
+              src: new URL(element.querySelector('img').src).href,
+            }))
+            await assert.equal(source.href, source.src, `Product walkthrough image ${index + 1} should preserve its direct image link without JavaScript.`)
+          }
+
+          const firstImage = walkthroughItems.first().locator('a[data-expandable-image]')
+          await firstImage.click()
+          const expandedImage = page.locator('[data-expanded-image-dialog]')
+          await page.waitForFunction(() => document.querySelector('[data-expanded-image-dialog]')?.open)
+          await assert.ok(await expandedImage.getByText(chineseLearningWalkthrough[0].caption, { exact: true }).isVisible(), 'The expanded walkthrough image should show its caption.')
+          await expandedImage.locator('[data-expanded-image-close]').click()
+          await page.waitForFunction(() => !document.querySelector('[data-expanded-image-dialog]'))
         }
         if (project === 'My OpenClaw Lab') {
           await assert.equal(await page.locator('#architecture-openclaw').locator('..').locator('ul').count(), 1, 'OpenClaw should describe connected tools without false ordering.')
@@ -1555,6 +1708,9 @@ async function run() {
             for (const heading of ['Why I started', 'What it does', architectureHeading, 'Examples', 'Deployment', 'Currently working on and future plans']) {
               await assert.ok(await staticPage.getByRole('heading', { name: heading, exact: true }).isVisible(), `No-JavaScript ${path} should retain the ${heading} section.`)
             }
+            if (projectId === 'chinese-learning') {
+              await assertChineseLearningMotivation(staticPage, `No-JavaScript ${path} motivation`)
+            }
           }
         }
         if (path === '/') {
@@ -1600,6 +1756,13 @@ async function run() {
           for (const action of await imageActions.all()) {
             const source = await action.evaluate((element) => ({ href: new URL(element.href).href, src: new URL(element.querySelector('img').src).href }))
             await assert.equal(source.href, source.src, `No-JavaScript ${path} image links should preserve their direct asset destination.`)
+          }
+          if (projectId === 'chinese-learning' && projectRoute.projectView === 'overview') {
+            await assert.equal(await projectRoot.locator('[data-capabilities-at-a-glance] ul > li').count(), chineseLearningOverviewCapabilities.length, 'No-JavaScript Chinese Learning overview should retain its four capability points.')
+            await assert.equal(await projectRoot.locator('[data-product-walkthrough]').count(), 0, 'No-JavaScript Chinese Learning overview should not render the product walkthrough.')
+          }
+          if (projectId === 'chinese-learning' && projectRoute.projectView === 'info') {
+            await assert.equal(await projectRoot.locator('[data-product-walkthrough] ol > li').count(), chineseLearningWalkthrough.length, 'No-JavaScript Chinese Learning writeup should retain all seven walkthrough figures.')
           }
         }
         if (path === '/skills/') {
@@ -2189,6 +2352,41 @@ async function run() {
             await assert.ok(narrowActions.featured.every(({ left, right, lines, text }) => text === 'Explore project' && left >= 0 && right <= viewport.width && lines >= 1 && lines <= 2), 'Featured project labels should fit in the viewport and wrap onto at most two whole-word lines at 320px/200%.')
             await assert.equal(narrowActions.earlier.length, 6, 'All six Before the age of AI project actions should remain available at 320px/200%.')
             await assert.ok(narrowActions.earlier.every(({ left, right, lines, text }) => text === 'View project' && left >= 0 && right <= viewport.width && lines === 1), 'Before the age of AI project actions should stay inside the viewport and on one line at 320px/200%.')
+
+            await zoomPage.goto(urlFor(projectInfoPaths['chinese-learning']), { waitUntil: 'domcontentloaded' })
+            await zoomPage.evaluate(() => { document.documentElement.style.fontSize = '200%' })
+            await settle(zoomPage)
+            await zoomPage.locator('#project-chinese-learning [data-product-walkthrough] img').evaluateAll(async (images) => {
+              for (const image of images) {
+                image.loading = 'eager'
+                await image.decode()
+              }
+            })
+            const walkthroughGeometry = await zoomPage.locator('#project-chinese-learning [data-product-walkthrough]').evaluate((section) => {
+              const sectionRect = section.getBoundingClientRect()
+              const figures = [...section.querySelectorAll('figure')].map((figure) => {
+                const figureRect = figure.getBoundingClientRect()
+                const imageRect = figure.querySelector('img').getBoundingClientRect()
+                const captionRect = figure.querySelector('figcaption').getBoundingClientRect()
+                return {
+                  figureWidth: figureRect.width,
+                  imageWidth: imageRect.width,
+                  imageLeft: imageRect.left,
+                  imageRight: imageRect.right,
+                  captionWidth: captionRect.width,
+                }
+              })
+              return {
+                sectionWidth: sectionRect.width,
+                documentWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
+                figures,
+              }
+            })
+            await assert.equal(walkthroughGeometry.figures.length, 7, 'The Chinese Learning walkthrough should retain all seven figures at 320px/200% text.')
+            await assert.ok(walkthroughGeometry.documentWidth <= viewport.width, 'The Chinese Learning walkthrough should not overflow horizontally at 320px/200% text.')
+            await assert.ok(walkthroughGeometry.figures.every(({ figureWidth }) => figureWidth >= walkthroughGeometry.sectionWidth - 2), `Walkthrough figures should use the available section width at 320px/200%, received ${walkthroughGeometry.figures.map(({ figureWidth }) => Math.round(figureWidth)).join(', ')}px for a ${Math.round(walkthroughGeometry.sectionWidth)}px section.`)
+            await assert.ok(walkthroughGeometry.figures.every(({ captionWidth }) => captionWidth >= walkthroughGeometry.sectionWidth - 2), 'Walkthrough captions should use the available section width at 320px/200% text.')
+            await assert.ok(walkthroughGeometry.figures.every(({ imageWidth, imageLeft, imageRight }) => imageWidth >= 100 && imageLeft >= 0 && imageRight <= viewport.width), `Walkthrough screenshots should remain visible and inside the viewport at 320px/200%, received widths ${walkthroughGeometry.figures.map(({ imageWidth }) => Math.round(imageWidth)).join(', ')}px.`)
           }
           if (label === 'Experience') {
             const heroGeometry = await zoomPage.evaluate(() => {

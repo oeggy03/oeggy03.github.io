@@ -4,6 +4,51 @@ import { Badge } from '../ui/index.jsx'
 import ExpandableImage from '../ui/ExpandableImage.jsx'
 import { projectPathFor } from '../../navigation/routes.js'
 
+function ProductWalkthrough({ projectId, showcase }) {
+  return (
+    <section data-product-walkthrough aria-labelledby={`product-walkthrough-${projectId}`}>
+      <h3 id={`product-walkthrough-${projectId}`} className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">{showcase.title}</h3>
+      <p className="mt-3 max-w-3xl text-base leading-7 text-muted">{showcase.intro}</p>
+      <ol className="mt-6 list-none space-y-8 pl-0 sm:space-y-10">
+        {showcase.items.map((item, index) => (
+          <li key={item.src} className="min-w-0">
+            <h4 className="text-xl font-semibold tracking-tight text-ink"><span aria-hidden="true" className="mr-1 text-accent-ink">{String(index + 1).padStart(2, '0')}.</span>{item.title}</h4>
+            <figure className="mt-4 min-w-0 rounded-2xl bg-paper p-0 ring-1 ring-line/70 sm:p-4">
+              <ExpandableImage
+                src={item.src}
+                alt={item.alt}
+                width={item.width}
+                height={item.height}
+                caption={item.caption}
+                linkClassName="flex min-h-11 min-w-0 w-full items-center justify-center rounded-xl bg-surface p-0 sm:p-2"
+                imageClassName="max-h-[42rem] max-w-full w-auto object-contain"
+                loading="lazy"
+              />
+              <figcaption className="mt-3 text-sm leading-6 text-muted">{item.caption}</figcaption>
+            </figure>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )
+}
+
+ProductWalkthrough.propTypes = {
+  projectId: PropTypes.string.isRequired,
+  showcase: PropTypes.shape({
+    title: PropTypes.string.isRequired,
+    intro: PropTypes.string.isRequired,
+    items: PropTypes.arrayOf(PropTypes.shape({
+      title: PropTypes.string.isRequired,
+      src: PropTypes.string.isRequired,
+      alt: PropTypes.string.isRequired,
+      caption: PropTypes.string.isRequired,
+      width: PropTypes.number.isRequired,
+      height: PropTypes.number.isRequired,
+    })).isRequired,
+  }).isRequired,
+}
+
 export default function ProjectCaseStudy({ project }) {
   const study = project.caseStudy
   const componentArchitecture = ['openclaw', 'traders-edge'].includes(project.id)
@@ -48,6 +93,8 @@ export default function ProjectCaseStudy({ project }) {
             ))}
           </div>
         </section>
+
+        {study.productWalkthrough && <ProductWalkthrough projectId={project.id} showcase={study.productWalkthrough} />}
 
         <section aria-labelledby={`architecture-${project.id}`}>
           <h3 id={`architecture-${project.id}`} className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">{study.architectureTitle || (componentArchitecture ? 'Architecture and components' : 'How it works')}</h3>
@@ -161,6 +208,18 @@ ProjectCaseStudy.propTypes = {
         steps: PropTypes.arrayOf(PropTypes.shape({ title: PropTypes.string.isRequired, text: PropTypes.string.isRequired })).isRequired,
       }).isRequired,
       architectureTitle: PropTypes.string,
+      productWalkthrough: PropTypes.shape({
+        title: PropTypes.string.isRequired,
+        intro: PropTypes.string.isRequired,
+        items: PropTypes.arrayOf(PropTypes.shape({
+          title: PropTypes.string.isRequired,
+          src: PropTypes.string.isRequired,
+          alt: PropTypes.string.isRequired,
+          caption: PropTypes.string.isRequired,
+          width: PropTypes.number.isRequired,
+          height: PropTypes.number.isRequired,
+        })).isRequired,
+      }),
       examplesTitle: PropTypes.string,
       examples: PropTypes.arrayOf(PropTypes.shape({
         title: PropTypes.string.isRequired,
