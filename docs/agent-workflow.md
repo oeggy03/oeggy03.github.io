@@ -98,7 +98,7 @@ For any website behavior or visual change in a PR, embed relevant real desktop a
 
 ### Resume and social-card generation
 
-`docs/resume.html` is the resume source. When resume synchronization is requested, run `node scripts/generate-resume.mjs`; it writes the PDF and preview and validates two pages plus source link destinations. `node scripts/capture-screenshots.mjs` updates site screenshots and the social card; use `--screenshots-only` when the card should remain unchanged. Finalize the resume and social-card assets before the production build.
+`docs/resume.html` is the normal resume authoring source. When resume synchronization is requested, run `node scripts/generate-resume.mjs`; it writes the PDF and preview and validates two pages plus source link destinations. If the owner supplies an exact PDF and asks to preserve it, that PDF is authoritative for the update: keep it byte-for-byte, apply the requested copy to the HTML, document any remaining divergence, and do not regenerate the PDF. `node scripts/capture-screenshots.mjs` updates site screenshots and the social card; use `--screenshots-only` when the card should remain unchanged. Finalize the resume and social-card assets before the production build.
 
 ## Fresh setup and official client documentation
 

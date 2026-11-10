@@ -1675,7 +1675,7 @@ async function run() {
       await assert.equal(resumeResponse.status(), 200, 'Resume should resolve to a built PDF.')
       await assert.match(resumeResponse.headers()['content-type'] || '', /application\/pdf/i)
       const resumeSource = await readFile(new URL('../src/assets/Resume_TranHaThu.pdf', import.meta.url))
-      const expectedResumeSha256 = '1397baf8f3068943c8d8ea488a7753824fa4662fdf20c6f185223629268f6b14'
+      const expectedResumeSha256 = 'a2e4918cfda43ff6b0238762972e839f472bfc3e390ba2c5c12fef4e9638ac2d'
       await assert.equal(createHash('sha256').update(resumeSource).digest('hex'), expectedResumeSha256, 'The supplied one-page resume PDF should retain its confirmed source bytes.')
       await assert.deepEqual(await resumeResponse.body(), resumeSource, 'The served resume PDF should match the supplied source byte for byte.')
     })
