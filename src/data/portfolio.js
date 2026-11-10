@@ -46,6 +46,7 @@ export const profile = {
     activities: [
       "Invited to CVWO; teaching assistant for five programming modules",
       "Organized 20+ university events as a residential assistant and CCA committee leader",
+      "Founding engineer for a Healthtech startup, which attained 2nd @ NUS Social Impact Catalyst and top 10 for TigerLaunch Pitch.",
     ],
     url: "https://nus.edu.sg/",
   },

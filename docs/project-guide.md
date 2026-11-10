@@ -36,7 +36,7 @@ The normal path through the site is the Experience profile and timeline, with li
 | Static rendering and sitemap | `scripts/build.mjs` | Builds assets, renders canonical and compatibility pages, and writes `dist/sitemap.xml` |
 | Quality checks | `scripts/check-ui.mjs`, `scripts/check-seo.mjs`, ESLint config | Browser behavior/accessibility and static metadata/assets; see [verification](agent-workflow.md#website-verification) |
 | GitHub Pages CI | `.github/workflows/deploy-pages.yml` | Verify on PRs to `main`; deploy the verified artifact only on `main` pushes or manual main runs |
-| Resume source and generated files | `docs/resume.html`, `src/assets/Resume_TranHaThu.pdf`, `docs/screenshots/resume-preview.png` | The HTML is authoritative; `scripts/generate-resume.mjs` writes the PDF and preview |
+| Resume source and published files | `docs/resume.html`, `src/assets/Resume_TranHaThu.pdf`, `docs/screenshots/resume-preview.png` | The HTML is the normal authoring source; an owner-supplied exact PDF is authoritative for that update and may diverge from the HTML |
 
 All website styles are Tailwind utilities in JSX plus the theme in `tailwind.config.js`; `src/tailwind.css` only contains Tailwind directives. Avoid a parallel handwritten site stylesheet. Most imagery is stored in `src/assets/` and imported by the data or view modules. The app itself makes no required remote API calls.
 
@@ -64,7 +64,7 @@ All website styles are Tailwind utilities in JSX plus the theme in `tailwind.con
 
 ### Update the resume or visual assets
 
-- Edit `docs/resume.html`; run `node scripts/generate-resume.mjs` when resume synchronization is requested. The script validates two PDF pages and source link destinations.
+- Edit `docs/resume.html`; run `node scripts/generate-resume.mjs` for normal resume synchronization. If the owner supplies an exact PDF and asks to preserve it, copy it byte-for-byte, update the HTML for the requested content, and do not regenerate the PDF. Document any remaining source divergence. The script validates two PDF pages and source link destinations.
 - Screenshots are made from the production build and preview. `node scripts/capture-screenshots.mjs --screenshots-only` updates the captured site states without rewriting `public/social-preview.png`; the default also refreshes the social card. `--review-only` writes temporary captures under ignored `node_modules/.cache/`; `--social-only` updates only the social card.
 - The capture script covers the Experience landing (some legacy filenames still say `overview`), Projects, Skills, TeleAI, and the two long-form case studies, plus selected disclosure, dark appearance, and scrolled states. It does not make a screenshot of every project detail route. See the script before describing screenshot coverage.
 
