@@ -324,7 +324,19 @@ for (const [projectId, path, sectionTitles, destinations] of [
     'https://docs.openclaw.ai/', 'https://developers.openai.com/api/docs/', 'https://github.com/microsoft/playwright-mcp',
     'https://github.com/CortexReach/memory-lancedb-pro', 'https://developers.openai.com/api/docs/guides/decisions',
   ]],
-  ['chinese-learning', '/call_analyzer_chinese_learning/info/', ['Why I started', 'What it does', 'How it works', 'Examples', 'Deployment', 'Currently working on and future plans'], [
+  ['chinese-learning', '/call_analyzer_chinese_learning/info/', [
+    'Why I started',
+    'What it does',
+    'Product walkthrough',
+    'Live lesson capture',
+    'Instant vocabulary analysis',
+    'AI-assisted vocabulary maintenance',
+    'Automatic syncing to the cloud',
+    'How it works',
+    'Examples',
+    'Deployment',
+    'Currently working on and future plans',
+  ], [
     'https://github.com/oeggy03/call_analyzer', 'https://github.com/oeggy03/call_analyzer_lesson_db', 'https://github.com/oeggy03/call_analyzer_active_recall',
   ]],
   ['traders-edge', '/traders_edge/info/', ['What it does', 'How the simulation is modelled', 'Inside the game and its data model'], ['https://github.com/Traders-Edge/traders_edge']],
@@ -359,7 +371,27 @@ for (const fact of ['lancedb', 'playwright mcp', 'openai', 'windows wsl', 'stopp
 assert.doesNotMatch(openClawText, /cloud deployment is live|deployed to the cloud/)
 const chineseText = textOf(extractMain(htmlByPath.get('/call_analyzer_chinese_learning/info/'), '/call_analyzer_chinese_learning/info/')).toLowerCase()
 for (const fact of ['openrouter', 'sqlite', 'supabase', 'google cloud run', 'telegram', 'ten']) assert.ok(chineseText.includes(fact), `Chinese Learning case study should retain ${fact}.`)
+const newChineseLearningDefaultAlt = 'Call Analyzer Live Lesson workspace showing audio capture setup alongside a live Chinese conversation transcript and candidate count.'
+const oldChineseLearningDefaultAlt = 'A daily Telegram message with a sample of collected Chinese vocabulary.'
+for (const path of ['/', '/projects/', '/call_analyzer_chinese_learning/', '/call_analyzer_chinese_learning/info/']) {
+  const routeHtml = htmlByPath.get(path)
+  const routeMain = extractMain(routeHtml, path)
+  assert.ok(routeMain.includes(`alt="${newChineseLearningDefaultAlt}"`), `${path} must include the updated Chinese Learning Live Lesson default image.`)
+  assert.ok(!routeHtml.includes(`alt="${oldChineseLearningDefaultAlt}"`), `${path} must not retain the removed daily Telegram default image.`)
+}
 const chineseMarkup = extractMain(htmlByPath.get('/call_analyzer_chinese_learning/info/'), '/call_analyzer_chinese_learning/info/')
+const chineseCaseMarkup = extractElementById(chineseMarkup, 'article', 'project-chinese-learning', '/call_analyzer_chinese_learning/info/')
+const chineseWalkthroughSectionIds = [...chineseCaseMarkup.matchAll(/\bdata-walkthrough-section="([^"]+)"/g)].map(([, id]) => id)
+assert.deepEqual(chineseWalkthroughSectionIds, [
+  'live-lesson-capture',
+  'instant-vocabulary-analysis',
+  'ai-assisted-vocabulary-maintenance',
+  'automatic-syncing-to-the-cloud',
+], '/call_analyzer_chinese_learning/info/ should render all four Product walkthrough sections in order.')
+assert.ok(chineseCaseMarkup.includes('Automatic word detection and suggestions for adding'), '/call_analyzer_chinese_learning/info/ should include the Candidate Inbox walkthrough item.')
+const chineseExamplesMarkup = chineseCaseMarkup.match(/<section\b[^>]*aria-labelledby="examples-chinese-learning"[^>]*>([\s\S]*?)<\/section>/)?.[1]
+assert.ok(chineseExamplesMarkup, 'The Chinese Learning writeup should have an Examples section.')
+assert.ok(chineseExamplesMarkup.includes('alt="Telegram message showing a sample of daily Chinese vocabulary with readings and meanings."'), 'Chinese Learning Examples should retain the daily Telegram sample screenshot.')
 const chineseMotivationMarkup = chineseMarkup.match(/<section\b[^>]*aria-labelledby="motivation-chinese-learning"[^>]*>([\s\S]*?)<\/section>/)?.[1]
 assert.ok(chineseMotivationMarkup, 'The Chinese Learning writeup should have a motivation section.')
 const chineseMotivation = textOf(chineseMotivationMarkup).toLowerCase()
