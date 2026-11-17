@@ -4,6 +4,8 @@ import shopeeInteraction from '../assets/featured/shopee-interaction.png'
 import shopeeCart from '../assets/featured/shopee-cart.png'
 import chineseDaily from '../assets/featured/chinese-daily.png'
 import captureLiveLesson from '../assets/featured/chinese-learning/capture-live-lesson.jpg'
+import liveLessonOverview from '../assets/featured/chinese-learning/live-lesson-overview.jpg'
+import candidateInboxSuggestions from '../assets/featured/chinese-learning/candidate-inbox-suggestions.jpg'
 import defineSelectedText from '../assets/featured/chinese-learning/define-selected-text.jpg'
 import reviewGeneratedEntry from '../assets/featured/chinese-learning/review-generated-entry.jpg'
 import startWordOrPhoto from '../assets/featured/chinese-learning/start-word-or-photo.jpg'
@@ -20,63 +22,99 @@ export const profilePortrait = {
 
 const chineseLearningShowcase = {
   title: 'Product walkthrough',
-  intro: 'From a live lesson or selected text to a saved word and an explicit sync, each step keeps the learner in control.',
-  items: [
+  intro: 'From a live lesson or selected text to a curated vocabulary bank and cloud sync, the desktop workflow is organized into four stages that keep the learner in control.',
+  sections: [
     {
-      title: 'Capture a live lesson',
-      src: captureLiveLesson,
-      alt: 'Call Analyzer Live Lesson screen showing consent and setup checks beside a Chinese conversation transcript.',
-      caption: 'The Live Lesson workspace keeps participant consent and setup checks beside the transcript, where recognized terms become vocabulary candidates.',
-      width: 1280,
-      height: 686,
+      id: 'live-lesson-capture',
+      title: 'Live lesson capture',
+      subtitle: 'Transcribe consented call audio in real time and collect unfamiliar Chinese words into a review inbox with transcript evidence.',
+      items: [
+        {
+          title: 'Capture a live lesson',
+          src: captureLiveLesson,
+          alt: 'Call Analyzer Live Lesson screen showing consent and setup checks beside a Chinese conversation transcript.',
+          caption: 'The Live Lesson workspace keeps participant consent and setup checks beside the transcript, where recognized terms become vocabulary candidates.',
+          width: 1280,
+          height: 686,
+        },
+        {
+          title: 'Automatic word detection and suggestions for adding',
+          src: candidateInboxSuggestions,
+          alt: 'Call Analyzer Candidate Inbox showing high-confidence detected Chinese words with pinyin, meanings, sample sentences, transcript evidence, and Edit, Reject, and Confirm buttons.',
+          caption: 'Candidate Inbox groups detected words by confidence alongside the exact lesson sentence where each term appeared, so suggestions can be edited, rejected, or confirmed before joining your vocabulary.',
+          width: 1024,
+          height: 549,
+        },
+      ],
     },
     {
-      title: 'Define selected text instantly',
-      src: defineSelectedText,
-      alt: 'Quick definition card for 查询 showing pinyin, English meanings, and an Add word button over selected text.',
-      caption: 'Pressing Control–Option–5 on selected text opens a compact definition card, with a direct path to add the term.',
-      width: 820,
-      height: 406,
+      id: 'instant-vocabulary-analysis',
+      title: 'Instant vocabulary analysis',
+      subtitle: 'Look up any highlighted Chinese phrase on screen with a keyboard shortcut and turn it into a structured draft without leaving your current window.',
+      items: [
+        {
+          title: 'Define selected text instantly',
+          src: defineSelectedText,
+          alt: 'Quick definition card for 查询 showing pinyin, English meanings, and an Add word button over selected text.',
+          caption: 'Pressing Control–Option–5 on selected text opens a compact definition card, with a direct path to add the term.',
+          width: 820,
+          height: 406,
+        },
+        {
+          title: 'Review the generated entry',
+          src: reviewGeneratedEntry,
+          alt: 'Editable Add Word form for 查询 with pinyin, meaning, example sentence, translation, tags, and a Save button.',
+          caption: 'Choosing Add word opens an editable entry with generated learning details and tags, so the word can be checked before saving.',
+          width: 681,
+          height: 1280,
+        },
+      ],
     },
     {
-      title: 'Review the generated entry',
-      src: reviewGeneratedEntry,
-      alt: 'Editable Add Word form for 查询 with pinyin, meaning, example sentence, translation, tags, and a Save button.',
-      caption: 'Choosing Add word opens an editable entry with generated learning details and tags, so the word can be checked before saving.',
-      width: 681,
-      height: 1280,
+      id: 'ai-assisted-vocabulary-maintenance',
+      title: 'AI-assisted vocabulary maintenance',
+      subtitle: 'Build entries from typed words or study photos, fill in sample sentences and readings with AI assistance, and search or filter your saved collection.',
+      items: [
+        {
+          title: 'Start from a word or photo',
+          src: startWordOrPhoto,
+          alt: 'Call Analyzer Add Word screen with a photo upload workflow and blank fields for a manual vocabulary entry.',
+          caption: 'The Add Word workspace accepts photos for word suggestions or starts with a single simplified Chinese word.',
+          width: 1280,
+          height: 691,
+        },
+        {
+          title: 'Complete the learning details',
+          src: completeLearningDetails,
+          alt: 'Add Word form populated with pinyin, English meaning, a Chinese sample sentence, translation, tags, and generation status.',
+          caption: 'Generated fields remain editable, and the interface identifies the model and whether the learning-critical details are complete.',
+          width: 1280,
+          height: 687,
+        },
+        {
+          title: 'Browse the vocabulary bank',
+          src: browseVocabularyBank,
+          alt: 'Call Analyzer Vocabulary screen with search and filter controls above cards for saved Chinese words.',
+          caption: 'Saved words are searchable and filterable, with each card showing pinyin, meaning, example context, tags, and review status.',
+          width: 1280,
+          height: 686,
+        },
+      ],
     },
     {
-      title: 'Start from a word or photo',
-      src: startWordOrPhoto,
-      alt: 'Call Analyzer Add Word screen with a photo upload workflow and blank fields for a manual vocabulary entry.',
-      caption: 'The Add Word workspace accepts photos for word suggestions or starts with a single simplified Chinese word.',
-      width: 1280,
-      height: 691,
-    },
-    {
-      title: 'Complete the learning details',
-      src: completeLearningDetails,
-      alt: 'Add Word form populated with pinyin, English meaning, a Chinese sample sentence, translation, tags, and generation status.',
-      caption: 'Generated fields remain editable, and the interface identifies the model and whether the learning-critical details are complete.',
-      width: 1280,
-      height: 687,
-    },
-    {
-      title: 'Browse the vocabulary bank',
-      src: browseVocabularyBank,
-      alt: 'Call Analyzer Vocabulary screen with search and filter controls above cards for saved Chinese words.',
-      caption: 'Saved words are searchable and filterable, with each card showing pinyin, meaning, example context, tags, and review status.',
-      width: 1280,
-      height: 686,
-    },
-    {
-      title: 'Keep sync under user control',
-      src: syncBeforeClose,
-      alt: 'macOS Unsynced vocabulary dialog asking whether to sync pending items before the app closes.',
-      caption: 'When the app closes with unsynced items, a native prompt offers an explicit choice to sync now or leave them for later.',
-      width: 792,
-      height: 598,
+      id: 'automatic-syncing-to-the-cloud',
+      title: 'Automatic syncing to the cloud',
+      subtitle: 'Confirmed and manually saved entries queue for automatic background sync to Supabase, with an explicit prompt before closing if pending changes remain.',
+      items: [
+        {
+          title: 'Keep sync under user control',
+          src: syncBeforeClose,
+          alt: 'macOS Unsynced vocabulary dialog asking whether to sync pending items before the app closes.',
+          caption: 'Confirmed words sync automatically in the background after idle periods, and closing the app with unsynced items brings up a native prompt to sync immediately or wait until later.',
+          width: 792,
+          height: 598,
+        },
+      ],
     },
   ],
 }
@@ -185,10 +223,10 @@ export const featuredProjects = [
     title: 'Chinese Learning Toolkit',
     category: 'AI & bots',
     featured: true,
-    image: chineseDaily,
-    imageAlt: 'A daily Telegram message with a sample of collected Chinese vocabulary.',
-    imageWidth: 533,
-    imageHeight: 257,
+    image: liveLessonOverview,
+    imageAlt: 'Call Analyzer Live Lesson workspace showing audio capture setup alongside a live Chinese conversation transcript and candidate count.',
+    imageWidth: 1024,
+    imageHeight: 553,
     summary: 'A local-first Chinese vocabulary workflow that turns reviewed lesson words into a daily Telegram recall message.',
     overviewCapabilities: chineseLearningOverviewCapabilities,
     skills: ['Go', 'React', 'TypeScript', 'Wails', 'Swift', 'SQLite', 'Supabase', 'PostgreSQL', 'Google Cloud Run', 'Cloud Scheduler', 'Telegram'],

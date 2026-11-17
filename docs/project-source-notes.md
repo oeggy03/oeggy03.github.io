@@ -36,6 +36,8 @@ The three related repositories were reviewed as one project. Their cached snapsh
 - `oeggy03/call_analyzer_active_recall` at `cf86907fba2ce46713ce4e0102df084f091f9a5d`
   - Delivery and deployment: `README.md`, `AGENTS.md`, `docs/operations.md`, `daily.go`, `telegram.go`, `supabase.go`, `Dockerfile`, `.github/workflows/deploy.yml`.
 
+The project overview/intro image and the eight walkthrough screenshots across live lesson capture, instant vocabulary analysis, AI-assisted vocabulary maintenance, and cloud sync are user-provided captures of the Call Analyzer desktop workspace.
+
 The daily recall image is a user-provided sample showing only part of a message. It is described as a sample, not a complete ten-word delivery. Deployment details come from the service documentation and workflow at the recorded snapshot commits.
 
 Project repositories:

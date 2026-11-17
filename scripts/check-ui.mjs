@@ -68,57 +68,94 @@ const caseStudySynopses = {
   'chinese-learning': 'A local-first Chinese vocabulary workflow that turns reviewed lesson words into a daily Telegram recall message.',
   'traders-edge': 'A trading education game where learners practice market orders, read price signals and test strategies in guided, historical and multiplayer scenarios.',
 }
-const chineseLearningWalkthrough = [
+const chineseLearningWalkthroughIntro = 'From a live lesson or selected text to a curated vocabulary bank and cloud sync, the desktop workflow is organized into four stages that keep the learner in control.'
+const chineseLearningWalkthroughSections = [
   {
-    title: 'Capture a live lesson',
-    alt: 'Call Analyzer Live Lesson screen showing consent and setup checks beside a Chinese conversation transcript.',
-    caption: 'The Live Lesson workspace keeps participant consent and setup checks beside the transcript, where recognized terms become vocabulary candidates.',
-    width: 1280,
-    height: 686,
+    id: 'live-lesson-capture',
+    title: 'Live lesson capture',
+    subtitle: 'Transcribe consented call audio in real time and collect unfamiliar Chinese words into a review inbox with transcript evidence.',
+    items: [
+      {
+        title: 'Capture a live lesson',
+        alt: 'Call Analyzer Live Lesson screen showing consent and setup checks beside a Chinese conversation transcript.',
+        caption: 'The Live Lesson workspace keeps participant consent and setup checks beside the transcript, where recognized terms become vocabulary candidates.',
+        width: 1280,
+        height: 686,
+      },
+      {
+        title: 'Automatic word detection and suggestions for adding',
+        alt: 'Call Analyzer Candidate Inbox showing high-confidence detected Chinese words with pinyin, meanings, sample sentences, transcript evidence, and Edit, Reject, and Confirm buttons.',
+        caption: 'Candidate Inbox groups detected words by confidence alongside the exact lesson sentence where each term appeared, so suggestions can be edited, rejected, or confirmed before joining your vocabulary.',
+        width: 1024,
+        height: 549,
+      },
+    ],
   },
   {
-    title: 'Define selected text instantly',
-    alt: 'Quick definition card for 查询 showing pinyin, English meanings, and an Add word button over selected text.',
-    caption: 'Pressing Control–Option–5 on selected text opens a compact definition card, with a direct path to add the term.',
-    width: 820,
-    height: 406,
+    id: 'instant-vocabulary-analysis',
+    title: 'Instant vocabulary analysis',
+    subtitle: 'Look up any highlighted Chinese phrase on screen with a keyboard shortcut and turn it into a structured draft without leaving your current window.',
+    items: [
+      {
+        title: 'Define selected text instantly',
+        alt: 'Quick definition card for 查询 showing pinyin, English meanings, and an Add word button over selected text.',
+        caption: 'Pressing Control–Option–5 on selected text opens a compact definition card, with a direct path to add the term.',
+        width: 820,
+        height: 406,
+      },
+      {
+        title: 'Review the generated entry',
+        alt: 'Editable Add Word form for 查询 with pinyin, meaning, example sentence, translation, tags, and a Save button.',
+        caption: 'Choosing Add word opens an editable entry with generated learning details and tags, so the word can be checked before saving.',
+        width: 681,
+        height: 1280,
+      },
+    ],
   },
   {
-    title: 'Review the generated entry',
-    alt: 'Editable Add Word form for 查询 with pinyin, meaning, example sentence, translation, tags, and a Save button.',
-    caption: 'Choosing Add word opens an editable entry with generated learning details and tags, so the word can be checked before saving.',
-    width: 681,
-    height: 1280,
+    id: 'ai-assisted-vocabulary-maintenance',
+    title: 'AI-assisted vocabulary maintenance',
+    subtitle: 'Build entries from typed words or study photos, fill in sample sentences and readings with AI assistance, and search or filter your saved collection.',
+    items: [
+      {
+        title: 'Start from a word or photo',
+        alt: 'Call Analyzer Add Word screen with a photo upload workflow and blank fields for a manual vocabulary entry.',
+        caption: 'The Add Word workspace accepts photos for word suggestions or starts with a single simplified Chinese word.',
+        width: 1280,
+        height: 691,
+      },
+      {
+        title: 'Complete the learning details',
+        alt: 'Add Word form populated with pinyin, English meaning, a Chinese sample sentence, translation, tags, and generation status.',
+        caption: 'Generated fields remain editable, and the interface identifies the model and whether the learning-critical details are complete.',
+        width: 1280,
+        height: 687,
+      },
+      {
+        title: 'Browse the vocabulary bank',
+        alt: 'Call Analyzer Vocabulary screen with search and filter controls above cards for saved Chinese words.',
+        caption: 'Saved words are searchable and filterable, with each card showing pinyin, meaning, example context, tags, and review status.',
+        width: 1280,
+        height: 686,
+      },
+    ],
   },
   {
-    title: 'Start from a word or photo',
-    alt: 'Call Analyzer Add Word screen with a photo upload workflow and blank fields for a manual vocabulary entry.',
-    caption: 'The Add Word workspace accepts photos for word suggestions or starts with a single simplified Chinese word.',
-    width: 1280,
-    height: 691,
-  },
-  {
-    title: 'Complete the learning details',
-    alt: 'Add Word form populated with pinyin, English meaning, a Chinese sample sentence, translation, tags, and generation status.',
-    caption: 'Generated fields remain editable, and the interface identifies the model and whether the learning-critical details are complete.',
-    width: 1280,
-    height: 687,
-  },
-  {
-    title: 'Browse the vocabulary bank',
-    alt: 'Call Analyzer Vocabulary screen with search and filter controls above cards for saved Chinese words.',
-    caption: 'Saved words are searchable and filterable, with each card showing pinyin, meaning, example context, tags, and review status.',
-    width: 1280,
-    height: 686,
-  },
-  {
-    title: 'Keep sync under user control',
-    alt: 'macOS Unsynced vocabulary dialog asking whether to sync pending items before the app closes.',
-    caption: 'When the app closes with unsynced items, a native prompt offers an explicit choice to sync now or leave them for later.',
-    width: 792,
-    height: 598,
+    id: 'automatic-syncing-to-the-cloud',
+    title: 'Automatic syncing to the cloud',
+    subtitle: 'Confirmed and manually saved entries queue for automatic background sync to Supabase, with an explicit prompt before closing if pending changes remain.',
+    items: [
+      {
+        title: 'Keep sync under user control',
+        alt: 'macOS Unsynced vocabulary dialog asking whether to sync pending items before the app closes.',
+        caption: 'Confirmed words sync automatically in the background after idle periods, and closing the app with unsynced items brings up a native prompt to sync immediately or wait until later.',
+        width: 792,
+        height: 598,
+      },
+    ],
   },
 ]
+const chineseLearningWalkthroughItems = chineseLearningWalkthroughSections.flatMap((section) => section.items)
 const chineseLearningOverviewCapabilities = [
   {
     title: 'Instant word lookup',
@@ -984,7 +1021,7 @@ async function run() {
         }
         const imagesByProject = {
           'My OpenClaw Lab': [['OpenClaw brand banner showing its lobster mascot and wordmark, with the line “Your personal AI assistant, running on your own devices.”', 1280, 358]],
-          'Chinese Learning Toolkit': [['A daily Telegram message with a sample of collected Chinese vocabulary.', 533, 257]],
+          'Chinese Learning Toolkit': [['Call Analyzer Live Lesson workspace showing audio capture setup alongside a live Chinese conversation transcript and candidate count.', 1024, 553]],
         }
         for (const [alt, expectedWidth, expectedHeight] of imagesByProject[project] || []) {
           const image = page.locator(`img[alt="${alt}"]`).first()
@@ -999,6 +1036,7 @@ async function run() {
           await assert.equal(imageData.height, expectedHeight, `${project} should preserve the supplied image height.`)
         }
         if (project === 'Chinese Learning Toolkit') {
+          await assert.equal(await page.locator('img[alt="A daily Telegram message with a sample of collected Chinese vocabulary."]').count(), 0, 'Chinese Learning overview should not render the removed Telegram default image.')
           const capabilities = page.locator('#project-chinese-learning [data-capabilities-at-a-glance]')
           await assert.equal(await capabilities.count(), 1, 'Chinese Learning should render one capabilities-at-a-glance section.')
           await assert.ok(await capabilities.getByRole('heading', { name: 'Capabilities at a glance', exact: true }).isVisible(), 'Chinese Learning should show the Capabilities at a glance heading.')
@@ -1031,7 +1069,10 @@ async function run() {
             ['OpenClaw conversation about comparing gaming mice and adding a Tecware EX2 to the cart.', 608, 726],
             ['Shopee cart showing one Tecware EX2 mouse.', 1230, 636],
           ],
-          'Chinese Learning Toolkit': [['Telegram message showing a sample of daily Chinese vocabulary with readings and meanings.', 533, 257]],
+          'Chinese Learning Toolkit': [
+            ['Call Analyzer Live Lesson workspace showing audio capture setup alongside a live Chinese conversation transcript and candidate count.', 1024, 553],
+            ['Telegram message showing a sample of daily Chinese vocabulary with readings and meanings.', 533, 257],
+          ],
         }
         for (const [alt, expectedWidth, expectedHeight] of imagesByCaseStudy[project] || []) {
           const image = page.locator(`img[alt="${alt}"]`).first()
@@ -1049,24 +1090,47 @@ async function run() {
           const walkthrough = page.locator('#project-chinese-learning [data-product-walkthrough]')
           await assert.equal(await walkthrough.count(), 1, 'Chinese Learning writeup should render one product walkthrough section.')
           await assert.ok(await walkthrough.getByRole('heading', { name: 'Product walkthrough', exact: true }).isVisible(), 'Chinese Learning writeup should show the Product walkthrough heading.')
+          await assert.ok(await walkthrough.getByText(chineseLearningWalkthroughIntro, { exact: true }).isVisible(), 'Chinese Learning writeup should show the Product walkthrough intro.')
           const walkthroughHeading = await walkthrough.getByRole('heading', { name: 'Product walkthrough', exact: true }).boundingBox()
           const architectureHeading = await page.getByRole('heading', { name: 'How it works', exact: true }).boundingBox()
           await assert.ok(walkthroughHeading && architectureHeading && walkthroughHeading.y < architectureHeading.y, 'The Product walkthrough should appear before How it works.')
-          await assert.equal(await walkthrough.locator('ol').count(), 1, 'Product walkthrough should use one ordered list for its sequence.')
-          const walkthroughItems = walkthrough.locator('ol > li')
-          await assert.equal(await walkthroughItems.count(), chineseLearningWalkthrough.length, 'Product walkthrough should contain all seven supplied screenshots.')
-          const content = await walkthroughItems.evaluateAll((items) => items.map((item) => {
-            const title = item.querySelector('h4').cloneNode(true)
-            title.querySelectorAll('[aria-hidden="true"]').forEach((element) => element.remove())
+          const walkthroughSections = walkthrough.locator('[data-walkthrough-section]')
+          await assert.equal(await walkthroughSections.count(), chineseLearningWalkthroughSections.length, 'Product walkthrough should contain all four workflow sections.')
+          const sectionContent = await walkthroughSections.evaluateAll((sections) => sections.map((section) => {
+            const heading = section.querySelector('h4')
+            const cleanHeading = heading ? heading.cloneNode(true) : null
+            cleanHeading?.querySelectorAll('[aria-hidden="true"]').forEach((element) => element.remove())
             return {
-              title: title.textContent.trim(),
-              alt: item.querySelector('img')?.alt,
-              caption: item.querySelector('figcaption')?.textContent.trim(),
+              id: section.getAttribute('data-walkthrough-section'),
+              headingId: heading?.id,
+              title: cleanHeading?.textContent.trim(),
+              subtitle: section.querySelector('p[data-walkthrough-subtitle]')?.textContent.trim(),
+              items: [...section.querySelectorAll('ol > li[data-walkthrough-item]')].map((item) => ({
+                title: item.querySelector('h5')?.textContent.trim(),
+                alt: item.querySelector('img')?.alt,
+                caption: item.querySelector('figcaption')?.textContent.trim(),
+              })),
             }
           }))
-          await assert.deepEqual(content, chineseLearningWalkthrough.map(({ title, alt, caption }) => ({ title, alt, caption })), 'Product walkthrough content should stay in the requested order.')
+          await assert.deepEqual(
+            sectionContent,
+            chineseLearningWalkthroughSections.map(({ id, title, subtitle, items }) => ({
+              id,
+              headingId: `walkthrough-chinese-learning-${id}`,
+              title,
+              subtitle,
+              items: items.map(({ title: itemTitle, alt, caption }) => ({
+                title: itemTitle,
+                alt,
+                caption,
+              })),
+            })),
+            'Product walkthrough sections and items should stay in the requested order.',
+          )
 
-          for (const [index, expected] of chineseLearningWalkthrough.entries()) {
+          const walkthroughItems = walkthrough.locator('ol > li[data-walkthrough-item]')
+          await assert.equal(await walkthroughItems.count(), chineseLearningWalkthroughItems.length, 'Product walkthrough should contain all eight supplied screenshots.')
+          for (const [index, expected] of chineseLearningWalkthroughItems.entries()) {
             const item = walkthroughItems.nth(index)
             const image = item.locator('img')
             const imageData = await image.evaluate(async (element) => {
@@ -1094,13 +1158,15 @@ async function run() {
             await assert.equal(source.href, source.src, `Product walkthrough image ${index + 1} should preserve its direct image link without JavaScript.`)
           }
 
-          const firstImage = walkthroughItems.first().locator('a[data-expandable-image]')
-          await firstImage.click()
-          const expandedImage = page.locator('[data-expanded-image-dialog]')
-          await page.waitForFunction(() => document.querySelector('[data-expanded-image-dialog]')?.open)
-          await assert.ok(await expandedImage.getByText(chineseLearningWalkthrough[0].caption, { exact: true }).isVisible(), 'The expanded walkthrough image should show its caption.')
-          await expandedImage.locator('[data-expanded-image-close]').click()
-          await page.waitForFunction(() => !document.querySelector('[data-expanded-image-dialog]'))
+          for (const index of [0, 1]) {
+            const imageTrigger = walkthroughItems.nth(index).locator('a[data-expandable-image]')
+            await imageTrigger.click()
+            const expandedImage = page.locator('[data-expanded-image-dialog]')
+            await page.waitForFunction(() => document.querySelector('[data-expanded-image-dialog]')?.open)
+            await assert.ok(await expandedImage.getByText(chineseLearningWalkthroughItems[index].caption, { exact: true }).isVisible(), `The expanded walkthrough image ${index + 1} should show its caption.`)
+            await expandedImage.locator('[data-expanded-image-close]').click()
+            await page.waitForFunction(() => !document.querySelector('[data-expanded-image-dialog]'))
+          }
         }
         if (project === 'My OpenClaw Lab') {
           await assert.equal(await page.locator('#architecture-openclaw').locator('..').locator('ul').count(), 1, 'OpenClaw should describe connected tools without false ordering.')
@@ -1762,7 +1828,8 @@ async function run() {
             await assert.equal(await projectRoot.locator('[data-product-walkthrough]').count(), 0, 'No-JavaScript Chinese Learning overview should not render the product walkthrough.')
           }
           if (projectId === 'chinese-learning' && projectRoute.projectView === 'info') {
-            await assert.equal(await projectRoot.locator('[data-product-walkthrough] ol > li').count(), chineseLearningWalkthrough.length, 'No-JavaScript Chinese Learning writeup should retain all seven walkthrough figures.')
+            await assert.equal(await projectRoot.locator('[data-product-walkthrough] [data-walkthrough-section]').count(), chineseLearningWalkthroughSections.length, 'No-JavaScript Chinese Learning writeup should retain all four walkthrough sections.')
+            await assert.equal(await projectRoot.locator('[data-product-walkthrough] ol > li[data-walkthrough-item]').count(), chineseLearningWalkthroughItems.length, 'No-JavaScript Chinese Learning writeup should retain all eight walkthrough figures.')
           }
         }
         if (path === '/skills/') {
@@ -2382,7 +2449,7 @@ async function run() {
                 figures,
               }
             })
-            await assert.equal(walkthroughGeometry.figures.length, 7, 'The Chinese Learning walkthrough should retain all seven figures at 320px/200% text.')
+            await assert.equal(walkthroughGeometry.figures.length, chineseLearningWalkthroughItems.length, 'The Chinese Learning walkthrough should retain all eight figures at 320px/200% text.')
             await assert.ok(walkthroughGeometry.documentWidth <= viewport.width, 'The Chinese Learning walkthrough should not overflow horizontally at 320px/200% text.')
             await assert.ok(walkthroughGeometry.figures.every(({ figureWidth }) => figureWidth >= walkthroughGeometry.sectionWidth - 2), `Walkthrough figures should use the available section width at 320px/200%, received ${walkthroughGeometry.figures.map(({ figureWidth }) => Math.round(figureWidth)).join(', ')}px for a ${Math.round(walkthroughGeometry.sectionWidth)}px section.`)
             await assert.ok(walkthroughGeometry.figures.every(({ captionWidth }) => captionWidth >= walkthroughGeometry.sectionWidth - 2), 'Walkthrough captions should use the available section width at 320px/200% text.')
